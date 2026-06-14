@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://7pcvefm8c7gy"]
+
+[ext_resource type="Script" path="res://scenes/weapons/orb/orb_weapon.gd" id="1_hjy0k"]
+
+[node name="OrbWeapon" type="Node" unique_id=280639122]
+script = ExtResource("1_hjy0k")
