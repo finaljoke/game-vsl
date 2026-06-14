@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dn8mb2gdiwb88"]
+
+[ext_resource type="Script" path="res://scenes/weapons/knife/knife_weapon.gd" id="1_kcebv"]
+
+[node name="KnifeWeapon" type="Node" unique_id=121017663]
+script = ExtResource("1_kcebv")

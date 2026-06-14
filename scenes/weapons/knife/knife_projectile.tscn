@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://bk24oqql1wdwf"]
+
+[ext_resource type="Script" path="res://scenes/weapons/knife/knife_projectile.gd" id="1_ig84x"]
+[ext_resource type="Texture2D" uid="uid://bu6prmfrsmw5f" path="res://icon.svg" id="2_dkynb"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sh6y1"]
+size = Vector2(12, 4)
+
+[node name="KnifeProjectile" type="Area2D" unique_id=914048337]
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("1_ig84x")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=639920304]
+modulate = Color(1, 1, 0.2, 1)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("2_dkynb")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1719127129]
+shape = SubResource("RectangleShape2D_sh6y1")
