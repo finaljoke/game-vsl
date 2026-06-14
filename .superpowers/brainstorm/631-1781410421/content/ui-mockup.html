@@ -1,0 +1,105 @@
+<h2>UI 布局预览</h2>
+<p class="subtitle">两个关键界面：游戏 HUD 和升级选择屏。点击你更想要的方案。</p>
+
+<div class="section">
+  <h3>① 游戏中 HUD</h3>
+
+  <div class="split">
+    <div class="mockup" data-choice="hud-a" onclick="toggleSelect(this)" style="cursor:pointer;">
+      <div class="mockup-header">方案 A — 四角分布</div>
+      <div class="mockup-body" style="background:#111; position:relative; height:200px; font-family:monospace;">
+        <!-- HP bar top-left -->
+        <div style="position:absolute;top:10px;left:10px;">
+          <div style="font-size:10px;color:#aaa;margin-bottom:2px;">❤ HP</div>
+          <div style="width:120px;height:10px;background:#333;border-radius:4px;">
+            <div style="width:75%;height:100%;background:#e74c3c;border-radius:4px;"></div>
+          </div>
+        </div>
+        <!-- Timer top-center -->
+        <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);text-align:center;">
+          <div style="font-size:18px;color:#fff;font-weight:bold;">02:34</div>
+        </div>
+        <!-- Level top-right -->
+        <div style="position:absolute;top:10px;right:10px;">
+          <div style="font-size:12px;color:#f1c40f;">Lv.4</div>
+        </div>
+        <!-- Arena placeholder -->
+        <div style="position:absolute;top:35px;left:50%;transform:translateX(-50%);width:80px;height:80px;background:#1a1a2e;border:1px solid #30363d;border-radius:4px;display:flex;align-items:center;justify-content:center;">
+          <div style="width:10px;height:10px;background:#58a6ff;border-radius:50%;"></div>
+        </div>
+        <!-- XP bar bottom -->
+        <div style="position:absolute;bottom:10px;left:10px;right:10px;">
+          <div style="font-size:9px;color:#aaa;margin-bottom:2px;">XP 60/100</div>
+          <div style="width:100%;height:8px;background:#333;border-radius:4px;">
+            <div style="width:60%;height:100%;background:#3fb950;border-radius:4px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup" data-choice="hud-b" onclick="toggleSelect(this)" style="cursor:pointer;">
+      <div class="mockup-header">方案 B — 底部集中</div>
+      <div class="mockup-body" style="background:#111; position:relative; height:200px; font-family:monospace;">
+        <!-- Timer top-center only -->
+        <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);">
+          <div style="font-size:18px;color:#fff;font-weight:bold;">02:34</div>
+        </div>
+        <!-- Arena placeholder -->
+        <div style="position:absolute;top:35px;left:50%;transform:translateX(-50%);width:80px;height:80px;background:#1a1a2e;border:1px solid #30363d;border-radius:4px;display:flex;align-items:center;justify-content:center;">
+          <div style="width:10px;height:10px;background:#58a6ff;border-radius:50%;"></div>
+        </div>
+        <!-- Bottom bar -->
+        <div style="position:absolute;bottom:0;left:0;right:0;background:#0d1117;padding:8px 10px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:10px;color:#e74c3c;">❤ 75/100</span>
+            <div style="flex:1;height:8px;background:#333;border-radius:4px;">
+              <div style="width:75%;height:100%;background:#e74c3c;border-radius:4px;"></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:10px;color:#3fb950;">Lv4 XP</span>
+            <div style="flex:1;height:8px;background:#333;border-radius:4px;">
+              <div style="width:60%;height:100%;background:#3fb950;border-radius:4px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>② 升级选择界面</h3>
+  <div class="mockup">
+    <div class="mockup-header">升级！选择一个武器 / 强化</div>
+    <div class="mockup-body" style="background:#0d1117; padding:16px;">
+      <p style="text-align:center;color:#8b949e;font-size:12px;margin-bottom:16px;">游戏暂停 · 选择一项</p>
+      <div style="display:flex;gap:12px;justify-content:center;">
+
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;width:100px;text-align:center;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#388bfd'" onmouseout="this.style.borderColor='#30363d'">
+          <div style="font-size:28px;margin-bottom:6px;">🗡️</div>
+          <div style="font-size:11px;color:#f0f6fc;font-weight:bold;">飞刀</div>
+          <div style="font-size:9px;color:#8b949e;margin-top:4px;">朝最近敌人射出飞刀</div>
+          <div style="font-size:9px;color:#3fb950;margin-top:4px;">NEW</div>
+        </div>
+
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;width:100px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='#388bfd'" onmouseout="this.style.borderColor='#30363d'">
+          <div style="font-size:28px;margin-bottom:6px;">🔮</div>
+          <div style="font-size:11px;color:#f0f6fc;font-weight:bold;">护盾球</div>
+          <div style="font-size:9px;color:#8b949e;margin-top:4px;">绕身旋转的能量球</div>
+          <div style="font-size:9px;color:#3fb950;margin-top:4px;">NEW</div>
+        </div>
+
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:12px;width:100px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='#388bfd'" onmouseout="this.style.borderColor='#30363d'">
+          <div style="font-size:28px;margin-bottom:6px;">💥</div>
+          <div style="font-size:11px;color:#f0f6fc;font-weight:bold;">爆炸</div>
+          <div style="font-size:9px;color:#8b949e;margin-top:4px;">随机位置触发范围爆炸</div>
+          <div style="font-size:9px;color:#3fb950;margin-top:4px;">NEW</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">HUD 选 A 或 B，升级界面风格是否满意？</p>

@@ -1,0 +1,55 @@
+<h2>地图 / 关卡形式</h2>
+<p class="subtitle">原型里的"战场"是什么样的？这决定了摄像机、地图边界和敌人生成逻辑。</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="infinite-scroll" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1117; display:flex; align-items:center; justify-content:center; min-height:160px; padding:12px;">
+      <div style="position:relative; width:220px; height:130px; border:1px solid #30363d; border-radius:6px; overflow:hidden; background:#161b22;">
+        <!-- Grid lines -->
+        <div style="position:absolute;inset:0;background-image:linear-gradient(#21262d 1px,transparent 1px),linear-gradient(90deg,#21262d 1px,transparent 1px);background-size:20px 20px;"></div>
+        <!-- Player -->
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;background:#58a6ff;border-radius:50%;box-shadow:0 0 8px #58a6ff;"></div>
+        <!-- Camera frame indicator -->
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:80px;height:60px;border:1px dashed #f0883e;border-radius:2px;"></div>
+        <!-- Enemies approaching from all sides -->
+        <div style="position:absolute;top:8px;left:30px;width:8px;height:8px;background:#f85149;border-radius:50%;"></div>
+        <div style="position:absolute;top:8px;right:30px;width:8px;height:8px;background:#f85149;border-radius:50%;"></div>
+        <div style="position:absolute;bottom:8px;left:60px;width:8px;height:8px;background:#f85149;border-radius:50%;"></div>
+        <div style="position:absolute;right:8px;top:40px;width:8px;height:8px;background:#f85149;border-radius:50%;"></div>
+        <div style="position:absolute;left:8px;top:55px;width:8px;height:8px;background:#f85149;border-radius:50%;"></div>
+        <!-- Label -->
+        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:#8b949e;">摄像机跟随玩家</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 无限滚动地图</h3>
+      <p>和 VS 一样——摄像机跟随玩家，地图在各方向无限延伸（或很大），敌人从屏幕外四面八方涌来。<br><span style="color:#3fb950;font-size:0.85em;">✓ 最接近 VS 体验，跑位空间大</span></p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="fixed-arena" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1117; display:flex; align-items:center; justify-content:center; min-height:160px; padding:12px;">
+      <div style="position:relative; width:220px; height:130px; border:2px solid #388bfd; border-radius:6px; overflow:hidden; background:#161b22;">
+        <!-- Grid lines -->
+        <div style="position:absolute;inset:0;background-image:linear-gradient(#21262d 1px,transparent 1px),linear-gradient(90deg,#21262d 1px,transparent 1px);background-size:20px 20px;"></div>
+        <!-- Walls -->
+        <div style="position:absolute;inset:0;border:6px solid #1f6feb;pointer-events:none;"></div>
+        <!-- Player -->
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;background:#58a6ff;border-radius:50%;box-shadow:0 0 8px #58a6ff;"></div>
+        <!-- Enemies -->
+        <div style="position:absolute;top:20px;left:20px;width:8px;height:8px;background:#f85149;border-radius:50%;"></div>
+        <div style="position:absolute;top:15px;right:25px;width:8px;height:8px;background:#f85149;border-radius:50%;"></div>
+        <div style="position:absolute;bottom:20px;left:50px;width:8px;height:8px;background:#f85149;border-radius:50%;"></div>
+        <div style="position:absolute;bottom:15px;right:20px;width:8px;height:8px;background:#f85149;border-radius:50%;"></div>
+        <!-- Label -->
+        <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:#8b949e;">固定边界</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 固定竞技场</h3>
+      <p>屏幕不滚动，玩家在一个有边界的房间里战斗，敌人从边缘或入口涌入。<br><span style="color:#d29922;font-size:0.85em;">⚡ 实现更简单，摄像机逻辑为零</span></p>
+    </div>
+  </div>
+
+</div>
