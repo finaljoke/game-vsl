@@ -6,6 +6,8 @@ signal enemy_died(position: Vector2)
 signal player_hit(amount: float)
 signal player_leveled_up(level: int)
 signal xp_collected(position: Vector2)
+signal player_died
+signal item_selected
 
 # ── Shake state ───────────────────────────────────────────────────────────
 var _shake_magnitude: float = 0.0
@@ -22,6 +24,8 @@ var _sfx_death: AudioStreamPlayer
 var _sfx_xp: AudioStreamPlayer
 var _sfx_levelup: AudioStreamPlayer
 var _sfx_player_hurt: AudioStreamPlayer
+var _sfx_player_death: AudioStreamPlayer
+var _sfx_item_select: AudioStreamPlayer
 
 # ── Setup ─────────────────────────────────────────────────────────────────
 func _ready() -> void:
@@ -32,6 +36,8 @@ func _ready() -> void:
 	player_hit.connect(_on_player_hit)
 	player_leveled_up.connect(_on_player_leveled_up)
 	xp_collected.connect(_on_xp_collected)
+	player_died.connect(_on_player_died)
+	item_selected.connect(_on_item_selected)
 
 func _setup_flash_rect() -> void:
 	var canvas := CanvasLayer.new()
@@ -48,7 +54,9 @@ func _setup_audio() -> void:
 	_sfx_death       = _make_sfx_player("res://assets/audio/sfx/enemy_death.wav")
 	_sfx_xp          = _make_sfx_player("res://assets/audio/sfx/xp_collect.wav")
 	_sfx_levelup     = _make_sfx_player("res://assets/audio/sfx/level_up.wav")
-	_sfx_player_hurt = _make_sfx_player("res://assets/audio/sfx/player_hurt.wav")
+	_sfx_player_hurt  = _make_sfx_player("res://assets/audio/sfx/player_hurt.wav")
+	_sfx_player_death = _make_sfx_player("res://assets/audio/sfx/player_death.wav")
+	_sfx_item_select  = _make_sfx_player("res://assets/audio/sfx/item_select.wav")
 
 func _make_sfx_player(path: String) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
@@ -175,3 +183,11 @@ func _on_player_leveled_up(_level: int) -> void:
 
 func _on_xp_collected(_position: Vector2) -> void:
 	_play_sfx(_sfx_xp)
+
+func _on_player_died() -> void:
+	_screen_flash(Color(1, 0, 0, 0.4), 0.5)
+	_shake(12.0, 0.5)
+	_play_sfx(_sfx_player_death)
+
+func _on_item_selected() -> void:
+	_play_sfx(_sfx_item_select)

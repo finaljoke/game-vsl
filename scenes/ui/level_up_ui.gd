@@ -23,11 +23,12 @@ const WEAPON_REGISTRY: Array[Dictionary] = [
 ]
 
 @onready var card_container: HBoxContainer = $BG/Panel/CardContainer
+@onready var _gm = get_node("/root/GameManager")
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
-	GameManager.level_up_triggered.connect(_on_level_up)
+	_gm.level_up_triggered.connect(_on_level_up)
 
 func _on_level_up() -> void:
 	visible = true
@@ -45,6 +46,7 @@ func _build_cards() -> void:
 
 func _on_weapon_picked(scene_path: String) -> void:
 	visible = false
+	GameFeel.item_selected.emit()
 	var player := get_tree().get_first_node_in_group("player") as Player
 	player.add_weapon(load(scene_path))
-	GameManager.resume_game()
+	_gm.resume_game()

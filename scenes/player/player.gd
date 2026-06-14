@@ -35,6 +35,7 @@ func take_damage(amount: float) -> void:
 	GameFeel.player_hit.emit(amount)
 	if hp <= 0.0:
 		_dead = true
+		GameFeel.player_died.emit()
 		died.emit()
 
 func add_xp(amount: float) -> void:
