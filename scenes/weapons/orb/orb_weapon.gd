@@ -6,6 +6,7 @@ const ORB_SCENE = preload("res://scenes/weapons/orb/orb_shield.tscn")
 const NUM_ORBS: int = 2
 
 func _ready() -> void:
+	super._ready()
 	cooldown = 9999.0
 	for i in range(NUM_ORBS):
 		var orb := ORB_SCENE.instantiate()

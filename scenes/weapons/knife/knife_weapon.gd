@@ -5,6 +5,7 @@ extends WeaponBase
 const PROJECTILE_SCENE = preload("res://scenes/weapons/knife/knife_projectile.tscn")
 
 func _ready() -> void:
+	super._ready()
 	cooldown = 1.0
 
 func attack() -> void:

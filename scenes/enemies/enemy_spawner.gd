@@ -48,7 +48,7 @@ func _on_enemy_died(pos: Vector2) -> void:
 
 func _random_edge_pos() -> Vector2:
 	match randi() % 4:
-		0: return Vector2(randf_range(0.0, ARENA_W), -SPAWN_MARGIN)
-		1: return Vector2(randf_range(0.0, ARENA_W), ARENA_H + SPAWN_MARGIN)
-		2: return Vector2(-SPAWN_MARGIN, randf_range(0.0, ARENA_H))
-		_: return Vector2(ARENA_W + SPAWN_MARGIN, randf_range(0.0, ARENA_H))
+		0: return Vector2(randf_range(SPAWN_MARGIN, ARENA_W - SPAWN_MARGIN), SPAWN_MARGIN)
+		1: return Vector2(randf_range(SPAWN_MARGIN, ARENA_W - SPAWN_MARGIN), ARENA_H - SPAWN_MARGIN)
+		2: return Vector2(SPAWN_MARGIN, randf_range(SPAWN_MARGIN, ARENA_H - SPAWN_MARGIN))
+		_: return Vector2(ARENA_W - SPAWN_MARGIN, randf_range(SPAWN_MARGIN, ARENA_H - SPAWN_MARGIN))

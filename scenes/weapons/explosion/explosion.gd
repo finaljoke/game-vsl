@@ -20,4 +20,4 @@ func _process(delta: float) -> void:
 func _apply_damage() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if global_position.distance_to((enemy as Node2D).global_position) <= RADIUS:
-			(enemy as Enemy).take_damage(DAMAGE)
+			enemy.take_damage(DAMAGE)

@@ -5,6 +5,7 @@ extends WeaponBase
 const EXPLOSION_SCENE = preload("res://scenes/weapons/explosion/explosion.tscn")
 
 func _ready() -> void:
+	super._ready()
 	cooldown = 3.0
 
 func attack() -> void:

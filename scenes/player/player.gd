@@ -25,7 +25,7 @@ func _physics_process(delta: float) -> void:
 func _check_contact_damage(delta: float) -> void:
 	for body in hurt_box.get_overlapping_bodies():
 		if body.is_in_group("enemies"):
-			take_damage((body as Enemy).CONTACT_DAMAGE * delta)
+			take_damage(body.CONTACT_DAMAGE * delta)
 			break
 
 func take_damage(amount: float) -> void:
