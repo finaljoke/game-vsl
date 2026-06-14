@@ -5,7 +5,7 @@ extends Area2D
 const SPEED: float = 220.0
 const LIFETIME: float = 3.0
 
-var direction: Vector2 = Vector2.RIGHT  # 由 bt_ranged_kite 注入
+var direction: Vector2 = Vector2.RIGHT  # 由 bt_kite_target / bt_fire_projectile 注入
 var damage: float = 6.0                 # ⚙️可调
 var _age: float = 0.0
 

@@ -1,6 +1,7 @@
-# scenes/enemies/ai/bt_ranged_kite.gd
+# scenes/enemies/ai/atoms/bt_kite_target.gd
 # 行为：远程风筝——保持 preferred 距离的环带，区间内停下按冷却向玩家发射子弹。
-extends BTAction
+# kite_move() 是纯函数（静态），方便单测。
+extends "res://scenes/enemies/ai/atoms/bt_action_base.gd"
 
 const PROJECTILE = preload("res://scenes/enemies/enemy_projectile.tscn")
 
@@ -11,7 +12,7 @@ const PROJECTILE = preload("res://scenes/enemies/enemy_projectile.tscn")
 
 var _cd: float = 0.0
 
-# 纯函数：按距离决定移动方向。1=靠近 / -1=后退 / 0=驻守（开火）。便于单测。
+# 纯函数：按距离决定移动方向。1=靠近 / -1=后退 / 0=驻守（开火）。
 static func kite_move(dist: float, preferred_dist: float, band_half: float) -> int:
 	if dist > preferred_dist + band_half:
 		return 1
@@ -20,12 +21,11 @@ static func kite_move(dist: float, preferred_dist: float, band_half: float) -> i
 	return 0
 
 func _tick(delta: float) -> Status:
-	var target := agent.get_tree().get_first_node_in_group("player")
+	var target := _player()
 	if target == null:
 		return FAILURE
-	var to_target: Vector2 = target.global_position - agent.global_position
-	var dist := to_target.length()
-	var dir := to_target.normalized()
+	var dist := _dist_to_player(target)
+	var dir := _dir_to_player(target)
 	var move := kite_move(dist, preferred, band)
 	agent.velocity = dir * agent.SPEED * float(move)
 	agent.move_and_slide()

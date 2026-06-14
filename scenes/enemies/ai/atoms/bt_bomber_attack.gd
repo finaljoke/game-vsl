@@ -1,6 +1,6 @@
-# scenes/enemies/ai/bt_bomber.gd
+# scenes/enemies/ai/atoms/bt_bomber_attack.gd
 # 行为：自爆——贴近玩家至 fuse_range 后停下点引信，引信到点炸出 AoE 伤害玩家并自毁。
-extends BTAction
+extends "res://scenes/enemies/ai/atoms/bt_action_base.gd"
 
 const EXPLOSION = preload("res://scenes/weapons/explosion/explosion.tscn")
 
@@ -12,14 +12,13 @@ const EXPLOSION = preload("res://scenes/weapons/explosion/explosion.tscn")
 var _fuse: float = -1.0  # <0 表示未点燃；>=0 表示引信倒计时中
 
 func _tick(delta: float) -> Status:
-	var target := agent.get_tree().get_first_node_in_group("player")
+	var target := _player()
 	if target == null:
 		return FAILURE
-	var to_target: Vector2 = target.global_position - agent.global_position
-	var dist := to_target.length()
+	var dist := _dist_to_player(target)
 	if _fuse < 0.0:
 		# 阶段一：追击直到进入引信范围
-		agent.velocity = to_target.normalized() * agent.SPEED
+		agent.velocity = _dir_to_player(target) * agent.SPEED
 		agent.move_and_slide()
 		if dist <= fuse_range:
 			_fuse = fuse_time

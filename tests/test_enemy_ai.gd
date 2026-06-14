@@ -1,15 +1,16 @@
 extends GdUnitTestSuite
 
-# 验证行为树工厂 EnemyBT.build 与远程风筝的纯函数 kite_move。
-# 依赖 LimboAI GDExtension（BehaviorTree/BTAction）——headless 测试进程会加载。
+# 验证行为树工厂 EnemyBT.build、远程风筝 kite_move 纯函数、Boss 阶段 selector。
+# 依赖 LimboAI GDExtension（BehaviorTree/BTAction/BTSelector/BTSequence）——headless 测试进程会加载。
 
 const EnemyBT := preload("res://scenes/enemies/ai/enemy_bt.gd")
-const RangedTask := preload("res://scenes/enemies/ai/bt_ranged_kite.gd")
+const KiteTask := preload("res://scenes/enemies/ai/atoms/bt_kite_target.gd")
+const HpBelow := preload("res://scenes/enemies/ai/atoms/bt_hp_below.gd")
 const ProjectileScene := preload("res://scenes/enemies/enemy_projectile.tscn")
 
-const CHASE_PATH := "res://scenes/enemies/ai/bt_chase.gd"
-const RANGED_PATH := "res://scenes/enemies/ai/bt_ranged_kite.gd"
-const BOMBER_PATH := "res://scenes/enemies/ai/bt_bomber.gd"
+const CHASE_PATH  := "res://scenes/enemies/ai/atoms/bt_chase_target.gd"
+const RANGED_PATH := "res://scenes/enemies/ai/atoms/bt_kite_target.gd"
+const BOMBER_PATH := "res://scenes/enemies/ai/atoms/bt_bomber_attack.gd"
 
 # ── EnemyBT.build：每种 behavior 返回非空树且 root_task 类型正确 ──────────────
 
@@ -30,24 +31,43 @@ func test_build_unknown_falls_back_to_chase() -> void:
 	var bt := EnemyBT.build("nonsense")
 	assert_str(bt.root_task.get_script().resource_path).is_equal(CHASE_PATH)
 
+# ── Boss 阶段 selector：root 是 BTSelector，外层有 3 个分支 ─────────────────────
+
+func test_build_boss_returns_selector_with_three_branches() -> void:
+	var bt := EnemyBT.build("boss")
+	assert_object(bt.root_task).is_instanceof(BTSelector)
+	# Phase3 sequence + Phase2 sequence + Phase1 fallback = 3 个子任务
+	assert_int(bt.root_task.get_child_count()).is_equal(3)
+	# 前两个分支应是 BTSequence（带 HpBelow 守卫），第三个 fallback 是 BTAction
+	assert_object(bt.root_task.get_child(0)).is_instanceof(BTSequence)
+	assert_object(bt.root_task.get_child(1)).is_instanceof(BTSequence)
+
+func test_boss_phase_guards_have_correct_thresholds() -> void:
+	var bt := EnemyBT.build("boss")
+	# 顺序：先 0.3，再 0.7（越严格的阈值越靠前）
+	var phase3_guard := bt.root_task.get_child(0).get_child(0) as BTCondition
+	var phase2_guard := bt.root_task.get_child(1).get_child(0) as BTCondition
+	assert_float(phase3_guard.threshold).is_equal_approx(0.3, 0.001)
+	assert_float(phase2_guard.threshold).is_equal_approx(0.7, 0.001)
+
 # ── kite_move：三段距离决策（1=靠近 / 0=驻守开火 / -1=后退）─────────────────
 
 func test_kite_move_approaches_when_too_far() -> void:
 	# dist 350 > preferred 260 + band 40 = 300 → 靠近
-	assert_int(RangedTask.kite_move(350.0, 260.0, 40.0)).is_equal(1)
+	assert_int(KiteTask.kite_move(350.0, 260.0, 40.0)).is_equal(1)
 
 func test_kite_move_holds_within_band() -> void:
 	# dist 260 在 [220, 300] 区间内 → 驻守
-	assert_int(RangedTask.kite_move(260.0, 260.0, 40.0)).is_equal(0)
+	assert_int(KiteTask.kite_move(260.0, 260.0, 40.0)).is_equal(0)
 
 func test_kite_move_retreats_when_too_close() -> void:
 	# dist 150 < preferred 260 - band 40 = 220 → 后退
-	assert_int(RangedTask.kite_move(150.0, 260.0, 40.0)).is_equal(-1)
+	assert_int(KiteTask.kite_move(150.0, 260.0, 40.0)).is_equal(-1)
 
 func test_kite_move_band_edges_hold() -> void:
 	# 恰在环带边界（含端点）应驻守，不抖动
-	assert_int(RangedTask.kite_move(300.0, 260.0, 40.0)).is_equal(0)
-	assert_int(RangedTask.kite_move(220.0, 260.0, 40.0)).is_equal(0)
+	assert_int(KiteTask.kite_move(300.0, 260.0, 40.0)).is_equal(0)
+	assert_int(KiteTask.kite_move(220.0, 260.0, 40.0)).is_equal(0)
 
 # ── 子弹场景：根节点必须挂着脚本（防回归：曾漏 script= 导致发射时崩）────────────
 
