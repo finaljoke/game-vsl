@@ -18,3 +18,5 @@ texture = ExtResource("2_38ino")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1778868433]
 shape = SubResource("CapsuleShape2D_fcftc")
+
+[node name="BTPlayer" type="BTPlayer" parent="."]

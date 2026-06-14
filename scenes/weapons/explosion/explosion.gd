@@ -1,4 +1,5 @@
 # scenes/weapons/explosion/explosion.gd
+class_name Explosion
 extends Node2D
 
 const BASE_DAMAGE: float = 40.0

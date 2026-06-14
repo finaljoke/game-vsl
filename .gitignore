@@ -1,0 +1,5 @@
+.codegraph/
+
+# LimboAI GDExtension（~32MB 各平台二进制，不入库）
+# 装法见 CLAUDE.md「LimboAI 依赖」：从 AssetLib 或 GitHub release 装 v1.7.1 (gdextension-4.6)
+addons/limboai/

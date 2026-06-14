@@ -55,7 +55,7 @@ func add_xp(amount: float) -> void:
 	xp += amount * xp_mult
 	while xp >= xp_threshold:
 		xp -= xp_threshold
-		xp_threshold *= 1.2
+		xp_threshold *= 1.15
 		level += 1
 		GameFeel.player_leveled_up.emit(level)
 		leveled_up.emit(level)

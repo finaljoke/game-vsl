@@ -58,7 +58,7 @@ func _get_player() -> Node2D:
 # ── Effect helpers ────────────────────────────────────────────────────────
 func _setup_shake_emitters() -> void:
 	_emitter_hit     = _make_emitter(4.0,  8.0, 0.08, 0.05, false)
-	_emitter_player  = _make_emitter(18.0, 5.0, 0.25, 0.15, true)
+	_emitter_player  = _make_emitter(18.0, 5.0, 0.25, 0.15, false)
 	_emitter_levelup = _make_emitter(10.0, 6.0, 0.15, 0.10, false)
 
 func _make_emitter(amplitude: float, frequency: float, duration: float, decay: float, rotational: bool) -> PhantomCameraNoiseEmitter2D:

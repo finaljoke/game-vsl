@@ -5,6 +5,7 @@ extends CanvasLayer
 @onready var xp_bar: ProgressBar = $XPBar
 @onready var timer_label: Label = $TimerLabel
 @onready var level_label: Label = $LevelLabel
+@onready var _gm = get_node("/root/GameManager")
 
 var _player: Player = null
 
@@ -18,5 +19,5 @@ func _process(_delta: float) -> void:
 	hp_bar.value = (_player.hp / _player.max_hp) * 100.0
 	xp_bar.value = _player.get_xp_percent() * 100.0
 	level_label.text = "Lv.%d" % _player.level
-	var t := int(GameManager.elapsed_time)
+	var t := int(_gm.elapsed_time)
 	timer_label.text = "%02d:%02d" % [t / 60, t % 60]

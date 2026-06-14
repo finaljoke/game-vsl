@@ -66,13 +66,13 @@ func test_add_xp_subtracts_threshold_on_level_up() -> void:
 
 func test_xp_threshold_scales_after_level_up() -> void:
 	_player.add_xp(100.0)
-	assert_float(_player.xp_threshold).is_equal_approx(120.0, 0.001)
+	assert_float(_player.xp_threshold).is_equal_approx(115.0, 0.001)
 
 func test_two_level_ups_scale_threshold_twice() -> void:
-	_player.add_xp(100.0)  # level 2, threshold → 120
-	_player.add_xp(120.0)  # level 3, threshold → 144
+	_player.add_xp(100.0)  # level 2, threshold → 115
+	_player.add_xp(115.0)  # level 3, threshold → 132.25
 	assert_int(_player.level).is_equal(3)
-	assert_float(_player.xp_threshold).is_equal_approx(144.0, 0.001)
+	assert_float(_player.xp_threshold).is_equal_approx(132.25, 0.001)
 
 # ── XP 百分比 ─────────────────────────────────────────────────────────────
 
@@ -91,18 +91,18 @@ func test_get_xp_percent_just_before_level_up() -> void:
 # ── while 修复验证：单次 add_xp 触发多次升级 ──────────────────────────────
 
 func test_single_add_xp_can_level_up_twice() -> void:
-	# 100 升到 level 2，再 120 升到 level 3，共需 220 XP
+	# 100 升到 level 2，再 115 升到 level 3，共需 215 XP
 	_player.add_xp(220.0)
 	assert_int(_player.level).is_equal(3)
 
 func test_single_add_xp_double_levelup_xp_remainder() -> void:
-	# 250 XP：消耗 100 + 120 = 220，剩余 30
+	# 250 XP：消耗 100 + 115 = 215，剩余 35
 	_player.add_xp(250.0)
 	assert_int(_player.level).is_equal(3)
-	assert_float(_player.xp).is_equal_approx(30.0, 0.001)
+	assert_float(_player.xp).is_equal_approx(35.0, 0.001)
 
 func test_single_add_xp_triple_levelup() -> void:
-	# 100 + 120 + 144 = 364 XP 升到 level 4
+	# 100 + 115 + 132.25 = 347.25 XP 升到 level 4
 	_player.add_xp(364.0)
 	assert_int(_player.level).is_equal(4)
 
