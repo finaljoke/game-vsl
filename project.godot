@@ -19,6 +19,7 @@ run/main_scene="res://scenes/main/main.tscn"
 
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 GameManager="*res://autoloads/game_manager.gd"
+SoundManager="*res://addons/sound_manager/sound_manager.gd"
 GameFeel="*res://autoloads/game_feel.gd"
 
 [display]
@@ -29,7 +30,7 @@ window/size/resizable=false
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/sound_manager/plugin.cfg")
 
 [input]
 

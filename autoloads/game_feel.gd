@@ -9,6 +9,15 @@ signal xp_collected(position: Vector2)
 signal player_died
 signal item_selected
 
+# ── Audio resources ───────────────────────────────────────────────────────
+const SFX_HIT          = preload("res://assets/audio/sfx/hit.wav")
+const SFX_DEATH        = preload("res://assets/audio/sfx/enemy_death.wav")
+const SFX_XP           = preload("res://assets/audio/sfx/xp_collect.wav")
+const SFX_LEVELUP      = preload("res://assets/audio/sfx/level_up.wav")
+const SFX_PLAYER_HURT  = preload("res://assets/audio/sfx/player_hurt.wav")
+const SFX_PLAYER_DEATH = preload("res://assets/audio/sfx/player_death.wav")
+const SFX_ITEM_SELECT  = preload("res://assets/audio/sfx/item_select.wav")
+
 # ── Shake state ───────────────────────────────────────────────────────────
 var _shake_magnitude: float = 0.0
 var _shake_decay: float = 0.0
@@ -18,19 +27,9 @@ var _camera: Camera2D = null
 var _player_node: Node2D = null
 var _flash_rect: ColorRect = null
 
-# ── Audio players ─────────────────────────────────────────────────────────
-var _sfx_hit: AudioStreamPlayer
-var _sfx_death: AudioStreamPlayer
-var _sfx_xp: AudioStreamPlayer
-var _sfx_levelup: AudioStreamPlayer
-var _sfx_player_hurt: AudioStreamPlayer
-var _sfx_player_death: AudioStreamPlayer
-var _sfx_item_select: AudioStreamPlayer
-
 # ── Setup ─────────────────────────────────────────────────────────────────
 func _ready() -> void:
 	_setup_flash_rect()
-	_setup_audio()
 	enemy_hit.connect(_on_enemy_hit)
 	enemy_died.connect(_on_enemy_died)
 	player_hit.connect(_on_player_hit)
@@ -48,22 +47,6 @@ func _setup_flash_rect() -> void:
 	_flash_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(_flash_rect)
-
-func _setup_audio() -> void:
-	_sfx_hit         = _make_sfx_player("res://assets/audio/sfx/hit.wav")
-	_sfx_death       = _make_sfx_player("res://assets/audio/sfx/enemy_death.wav")
-	_sfx_xp          = _make_sfx_player("res://assets/audio/sfx/xp_collect.wav")
-	_sfx_levelup     = _make_sfx_player("res://assets/audio/sfx/level_up.wav")
-	_sfx_player_hurt  = _make_sfx_player("res://assets/audio/sfx/player_hurt.wav")
-	_sfx_player_death = _make_sfx_player("res://assets/audio/sfx/player_death.wav")
-	_sfx_item_select  = _make_sfx_player("res://assets/audio/sfx/item_select.wav")
-
-func _make_sfx_player(path: String) -> AudioStreamPlayer:
-	var player := AudioStreamPlayer.new()
-	add_child(player)
-	if ResourceLoader.exists(path):
-		player.stream = load(path)
-	return player
 
 # ── Process: screen shake ─────────────────────────────────────────────────
 func _process(delta: float) -> void:
@@ -154,40 +137,36 @@ func _spawn_damage_number(amount: float, pos: Vector2) -> void:
 	tween.tween_property(label, "modulate:a", 0.0, 0.6)
 	tween.finished.connect(func(): if is_instance_valid(label): label.queue_free())
 
-func _play_sfx(player: AudioStreamPlayer) -> void:
-	if is_instance_valid(player) and player.stream != null:
-		player.play()
-
 # ── Signal handlers ───────────────────────────────────────────────────────
 func _on_enemy_hit(amount: float, position: Vector2, enemy: Node2D) -> void:
 	_flash_node(enemy, Color.WHITE, 0.08)
 	_spawn_damage_number(amount, position)
-	_play_sfx(_sfx_hit)
+	SoundManager.play_sound(SFX_HIT)
 
 func _on_enemy_died(position: Vector2) -> void:
 	_spawn_particles(position)
 	_shake(3.0, 0.1)
-	_play_sfx(_sfx_death)
+	SoundManager.play_sound(SFX_DEATH)
 
 func _on_player_hit(_amount: float) -> void:
 	_shake(8.0, 0.3)
 	var p := _get_player()
 	if p != null:
 		_flash_node(p, Color(1.0, 0.3, 0.3), 0.12)
-	_play_sfx(_sfx_player_hurt)
+	SoundManager.play_sound(SFX_PLAYER_HURT)
 
 func _on_player_leveled_up(_level: int) -> void:
 	_screen_flash(Color(1, 1, 1, 0.6), 0.15)
 	_shake(5.0, 0.2)
-	_play_sfx(_sfx_levelup)
+	SoundManager.play_sound(SFX_LEVELUP)
 
 func _on_xp_collected(_position: Vector2) -> void:
-	_play_sfx(_sfx_xp)
+	SoundManager.play_sound(SFX_XP)
 
 func _on_player_died() -> void:
 	_screen_flash(Color(1, 0, 0, 0.4), 0.5)
 	_shake(12.0, 0.5)
-	_play_sfx(_sfx_player_death)
+	SoundManager.play_sound(SFX_PLAYER_DEATH)
 
 func _on_item_selected() -> void:
-	_play_sfx(_sfx_item_select)
+	SoundManager.play_ui_sound(SFX_ITEM_SELECT)
