@@ -12,7 +12,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_timer += delta
-	if _timer >= cooldown:
+	var effective_cd := cooldown / (_player as Player).attack_speed_mult
+	if _timer >= effective_cd:
 		_timer = 0.0
 		attack()
 
