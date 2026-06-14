@@ -1,0 +1,32 @@
+# autoloads/card_pool.gd
+extends Node
+
+const CARDS: Array[Dictionary] = [
+	{ "id": "knife",       "name": "飞刀",      "desc": "朝最近敌人射出飞刀",    "type": "weapon",  "condition": "no:knife"      },
+	{ "id": "orb",         "name": "护盾球",    "desc": "绕身旋转的能量球",      "type": "weapon",  "condition": "no:orb"        },
+	{ "id": "explosion",   "name": "爆炸",      "desc": "随机位置触发范围爆炸",  "type": "weapon",  "condition": "no:explosion"  },
+	{ "id": "knife_2",     "name": "飞刀 Lv.2",    "desc": "冷却 1.0s → 0.5s",         "type": "upgrade", "condition": "upgrade:knife"     },
+	{ "id": "orb_2",       "name": "护盾球 Lv.2",  "desc": "护盾球数量 2 → 3",          "type": "upgrade", "condition": "upgrade:orb"       },
+	{ "id": "explosion_2", "name": "爆炸 Lv.2",    "desc": "冷却 3.0s → 1.5s",         "type": "upgrade", "condition": "upgrade:explosion" },
+	{ "id": "perk_speed",  "name": "移速提升",  "desc": "移动速度永久 +15%",     "type": "perk",    "condition": ""              },
+	{ "id": "perk_hp",     "name": "生命上限",  "desc": "最大 HP +20，当场补满", "type": "perk",    "condition": ""              },
+	{ "id": "perk_attack", "name": "攻速提升",  "desc": "攻击速度永久 +15%",     "type": "perk",    "condition": ""              },
+	{ "id": "perk_xp",     "name": "XP 加成",   "desc": "XP 获取量永久 +25%",    "type": "perk",    "condition": ""              },
+]
+
+const KNIFE_SCENE := preload("res://scenes/weapons/knife/knife_weapon.tscn")
+const ORB_SCENE := preload("res://scenes/weapons/orb/orb_weapon.tscn")
+const ORB_SHIELD_SCENE := preload("res://scenes/weapons/orb/orb_shield.tscn")
+const EXPLOSION_SCENE := preload("res://scenes/weapons/explosion/explosion_weapon.tscn")
+
+func pick(_player: Player, _count: int = 3) -> Array[Dictionary]:
+	return []
+
+func apply(_card: Dictionary, _player: Player) -> void:
+	pass
+
+func register_weapon(player: Player, weapon_id: String) -> void:
+	player.owned_weapons[weapon_id] = 1
+
+func _check_condition(_condition: String, _player: Player) -> bool:
+	return false

@@ -11,16 +11,18 @@ config_version=5
 [application]
 
 config/name="game_0_vsl"
+run/main_scene="res://scenes/main/main.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
-run/main_scene="res://scenes/main/main.tscn"
 
 [autoload]
 
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 GameManager="*res://autoloads/game_manager.gd"
-SoundManager="*res://addons/sound_manager/sound_manager.gd"
 GameFeel="*res://autoloads/game_feel.gd"
+CardPool="*res://autoloads/card_pool.gd"
+SoundManager="*uid://bg6usvpgisg7x"
+PhantomCameraManager="*uid://duq6jhf6unyis"
 
 [display]
 
@@ -30,7 +32,7 @@ window/size/resizable=false
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/sound_manager/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/godot_ai/plugin.cfg", "res://addons/phantom_camera/plugin.cfg", "res://addons/sound_manager/plugin.cfg")
 
 [input]
 

@@ -1,4 +1,5 @@
 # scenes/weapons/orb/orb_shield.gd
+class_name OrbShield
 extends Node2D
 
 const DAMAGE: float = 8.0
