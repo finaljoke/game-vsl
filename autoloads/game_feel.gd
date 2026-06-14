@@ -8,6 +8,8 @@ signal player_leveled_up(level: int)
 signal xp_collected(position: Vector2)
 signal player_died
 signal item_selected
+# Boss 登场前 BOSS_WARNING_LEAD 秒由 spawner 发一次；HUD 监听并弹中央顶部红色 Label
+signal boss_incoming
 
 # ── Audio resources ───────────────────────────────────────────────────────
 const SFX_HIT          = preload("res://assets/audio/sfx/hit.wav")
@@ -58,7 +60,7 @@ func _get_player() -> Node2D:
 # ── Effect helpers ────────────────────────────────────────────────────────
 func _setup_shake_emitters() -> void:
 	_emitter_hit     = _make_emitter(4.0,  8.0, 0.08, 0.05, false)
-	_emitter_player  = _make_emitter(18.0, 5.0, 0.25, 0.15, false)
+	_emitter_player  = _make_emitter(24.0, 5.0, 0.25, 0.15, false)
 	_emitter_levelup = _make_emitter(10.0, 6.0, 0.15, 0.10, false)
 
 func _make_emitter(amplitude: float, frequency: float, duration: float, decay: float, rotational: bool) -> PhantomCameraNoiseEmitter2D:
@@ -133,20 +135,32 @@ func _spawn_damage_number(amount: float, pos: Vector2) -> void:
 
 # ── Signal handlers ───────────────────────────────────────────────────────
 func _on_enemy_hit(amount: float, position: Vector2, enemy: Node2D) -> void:
-	_flash_node(enemy, Color.WHITE, 0.08)
+	# 用 >1.0 的 modulate 真正"过曝"贴图；纯 Color.WHITE 是 identity 看不出来。
+	_flash_node(enemy, Color(2.5, 2.5, 2.5), 0.15)
+	if enemy.has_method("_apply_knockback"):
+		enemy._apply_knockback(position)
 	_spawn_damage_number(amount, position)
 	SoundManager.play_sound(SFX_HIT)
 
 func _on_enemy_died(position: Vector2) -> void:
 	_spawn_particles(position)
 	_emitter_hit.emit()
+	_trigger_hitstop(0.05)
 	SoundManager.play_sound(SFX_DEATH)
+
+# Engine.time_scale 全局拖慢制造击杀冲击感；恢复 timer 必须 ignore_time_scale，
+# 否则它自己也会被拖慢导致永远不归位。
+func _trigger_hitstop(duration: float) -> void:
+	Engine.time_scale = 0.05
+	var t := get_tree().create_timer(duration, false, true, true)
+	t.timeout.connect(func() -> void: Engine.time_scale = 1.0)
 
 func _on_player_hit(_amount: float) -> void:
 	_emitter_player.emit()
+	_screen_flash(Color(1.0, 0.0, 0.0, 0.25), 0.18)
 	var p := _get_player()
 	if p != null:
-		_flash_node(p, Color(1.0, 0.3, 0.3), 0.12)
+		_flash_node(p, Color(1.0, 0.2, 0.2), 0.2)
 	SoundManager.play_sound(SFX_PLAYER_HURT)
 
 func _on_player_leveled_up(_level: int) -> void:

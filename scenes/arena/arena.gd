@@ -6,7 +6,7 @@ const DEFAULT_CONFIG = preload("res://data/arenas/default.tres")
 
 @export var config: ArenaConfig
 
-@onready var _bg: ColorRect = $Background
+@onready var _bg: Node2D = $Background  # 挂了 floor.gd，自绘地砖网格
 @onready var _wall_top: StaticBody2D = $WallTop
 @onready var _wall_bottom: StaticBody2D = $WallBottom
 @onready var _wall_left: StaticBody2D = $WallLeft
@@ -22,10 +22,8 @@ func _apply_config() -> void:
 	var w := config.size.x
 	var h := config.size.y
 	var t := config.wall_thickness
-	# 背景：anchors=0 的 ColorRect 用 offset_right/offset_bottom 控制尺寸
-	_bg.offset_right = w
-	_bg.offset_bottom = h
-	_bg.color = config.bg_color
+	# 背景：floor.gd 按 ArenaConfig.size 自绘地砖网格；player_spawn 保留参数以兼容旧签名
+	_bg.setup(config.size, config.player_spawn)
 	# 4 面墙紧贴竞技场外缘，shape 是 .tscn 里的 sub_resource（单实例，原地改）
 	_set_wall(_wall_top,    Vector2(w * 0.5, -t * 0.5),     Vector2(w, t))
 	_set_wall(_wall_bottom, Vector2(w * 0.5, h + t * 0.5),  Vector2(w, t))

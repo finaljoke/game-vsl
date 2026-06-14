@@ -84,6 +84,23 @@ func pick(player: Player, count: int = 3) -> Array[Dictionary]:
 	available.shuffle()
 	return available.slice(0, min(count, available.size()))
 
+# 卡片图标：从卡关联的武器 WeaponData.icon 取（数据驱动；perk 卡无图标返回 null）。
+func card_icon(card: Dictionary) -> Texture2D:
+	var weapon_id := _weapon_id_of(card)
+	if weapon_id == "":
+		return null
+	var data := WeaponDB.get_data(weapon_id)
+	return data.icon if data != null else null
+
+# 由卡 id/type 反推所属武器 id：weapon=本体，upgrade=去尾级数(knife_2→knife)，evolution=去 evolve_ 前缀。
+func _weapon_id_of(card: Dictionary) -> String:
+	var id: String = card["id"]
+	match card.get("type", ""):
+		"weapon":    return id
+		"upgrade":   return id.rsplit("_", true, 1)[0]
+		"evolution": return id.trim_prefix("evolve_")
+	return ""
+
 func apply(card: Dictionary, player: Player) -> void:
 	if card.get("type", "") == "perk":
 		player.perk_stacks[card["id"]] = player.perk_stacks.get(card["id"], 0) + 1
@@ -146,7 +163,8 @@ func _check_condition(condition: String, player: Player) -> bool:
 		return _is_evolve_ready(player, condition.substr(13))
 	return false
 
-# 进化解锁：武器到 max_level 且 evolution.requires_perk 已封顶
+# 进化解锁：武器到 max_level 且关联 perk 累积到阈值。
+# 阈值优先取 evolution.requires_perk_stacks（每个进化可独立放宽），缺省回退到 perk 的 max_stacks。
 func _is_evolve_ready(player: Player, weapon_id: String) -> bool:
 	if not player.has_weapon(weapon_id):
 		return false
@@ -158,10 +176,10 @@ func _is_evolve_ready(player: Player, weapon_id: String) -> bool:
 	if not data.evolution.has("requires_perk"):
 		return false
 	var perk_id := String(data.evolution["requires_perk"])
-	var cap := _perk_max_stacks(perk_id)
-	if cap <= 0:
+	var threshold := int(data.evolution.get("requires_perk_stacks", _perk_max_stacks(perk_id)))
+	if threshold <= 0:
 		return false
-	return player.perk_stacks.get(perk_id, 0) >= cap
+	return player.perk_stacks.get(perk_id, 0) >= threshold
 
 func _perk_max_stacks(perk_id: String) -> int:
 	for c in CARDS:

@@ -6,10 +6,10 @@
 
 [resource]
 script = ExtResource("1_data")
-id = "orb"
-display_name = "护盾球"
+id = "mega_orb"
+display_name = "巨型护盾球"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
-max_level = 3
-levels = [{"total_orbs": 2}, {"total_orbs": 3}, {"total_orbs": 4}]
-evolution = {"requires_perk": "perk_hp", "requires_perk_stacks": 5, "evolved_id": "mega_orb"}
+max_level = 1
+levels = [{"total_orbs": 8}]
+evolution = {}

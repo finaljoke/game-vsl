@@ -81,7 +81,8 @@ func test_pick_excludes_perk_at_max_stacks() -> void:
 		assert_str(card["id"]).is_not_equal("perk_speed")
 
 func test_pick_still_has_cards_when_all_capped() -> void:
-	# 所有有上限 perk 全满 + 所有武器升满（Lv.3）→ 只剩 perk_heal
+	# 所有有上限 perk 全满 + 所有武器升满 → 池里仍至少有 perk_heal（无上限兜底）+ 3 张进化卡
+	# 取 pool 全量（pick > pool size 直接返回所有可选），断言 perk_heal 一定在其中。
 	_stub_owns("knife", 3)
 	_stub_owns("orb", 3)
 	_stub_owns("explosion", 3)
@@ -90,10 +91,13 @@ func test_pick_still_has_cards_when_all_capped() -> void:
 	_player.perk_stacks["perk_attack"] = 8
 	_player.perk_stacks["perk_xp"] = 6
 	_player.perk_stacks["perk_damage"] = 8
-	var cards := CardPool.pick(_player, 3)
-	# 兜底卡 perk_heal 保证卡池不为空
+	var cards := CardPool.pick(_player, 20)
 	assert_int(cards.size()).is_greater_equal(1)
-	assert_str(cards[0]["id"]).is_equal("perk_heal")
+	var has_heal := false
+	for c in cards:
+		if c["id"] == "perk_heal":
+			has_heal = true
+	assert_bool(has_heal).is_true()
 
 # ── apply() 属性效果 ──────────────────────────────────────────────────────
 
@@ -188,3 +192,78 @@ func test_apply_orb_3_sets_level_and_orb_count() -> void:
 	for child in _player.get_children():
 		if child is OrbShield:
 			assert_int(child.total_orbs).is_equal(4)
+
+# ── apply() 进化：3 张进化卡命中真实 evolved .tres，不再走 source 数据兜底 ──────
+
+func test_apply_evolve_knife_grants_thousand_edge() -> void:
+	# 拉满源武器 + 进化（走真实 thousand_edge.tres，不再 fallback 到 knife）
+	CardPool.apply({"id": "knife"}, _player)
+	CardPool.apply({"id": "knife_2"}, _player)
+	CardPool.apply({"id": "knife_3"}, _player)
+	CardPool.apply({"id": "evolve_knife", "type": "evolution"}, _player)
+	assert_bool(_player.has_weapon("thousand_edge")).is_true()
+	assert_bool(_player.has_weapon("knife")).is_false()
+	# 新挂上的 KnifeWeapon 实例的 data.id 必须是 thousand_edge 且 cooldown=0.15、pierce=8
+	for child in _player.get_children():
+		if child is KnifeWeapon and child.data != null and child.data.id == "thousand_edge":
+			assert_float(child.cooldown).is_equal_approx(0.15, 0.001)
+			assert_int(child.pierce).is_equal(8)
+
+func test_apply_evolve_orb_grants_mega_orb() -> void:
+	CardPool.apply({"id": "orb"}, _player)
+	CardPool.apply({"id": "orb_2"}, _player)
+	CardPool.apply({"id": "orb_3"}, _player)
+	CardPool.apply({"id": "evolve_orb", "type": "evolution"}, _player)
+	assert_bool(_player.has_weapon("mega_orb")).is_true()
+	assert_bool(_player.has_weapon("orb")).is_false()
+	for child in _player.get_children():
+		if child is OrbWeapon and child.data != null and child.data.id == "mega_orb":
+			assert_int(child.total_orbs).is_equal(8)
+
+func test_apply_evolve_explosion_grants_nuke() -> void:
+	CardPool.apply({"id": "explosion"}, _player)
+	CardPool.apply({"id": "explosion_2"}, _player)
+	CardPool.apply({"id": "explosion_3"}, _player)
+	CardPool.apply({"id": "evolve_explosion", "type": "evolution"}, _player)
+	assert_bool(_player.has_weapon("nuke")).is_true()
+	assert_bool(_player.has_weapon("explosion")).is_false()
+	for child in _player.get_children():
+		if child is ExplosionWeapon and child.data != null and child.data.id == "nuke":
+			assert_float(child.cooldown).is_equal_approx(0.5, 0.001)
+
+# ── 进化解锁阈值：读 evolution.requires_perk_stacks（半值），不再要求 perk 满层 ──
+
+func test_evolve_unlocks_at_half_perk_stacks() -> void:
+	# knife Lv.3 + perk_attack 4 层（perk cap 是 8，半值 4）→ evolve_knife 应被 pick 选中
+	_stub_owns("knife", 3)
+	_player.perk_stacks["perk_attack"] = 4
+	var cards := CardPool.pick(_player, 20)
+	var found := false
+	for c in cards:
+		if c["id"] == "evolve_knife":
+			found = true
+	assert_bool(found).is_true()
+
+func test_evolve_locked_below_half_perk_stacks() -> void:
+	# knife Lv.3 + perk_attack 3 层 → 还差 1 层，进化卡不应出现
+	_stub_owns("knife", 3)
+	_player.perk_stacks["perk_attack"] = 3
+	var cards := CardPool.pick(_player, 20)
+	for c in cards:
+		assert_str(c["id"]).is_not_equal("evolve_knife")
+
+func test_evolve_orb_uses_its_own_threshold() -> void:
+	# orb 的 requires_perk_stacks=5（perk_hp cap 是 10）；5 层够、4 层不够
+	_stub_owns("orb", 3)
+	_player.perk_stacks["perk_hp"] = 5
+	var cards5 := CardPool.pick(_player, 20)
+	var found5 := false
+	for c in cards5:
+		if c["id"] == "evolve_orb":
+			found5 = true
+	assert_bool(found5).is_true()
+
+	_player.perk_stacks["perk_hp"] = 4
+	var cards4 := CardPool.pick(_player, 20)
+	for c in cards4:
+		assert_str(c["id"]).is_not_equal("evolve_orb")

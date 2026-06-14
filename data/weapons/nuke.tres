@@ -6,10 +6,10 @@
 
 [resource]
 script = ExtResource("1_data")
-id = "explosion"
-display_name = "爆炸"
+id = "nuke"
+display_name = "核爆"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
-max_level = 3
-levels = [{"cooldown": 3.0}, {"cooldown": 1.5}, {"cooldown": 1.0}]
-evolution = {"requires_perk": "perk_damage", "requires_perk_stacks": 4, "evolved_id": "nuke"}
+max_level = 1
+levels = [{"cooldown": 0.5}]
+evolution = {}

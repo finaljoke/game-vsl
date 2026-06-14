@@ -6,10 +6,10 @@
 
 [resource]
 script = ExtResource("1_data")
-id = "knife"
-display_name = "飞刀"
+id = "thousand_edge"
+display_name = "千刃"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
-max_level = 3
-levels = [{"cooldown": 1.0, "pierce": 2}, {"cooldown": 0.5, "pierce": 2}, {"cooldown": 0.3, "pierce": 4}]
-evolution = {"requires_perk": "perk_attack", "requires_perk_stacks": 4, "evolved_id": "thousand_edge"}
+max_level = 1
+levels = [{"cooldown": 0.15, "pierce": 8}]
+evolution = {}

@@ -37,12 +37,23 @@ func test_brute_unlocks_at_120s() -> void:
 	var ids := _ids(_spawner._eligible_archetypes(120.0))
 	assert_bool(ids.has("brute")).is_true()
 
+func test_boss_locked_before_120s() -> void:
+	assert_bool(_ids(_spawner._eligible_archetypes(119.0)).has("boss")).is_false()
+
+func test_boss_unlocks_at_120s() -> void:
+	assert_bool(_ids(_spawner._eligible_archetypes(120.0)).has("boss")).is_true()
+
+func test_boss_after_is_120s() -> void:
+	# 提前到 120s 与 brute 同步解锁；HUD 在 120 - BOSS_WARNING_LEAD(=3) = 117s 收到预警
+	assert_float(_by_id("boss")["after"]).is_equal(120.0)
+
 func test_eligible_count_grows_by_threshold() -> void:
-	# 0s=2(normal,swarm)、60s=3(+ranged)、90s=4(+bomber)、120s=5(+brute)
+	# 0s=2(normal,swarm)、60s=3(+ranged)、90s=4(+bomber)、120s=6(+brute,+boss 同步解锁)
 	assert_int(_spawner._eligible_archetypes(0.0).size()).is_equal(2)
 	assert_int(_spawner._eligible_archetypes(60.0).size()).is_equal(3)
 	assert_int(_spawner._eligible_archetypes(90.0).size()).is_equal(4)
-	assert_int(_spawner._eligible_archetypes(120.0).size()).is_equal(5)
+	assert_int(_spawner._eligible_archetypes(120.0).size()).is_equal(6)
+	assert_int(_spawner._eligible_archetypes(180.0).size()).is_equal(6)
 
 # ── 原型三围倍率数学 ──────────────────────────────────────────────────────
 
@@ -81,6 +92,14 @@ func test_archetype_behaviors_are_correct() -> void:
 	assert_str(_by_id("brute")["behavior"]).is_equal("chase")
 	assert_str(_by_id("ranged")["behavior"]).is_equal("ranged")
 	assert_str(_by_id("bomber")["behavior"]).is_equal("bomber")
+	assert_str(_by_id("boss")["behavior"]).is_equal("boss")
+
+func test_boss_is_tankier_and_larger_than_brute() -> void:
+	# Boss 是稀有大体型阶段杀手：HP/体型显著高于 brute
+	var brute := _by_id("brute")
+	var boss := _by_id("boss")
+	assert_float(boss["hp"]).is_greater(brute["hp"])
+	assert_float(boss["scale"]).is_greater(brute["scale"])
 
 # ── helpers ───────────────────────────────────────────────────────────────
 

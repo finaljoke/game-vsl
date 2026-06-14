@@ -8,9 +8,14 @@ const KiteTask := preload("res://scenes/enemies/ai/atoms/bt_kite_target.gd")
 const HpBelow := preload("res://scenes/enemies/ai/atoms/bt_hp_below.gd")
 const ProjectileScene := preload("res://scenes/enemies/enemy_projectile.tscn")
 
-const CHASE_PATH  := "res://scenes/enemies/ai/atoms/bt_chase_target.gd"
-const RANGED_PATH := "res://scenes/enemies/ai/atoms/bt_kite_target.gd"
-const BOMBER_PATH := "res://scenes/enemies/ai/atoms/bt_bomber_attack.gd"
+const CHASE_PATH    := "res://scenes/enemies/ai/atoms/bt_chase_target.gd"
+const RANGED_PATH   := "res://scenes/enemies/ai/atoms/bt_kite_target.gd"
+const BOMBER_PATH   := "res://scenes/enemies/ai/atoms/bt_bomber_attack.gd"
+const MOVE_PATH     := "res://scenes/enemies/ai/atoms/bt_move_to_target.gd"
+const SUMMON_PATH   := "res://scenes/enemies/ai/atoms/bt_spawn_minions.gd"
+const FIRE_PATH     := "res://scenes/enemies/ai/atoms/bt_fire_projectile.gd"
+const COOLDOWN_PATH := "res://scenes/enemies/ai/atoms/bt_cooldown_ready.gd"
+const WAIT_PATH     := "res://scenes/enemies/ai/atoms/bt_wait.gd"
 
 # ── EnemyBT.build：每种 behavior 返回非空树且 root_task 类型正确 ──────────────
 
@@ -49,6 +54,40 @@ func test_boss_phase_guards_have_correct_thresholds() -> void:
 	var phase2_guard := bt.root_task.get_child(1).get_child(0) as BTCondition
 	assert_float(phase3_guard.threshold).is_equal_approx(0.3, 0.001)
 	assert_float(phase2_guard.threshold).is_equal_approx(0.7, 0.001)
+
+func test_boss_phase1_fallback_is_move_to_target() -> void:
+	# 第 3 个分支是 phase1 fallback：MoveToTarget(desired_dist=0)
+	var bt := EnemyBT.build("boss")
+	var phase1 := bt.root_task.get_child(2)
+	assert_str(phase1.get_script().resource_path).is_equal(MOVE_PATH)
+	assert_float(phase1.desired_dist).is_equal_approx(0.0, 0.001)
+
+func test_boss_phase2_subtree_has_cooldown_then_summon() -> void:
+	# phase2_tree = Selector[Sequence[CooldownReady, SpawnMinions], MoveToTarget]
+	var bt := EnemyBT.build("boss")
+	var phase2 := bt.root_task.get_child(1).get_child(1)
+	assert_object(phase2).is_instanceof(BTSelector)
+	var summon_seq := phase2.get_child(0)
+	assert_object(summon_seq).is_instanceof(BTSequence)
+	assert_str(summon_seq.get_child(0).get_script().resource_path).is_equal(COOLDOWN_PATH)
+	assert_str(summon_seq.get_child(1).get_script().resource_path).is_equal(SUMMON_PATH)
+	assert_int(summon_seq.get_child(1).count).is_equal(3)
+	# fallback 应是 MoveToTarget
+	assert_str(phase2.get_child(1).get_script().resource_path).is_equal(MOVE_PATH)
+
+func test_boss_phase3_subtree_has_cooldown_fire_wait() -> void:
+	# phase3_tree = Selector[Sequence[CooldownReady, FireProjectile, Wait], MoveToTarget]
+	var bt := EnemyBT.build("boss")
+	var phase3 := bt.root_task.get_child(0).get_child(1)
+	assert_object(phase3).is_instanceof(BTSelector)
+	var fire_seq := phase3.get_child(0)
+	assert_object(fire_seq).is_instanceof(BTSequence)
+	assert_str(fire_seq.get_child(0).get_script().resource_path).is_equal(COOLDOWN_PATH)
+	assert_str(fire_seq.get_child(1).get_script().resource_path).is_equal(FIRE_PATH)
+	assert_str(fire_seq.get_child(2).get_script().resource_path).is_equal(WAIT_PATH)
+	# 5 连发扇形
+	assert_int(fire_seq.get_child(1).count).is_equal(5)
+	assert_str(phase3.get_child(1).get_script().resource_path).is_equal(MOVE_PATH)
 
 # ── kite_move：三段距离决策（1=靠近 / 0=驻守开火 / -1=后退）─────────────────
 
