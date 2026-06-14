@@ -13,5 +13,7 @@ func attack() -> void:
 	if target == null:
 		return
 	var explosion := EXPLOSION_SCENE.instantiate()
+	explosion.damage = explosion.BASE_DAMAGE * (_player as Player).damage_mult
 	get_ysort().add_child(explosion)
 	explosion.global_position = target.global_position
+	explosion.detonate()

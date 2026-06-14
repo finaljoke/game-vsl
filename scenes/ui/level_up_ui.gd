@@ -19,6 +19,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	_gm.level_up_triggered.connect(_on_level_up)
+	_gm.game_over_triggered.connect(func() -> void: visible = false)
+	_gm.victory_triggered.connect(func() -> void: visible = false)
 
 func _on_level_up() -> void:
 	visible = true

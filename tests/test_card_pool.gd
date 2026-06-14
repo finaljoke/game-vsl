@@ -37,22 +37,44 @@ func test_pick_excludes_upgrade_when_weapon_at_level2() -> void:
 		assert_str(card["id"]).is_not_equal("knife_2")
 
 func test_pick_returns_all_available_when_pool_smaller_than_count() -> void:
-	# 三种武器都升到 Lv.2 → 只剩 4 张属性牌
+	# 三种武器都升到 Lv.2 → 只剩 6 张属性牌（5 种有上限 perk + perk_heal 无上限）
 	_player.owned_weapons["knife"] = 2
 	_player.owned_weapons["orb"] = 2
 	_player.owned_weapons["explosion"] = 2
-	var cards := CardPool.pick(_player, 10)
-	assert_int(cards.size()).is_equal(4)
+	var cards := CardPool.pick(_player, 20)
+	assert_int(cards.size()).is_equal(6)
 
 func test_pick_always_includes_perks() -> void:
-	var cards := CardPool.pick(_player, 10)
-	var perk_ids := ["perk_speed", "perk_hp", "perk_attack", "perk_xp"]
+	var cards := CardPool.pick(_player, 20)
+	var perk_ids := ["perk_speed", "perk_hp", "perk_attack", "perk_xp", "perk_damage", "perk_heal"]
 	for perk_id in perk_ids:
 		var found := false
 		for card in cards:
 			if card["id"] == perk_id:
 				found = true
 		assert_bool(found).is_true()
+
+func test_pick_excludes_perk_at_max_stacks() -> void:
+	# perk_speed 封顶 6 次
+	_player.perk_stacks["perk_speed"] = 6
+	var cards := CardPool.pick(_player, 20)
+	for card in cards:
+		assert_str(card["id"]).is_not_equal("perk_speed")
+
+func test_pick_still_has_cards_when_all_capped() -> void:
+	# 所有有上限 perk 全满 + 所有武器升满 → 只剩 perk_heal
+	_player.owned_weapons["knife"] = 2
+	_player.owned_weapons["orb"] = 2
+	_player.owned_weapons["explosion"] = 2
+	_player.perk_stacks["perk_speed"] = 6
+	_player.perk_stacks["perk_hp"] = 8
+	_player.perk_stacks["perk_attack"] = 6
+	_player.perk_stacks["perk_xp"] = 4
+	_player.perk_stacks["perk_damage"] = 8
+	var cards := CardPool.pick(_player, 3)
+	# 兜底卡 perk_heal 保证卡池不为空
+	assert_int(cards.size()).is_greater_equal(1)
+	assert_str(cards[0]["id"]).is_equal("perk_heal")
 
 # ── apply() 属性效果 ──────────────────────────────────────────────────────
 
@@ -86,3 +108,28 @@ func test_apply_perk_speed_stacks_multiplicatively() -> void:
 func test_apply_weapon_registers_in_owned_weapons() -> void:
 	CardPool.apply({"id": "knife"}, _player)
 	assert_int(_player.owned_weapons.get("knife", 0)).is_equal(1)
+
+func test_apply_perk_damage_multiplies_damage_mult() -> void:
+	CardPool.apply({"id": "perk_damage", "type": "perk"}, _player)
+	assert_float(_player.damage_mult).is_equal_approx(1.15, 0.001)
+
+func test_apply_perk_damage_stacks_multiplicatively() -> void:
+	CardPool.apply({"id": "perk_damage", "type": "perk"}, _player)
+	CardPool.apply({"id": "perk_damage", "type": "perk"}, _player)
+	assert_float(_player.damage_mult).is_equal_approx(1.15 * 1.15, 0.001)
+
+func test_apply_perk_heal_restores_hp() -> void:
+	_player.hp = 50.0
+	CardPool.apply({"id": "perk_heal", "type": "perk"}, _player)
+	# min(50 + 30, 100) = 80
+	assert_float(_player.hp).is_equal_approx(80.0, 0.001)
+
+func test_apply_perk_heal_does_not_overheal() -> void:
+	_player.hp = 90.0
+	CardPool.apply({"id": "perk_heal", "type": "perk"}, _player)
+	assert_float(_player.hp).is_equal_approx(100.0, 0.001)
+
+func test_apply_perk_tracks_stacks() -> void:
+	CardPool.apply({"id": "perk_speed", "type": "perk"}, _player)
+	CardPool.apply({"id": "perk_speed", "type": "perk"}, _player)
+	assert_int(_player.perk_stacks.get("perk_speed", 0)).is_equal(2)

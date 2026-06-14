@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://victory_screen_vsl"]
+
+[ext_resource type="Script" path="res://scenes/ui/victory_screen.gd" id="1_vstgd"]
+
+[node name="VictoryScreen" type="CanvasLayer" unique_id=1234567890]
+layer = 21
+script = ExtResource("1_vstgd")
+
+[node name="BG" type="ColorRect" parent="." unique_id=1234567891]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0.1, 0, 0.85)
+
+[node name="Panel" type="VBoxContainer" parent="BG" unique_id=1234567892]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
+
+[node name="TitleLabel" type="Label" parent="BG/Panel" unique_id=1234567893]
+layout_mode = 2
+text = "你赢了！"
+
+[node name="TimeLabel" type="Label" parent="BG/Panel" unique_id=1234567894]
+layout_mode = 2
+text = "存活时长：--"
+
+[node name="LevelLabel" type="Label" parent="BG/Panel" unique_id=1234567895]
+layout_mode = 2
+text = "达到等级：--"
+
+[node name="RestartButton" type="Button" parent="BG/Panel" unique_id=1234567896]
+layout_mode = 2
+text = "重新开始"

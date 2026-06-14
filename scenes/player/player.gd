@@ -6,6 +6,7 @@ signal leveled_up(new_level: int)
 signal died
 
 const SPEED: float = 200.0
+const CONTACT_MAX_SOURCES: int = 6  # 每帧最多被多少只敌人造成接触伤害
 
 var hp: float = 100.0
 var max_hp: float = 100.0
@@ -17,6 +18,8 @@ var owned_weapons: Dictionary = {}
 var speed_mult: float = 1.0
 var attack_speed_mult: float = 1.0
 var xp_mult: float = 1.0
+var damage_mult: float = 1.0
+var perk_stacks: Dictionary = {}
 
 @onready var hurt_box: Area2D = $HurtBox
 
@@ -27,10 +30,16 @@ func _physics_process(delta: float) -> void:
 	_check_contact_damage(delta)
 
 func _check_contact_damage(delta: float) -> void:
+	var n := 0
+	var total := 0.0
 	for body in hurt_box.get_overlapping_bodies():
 		if body.is_in_group("enemies"):
-			take_damage(body.CONTACT_DAMAGE * delta)
-			break
+			total += body.CONTACT_DAMAGE * delta
+			n += 1
+			if n >= CONTACT_MAX_SOURCES:
+				break
+	if total > 0.0:
+		take_damage(total)
 
 func take_damage(amount: float) -> void:
 	if _dead:

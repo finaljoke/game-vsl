@@ -12,7 +12,8 @@ func attack() -> void:
 	var target := get_nearest_enemy()
 	if target == null:
 		return
-	var projectile := PROJECTILE_SCENE.instantiate() as Area2D
+	var projectile := PROJECTILE_SCENE.instantiate()
+	projectile.damage = projectile.BASE_DAMAGE * (_player as Player).damage_mult
 	get_ysort().add_child(projectile)
 	projectile.global_position = _player.global_position
 	projectile.direction = (_player.global_position.direction_to(target.global_position))

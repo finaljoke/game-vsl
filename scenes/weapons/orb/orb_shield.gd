@@ -25,12 +25,15 @@ func _process(delta: float) -> void:
 	_tick_cooldowns(delta)
 
 func _check_hits() -> void:
+	var player := _player as Player
+	var dmg := DAMAGE * player.damage_mult
+	var cd := HIT_COOLDOWN / maxf(player.attack_speed_mult, 0.01)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if enemy in _hit_cooldowns:
 			continue
 		if global_position.distance_to((enemy as Node2D).global_position) <= ORB_RADIUS:
-			(enemy as Enemy).take_damage(DAMAGE)
-			_hit_cooldowns[enemy] = HIT_COOLDOWN
+			(enemy as Enemy).take_damage(dmg)
+			_hit_cooldowns[enemy] = cd
 
 func _tick_cooldowns(delta: float) -> void:
 	for key in _hit_cooldowns.keys():

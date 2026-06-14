@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://c4kjrxtuubd7" path="res://scenes/ui/hud.tscn" id="5_ouso4"]
 [ext_resource type="PackedScene" uid="uid://cowju2sko4cux" path="res://scenes/ui/level_up_ui.tscn" id="6_blune"]
 [ext_resource type="PackedScene" uid="uid://ymdn3de0nekv" path="res://scenes/ui/death_screen.tscn" id="7_th5th"]
+[ext_resource type="PackedScene" uid="uid://victory_screen_vsl" path="res://scenes/ui/victory_screen.tscn" id="8_vstsc"]
 [ext_resource type="Script" uid="uid://bd046eokvcnu2" path="res://addons/phantom_camera/scripts/phantom_camera_host/phantom_camera_host.gd" id="8_a8run"]
 [ext_resource type="Script" uid="uid://bhexx6mj1xv3q" path="res://addons/phantom_camera/scripts/phantom_camera/phantom_camera_2d.gd" id="9_ouso4"]
 [ext_resource type="Script" uid="uid://8umksf8e80fw" path="res://addons/phantom_camera/scripts/resources/tween_resource.gd" id="10_blune"]
@@ -33,10 +34,15 @@ position = Vector2(640, 360)
 
 [node name="DeathScreen" parent="." unique_id=1418589715 instance=ExtResource("7_th5th")]
 
+[node name="VictoryScreen" parent="." unique_id=1234567890 instance=ExtResource("8_vstsc")]
+
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1999577434]
+top_level = true
 position = Vector2(640, 360)
 
 [node name="PhantomCameraHost" type="Node" parent="Camera2D" unique_id=1296073927]
+process_priority = 300
+process_physics_priority = 300
 script = ExtResource("8_a8run")
 
 [node name="PhantomCamera2D" type="Node2D" parent="." unique_id=409623077]

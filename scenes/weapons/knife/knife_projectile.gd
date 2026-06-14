@@ -2,9 +2,10 @@
 extends Area2D
 
 const SPEED: float = 400.0
-const DAMAGE: float = 15.0
+const BASE_DAMAGE: float = 15.0
 const LIFETIME: float = 3.0
 
+var damage: float = BASE_DAMAGE  # 由 KnifeWeapon 注入 damage_mult 后设置
 var direction: Vector2 = Vector2.RIGHT
 var _age: float = 0.0
 var _hit: bool = false
@@ -20,6 +21,6 @@ func _physics_process(delta: float) -> void:
 	for body in get_overlapping_bodies():
 		if body.is_in_group("enemies"):
 			_hit = true
-			body.take_damage(DAMAGE)
+			body.take_damage(damage)
 			queue_free()
 			return
