@@ -27,8 +27,45 @@ func pick(player: Player, count: int = 3) -> Array[Dictionary]:
 	available.shuffle()
 	return available.slice(0, min(count, available.size()))
 
-func apply(_card: Dictionary, _player: Player) -> void:
-	pass
+func apply(card: Dictionary, player: Player) -> void:
+	match card["id"]:
+		"knife":
+			player.add_weapon(KNIFE_SCENE)
+			player.owned_weapons["knife"] = 1
+		"orb":
+			player.add_weapon(ORB_SCENE)
+			player.owned_weapons["orb"] = 1
+		"explosion":
+			player.add_weapon(EXPLOSION_SCENE)
+			player.owned_weapons["explosion"] = 1
+		"knife_2":
+			for child in player.get_children():
+				if child is KnifeWeapon:
+					child.cooldown = 0.5
+			player.owned_weapons["knife"] = 2
+		"orb_2":
+			var new_orb := ORB_SHIELD_SCENE.instantiate() as OrbShield
+			player.add_child(new_orb)
+			new_orb.orbit_index = 2
+			new_orb.total_orbs = 3
+			for child in player.get_children():
+				if child is OrbShield:
+					child.total_orbs = 3
+			player.owned_weapons["orb"] = 2
+		"explosion_2":
+			for child in player.get_children():
+				if child is ExplosionWeapon:
+					child.cooldown = 1.5
+			player.owned_weapons["explosion"] = 2
+		"perk_speed":
+			player.speed_mult *= 1.15
+		"perk_hp":
+			player.max_hp += 20.0
+			player.hp = min(player.hp + 20.0, player.max_hp)
+		"perk_attack":
+			player.attack_speed_mult *= 1.15
+		"perk_xp":
+			player.xp_mult *= 1.25
 
 func register_weapon(player: Player, weapon_id: String) -> void:
 	player.owned_weapons[weapon_id] = 1

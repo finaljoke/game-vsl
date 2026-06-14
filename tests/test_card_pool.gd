@@ -53,3 +53,36 @@ func test_pick_always_includes_perks() -> void:
 			if card["id"] == perk_id:
 				found = true
 		assert_bool(found).is_true()
+
+# ── apply() 属性效果 ──────────────────────────────────────────────────────
+
+func test_apply_perk_speed_multiplies_speed_mult() -> void:
+	CardPool.apply({"id": "perk_speed"}, _player)
+	assert_float(_player.speed_mult).is_equal_approx(1.15, 0.001)
+
+func test_apply_perk_hp_increases_max_hp() -> void:
+	CardPool.apply({"id": "perk_hp"}, _player)
+	assert_float(_player.max_hp).is_equal(120.0)
+
+func test_apply_perk_hp_heals_current_hp() -> void:
+	_player.hp = 80.0
+	CardPool.apply({"id": "perk_hp"}, _player)
+	# min(80 + 20, 120) = 100
+	assert_float(_player.hp).is_equal(100.0)
+
+func test_apply_perk_attack_multiplies_attack_speed_mult() -> void:
+	CardPool.apply({"id": "perk_attack"}, _player)
+	assert_float(_player.attack_speed_mult).is_equal_approx(1.15, 0.001)
+
+func test_apply_perk_xp_multiplies_xp_mult() -> void:
+	CardPool.apply({"id": "perk_xp"}, _player)
+	assert_float(_player.xp_mult).is_equal_approx(1.25, 0.001)
+
+func test_apply_perk_speed_stacks_multiplicatively() -> void:
+	CardPool.apply({"id": "perk_speed"}, _player)
+	CardPool.apply({"id": "perk_speed"}, _player)
+	assert_float(_player.speed_mult).is_equal_approx(1.15 * 1.15, 0.001)
+
+func test_apply_weapon_registers_in_owned_weapons() -> void:
+	CardPool.apply({"id": "knife"}, _player)
+	assert_int(_player.owned_weapons.get("knife", 0)).is_equal(1)
