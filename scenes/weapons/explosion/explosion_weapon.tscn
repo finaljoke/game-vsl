@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b3wtsjec1aqh1"]
+
+[ext_resource type="Script" uid="uid://de26onqsskv3m" path="res://scenes/weapons/explosion/explosion_weapon.gd" id="1_fgda8"]
+
+[node name="ExplosionWeapon" type="Node" unique_id=695706662]
+script = ExtResource("1_fgda8")
