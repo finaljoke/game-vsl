@@ -70,7 +70,7 @@ func _make_card(card: Dictionary) -> Control:
 	var type_lbl := Label.new()
 	type_lbl.text = TYPE_LABELS[card["type"]]
 	type_lbl.add_theme_color_override("font_color", color)
-	type_lbl.add_theme_font_size_override("font_size", 10)
+	type_lbl.add_theme_font_size_override("font_size", 12)
 	type_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_child(type_lbl)
 
@@ -83,13 +83,13 @@ func _make_card(card: Dictionary) -> Control:
 	var desc_lbl := Label.new()
 	desc_lbl.text = card["desc"]
 	desc_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-	desc_lbl.add_theme_font_size_override("font_size", 11)
+	desc_lbl.add_theme_font_size_override("font_size", 13)
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_child(desc_lbl)
 
 	if card["type"] == "upgrade":
-		panel.scale = Vector2(1.04, 1.04)
+		panel.scale = Vector2(1.08, 1.08)
 
 	panel.gui_input.connect(func(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.pressed \
