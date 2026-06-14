@@ -40,5 +40,7 @@ position = Vector2(640, 360)
 script = ExtResource("8_a8run")
 
 [node name="PhantomCamera2D" type="Node2D" parent="." unique_id=409623077]
+position = Vector2(640, 360)
 script = ExtResource("9_ouso4")
 tween_resource = SubResource("Resource_th5th")
+noise_emitter_layer = 1
