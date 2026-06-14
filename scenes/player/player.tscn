@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://b1kdom6ab5bob"]
+
+[ext_resource type="Script" uid="uid://bq4j3bdlw2af4" path="res://scenes/player/player.gd" id="1_dovo2"]
+[ext_resource type="Texture2D" uid="uid://bu6prmfrsmw5f" path="res://icon.svg" id="2_gmlin"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_lvxji"]
+radius = 12.0
+height = 24.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_p47bc"]
+radius = 12.0
+height = 24.0
+
+[node name="Player" type="CharacterBody2D" unique_id=1093608866 groups=["player"]]
+collision_layer = 2
+script = ExtResource("1_dovo2")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1288919572]
+modulate = Color(0.2, 0.6, 1, 1)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("2_gmlin")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=407406196]
+shape = SubResource("CapsuleShape2D_lvxji")
+
+[node name="HurtBox" type="Area2D" parent="." unique_id=2114858373]
+collision_layer = 2
+collision_mask = 4
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox" unique_id=1698054624]
+shape = SubResource("CapsuleShape2D_p47bc")
