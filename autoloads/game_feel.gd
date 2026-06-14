@@ -18,18 +18,19 @@ const SFX_PLAYER_HURT  = preload("res://assets/audio/sfx/player_hurt.wav")
 const SFX_PLAYER_DEATH = preload("res://assets/audio/sfx/player_death.wav")
 const SFX_ITEM_SELECT  = preload("res://assets/audio/sfx/item_select.wav")
 
-# ── Shake state ───────────────────────────────────────────────────────────
-var _shake_magnitude: float = 0.0
-var _shake_decay: float = 0.0
+# ── Shake emitters ────────────────────────────────────────────────────────
+var _emitter_hit: PhantomCameraNoiseEmitter2D
+var _emitter_player: PhantomCameraNoiseEmitter2D
+var _emitter_levelup: PhantomCameraNoiseEmitter2D
 
 # ── Cached references ─────────────────────────────────────────────────────
-var _camera: Camera2D = null
 var _player_node: Node2D = null
 var _flash_rect: ColorRect = null
 
 # ── Setup ─────────────────────────────────────────────────────────────────
 func _ready() -> void:
 	_setup_flash_rect()
+	_setup_shake_emitters()
 	enemy_hit.connect(_on_enemy_hit)
 	enemy_died.connect(_on_enemy_died)
 	player_hit.connect(_on_player_hit)
@@ -48,39 +49,32 @@ func _setup_flash_rect() -> void:
 	_flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(_flash_rect)
 
-# ── Process: screen shake ─────────────────────────────────────────────────
-func _process(delta: float) -> void:
-	if _shake_magnitude <= 0.0:
-		return
-	_shake_magnitude = max(0.0, _shake_magnitude - _shake_decay * delta)
-	var cam := _get_camera()
-	if cam == null:
-		return
-	if _shake_magnitude < 0.1:
-		cam.offset = Vector2.ZERO
-		_shake_magnitude = 0.0
-	else:
-		cam.offset = Vector2(
-			randf_range(-_shake_magnitude, _shake_magnitude),
-			randf_range(-_shake_magnitude, _shake_magnitude)
-		)
-
 # ── Lazy lookups ──────────────────────────────────────────────────────────
-func _get_camera() -> Camera2D:
-	if _camera == null or not is_instance_valid(_camera):
-		_camera = get_viewport().get_camera_2d()
-	return _camera
-
 func _get_player() -> Node2D:
 	if _player_node == null or not is_instance_valid(_player_node):
 		_player_node = get_tree().get_first_node_in_group("player") as Node2D
 	return _player_node
 
 # ── Effect helpers ────────────────────────────────────────────────────────
-func _shake(magnitude: float, duration: float) -> void:
-	if magnitude > _shake_magnitude:
-		_shake_magnitude = magnitude
-		_shake_decay = magnitude / duration
+func _setup_shake_emitters() -> void:
+	_emitter_hit     = _make_emitter(4.0,  8.0, 0.08, 0.05, false)
+	_emitter_player  = _make_emitter(18.0, 5.0, 0.25, 0.15, true)
+	_emitter_levelup = _make_emitter(10.0, 6.0, 0.15, 0.10, false)
+
+func _make_emitter(amplitude: float, frequency: float, duration: float, decay: float, rotational: bool) -> PhantomCameraNoiseEmitter2D:
+	var noise := PhantomCameraNoise2D.new()
+	noise.amplitude = amplitude
+	noise.frequency = frequency
+	noise.positional_noise = true
+	noise.rotational_noise = rotational
+	noise.randomize_noise_seed = true
+	var emitter := PhantomCameraNoiseEmitter2D.new()
+	emitter.noise = noise
+	emitter.duration = duration
+	emitter.decay_time = decay
+	emitter.continuous = false
+	add_child(emitter)
+	return emitter
 
 func _flash_node(node: Node2D, color: Color, duration: float) -> void:
 	if not is_instance_valid(node):
@@ -145,11 +139,11 @@ func _on_enemy_hit(amount: float, position: Vector2, enemy: Node2D) -> void:
 
 func _on_enemy_died(position: Vector2) -> void:
 	_spawn_particles(position)
-	_shake(3.0, 0.1)
+	_emitter_hit.emit()
 	SoundManager.play_sound(SFX_DEATH)
 
 func _on_player_hit(_amount: float) -> void:
-	_shake(8.0, 0.3)
+	_emitter_player.emit()
 	var p := _get_player()
 	if p != null:
 		_flash_node(p, Color(1.0, 0.3, 0.3), 0.12)
@@ -157,7 +151,7 @@ func _on_player_hit(_amount: float) -> void:
 
 func _on_player_leveled_up(_level: int) -> void:
 	_screen_flash(Color(1, 1, 1, 0.6), 0.15)
-	_shake(5.0, 0.2)
+	_emitter_levelup.emit()
 	SoundManager.play_sound(SFX_LEVELUP)
 
 func _on_xp_collected(_position: Vector2) -> void:
@@ -165,7 +159,7 @@ func _on_xp_collected(_position: Vector2) -> void:
 
 func _on_player_died() -> void:
 	_screen_flash(Color(1, 0, 0, 0.4), 0.5)
-	_shake(12.0, 0.5)
+	_emitter_player.emit()
 	SoundManager.play_sound(SFX_PLAYER_DEATH)
 
 func _on_item_selected() -> void:
