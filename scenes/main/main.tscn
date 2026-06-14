@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://ddd0fxqd4qx3t"]
+
+[ext_resource type="Script" path="res://scenes/main/main.gd" id="1_hujxm"]
+[ext_resource type="PackedScene" uid="uid://e14wnhvuikit" path="res://scenes/arena/arena.tscn" id="2_yyfjg"]
+[ext_resource type="Script" uid="uid://wtwbecx0hiab" path="res://scenes/enemies/enemy_spawner.gd" id="3_b1x3f"]
+[ext_resource type="PackedScene" uid="uid://b1kdom6ab5bob" path="res://scenes/player/player.tscn" id="4_a8run"]
+[ext_resource type="PackedScene" uid="uid://c4kjrxtuubd7" path="res://scenes/ui/hud.tscn" id="5_ouso4"]
+[ext_resource type="PackedScene" uid="uid://cowju2sko4cux" path="res://scenes/ui/level_up_ui.tscn" id="6_blune"]
+[ext_resource type="PackedScene" uid="uid://ymdn3de0nekv" path="res://scenes/ui/death_screen.tscn" id="7_th5th"]
+
+[node name="Main" type="Node" unique_id=1654845379]
+script = ExtResource("1_hujxm")
+
+[node name="Arena" parent="." unique_id=1689410502 instance=ExtResource("2_yyfjg")]
+
+[node name="EnemySpawner" type="Node" parent="." unique_id=290201802]
+script = ExtResource("3_b1x3f")
+
+[node name="YSort" type="Node2D" parent="." unique_id=1056842300 groups=["ysort"]]
+
+[node name="Player" parent="YSort" unique_id=1093608866 instance=ExtResource("4_a8run")]
+position = Vector2(640, 360)
+
+[node name="HUD" parent="." unique_id=1024811671 instance=ExtResource("5_ouso4")]
+
+[node name="LevelUpUI" parent="." unique_id=1816734453 instance=ExtResource("6_blune")]
+
+[node name="DeathScreen" parent="." unique_id=1418589715 instance=ExtResource("7_th5th")]

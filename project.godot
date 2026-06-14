@@ -13,9 +13,6 @@ config_version=5
 config/name="game_0_vsl"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
-
-[application]
-
 run/main_scene="res://scenes/main/main.tscn"
 
 [autoload]
