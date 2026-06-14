@@ -8,11 +8,13 @@ const COLORS := {
 	"weapon": Color(0x4a9effff),
 	"upgrade": Color(0xf5a623ff),
 	"perk": Color(0x50fa7bff),
+	"evolution": Color(0xbd93f9ff),
 }
 const TYPE_LABELS := {
 	"weapon": "新武器",
 	"upgrade": "★ 强化",
 	"perk": "属性",
+	"evolution": "✦ 进化",
 }
 
 func _ready() -> void:
@@ -92,6 +94,8 @@ func _make_card(card: Dictionary) -> Control:
 
 	if card["type"] == "upgrade":
 		panel.scale = Vector2(1.08, 1.08)
+	elif card["type"] == "evolution":
+		panel.scale = Vector2(1.12, 1.12)
 
 	panel.gui_input.connect(func(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.pressed \
