@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://c4kjrxtuubd7"]
+
+[ext_resource type="Script" path="res://scenes/ui/hud.gd" id="1_0mwgc"]
+
+[node name="HUD" type="CanvasLayer" unique_id=1024811671]
+script = ExtResource("1_0mwgc")
+
+[node name="HPBar" type="ProgressBar" parent="." unique_id=626117885]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 200.0
+offset_bottom = 28.0
+value = 100.0
+
+[node name="TimerLabel" type="Label" parent="." unique_id=322924834]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -40.0
+offset_top = 8.0
+offset_right = 40.0
+offset_bottom = 30.0
+text = "00:00"
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="." unique_id=1938625977]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -70.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = 30.0
+text = "Lv.1"
+horizontal_alignment = 2
+
+[node name="XPBar" type="ProgressBar" parent="." unique_id=628323697]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -20.0
