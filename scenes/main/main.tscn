@@ -1,12 +1,18 @@
 [gd_scene format=3 uid="uid://ddd0fxqd4qx3t"]
 
-[ext_resource type="Script" path="res://scenes/main/main.gd" id="1_hujxm"]
+[ext_resource type="Script" uid="uid://duqd37j4qcdtk" path="res://scenes/main/main.gd" id="1_hujxm"]
 [ext_resource type="PackedScene" uid="uid://e14wnhvuikit" path="res://scenes/arena/arena.tscn" id="2_yyfjg"]
 [ext_resource type="Script" uid="uid://wtwbecx0hiab" path="res://scenes/enemies/enemy_spawner.gd" id="3_b1x3f"]
 [ext_resource type="PackedScene" uid="uid://b1kdom6ab5bob" path="res://scenes/player/player.tscn" id="4_a8run"]
 [ext_resource type="PackedScene" uid="uid://c4kjrxtuubd7" path="res://scenes/ui/hud.tscn" id="5_ouso4"]
 [ext_resource type="PackedScene" uid="uid://cowju2sko4cux" path="res://scenes/ui/level_up_ui.tscn" id="6_blune"]
 [ext_resource type="PackedScene" uid="uid://ymdn3de0nekv" path="res://scenes/ui/death_screen.tscn" id="7_th5th"]
+[ext_resource type="Script" uid="uid://bd046eokvcnu2" path="res://addons/phantom_camera/scripts/phantom_camera_host/phantom_camera_host.gd" id="8_a8run"]
+[ext_resource type="Script" uid="uid://bhexx6mj1xv3q" path="res://addons/phantom_camera/scripts/phantom_camera/phantom_camera_2d.gd" id="9_ouso4"]
+[ext_resource type="Script" uid="uid://8umksf8e80fw" path="res://addons/phantom_camera/scripts/resources/tween_resource.gd" id="10_blune"]
+
+[sub_resource type="Resource" id="Resource_th5th"]
+script = ExtResource("10_blune")
 
 [node name="Main" type="Node" unique_id=1654845379]
 script = ExtResource("1_hujxm")
@@ -26,3 +32,13 @@ position = Vector2(640, 360)
 [node name="LevelUpUI" parent="." unique_id=1816734453 instance=ExtResource("6_blune")]
 
 [node name="DeathScreen" parent="." unique_id=1418589715 instance=ExtResource("7_th5th")]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1999577434]
+position = Vector2(640, 360)
+
+[node name="PhantomCameraHost" type="Node" parent="Camera2D" unique_id=1296073927]
+script = ExtResource("8_a8run")
+
+[node name="PhantomCamera2D" type="Node2D" parent="." unique_id=409623077]
+script = ExtResource("9_ouso4")
+tween_resource = SubResource("Resource_th5th")
