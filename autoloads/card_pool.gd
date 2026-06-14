@@ -1,4 +1,6 @@
 # autoloads/card_pool.gd
+# 子系统 1 阶段：仍保留 CARDS 数组与 match 派发，只把武器获取/升级转到 Player.grant_weapon /
+# level_up_weapon，让武器数据走 WeaponDB。子系统 2 会进一步把 match 拆成 effect_registry。
 extends Node
 
 const CARDS: Array[Dictionary] = [
@@ -20,11 +22,6 @@ const CARDS: Array[Dictionary] = [
 	{ "id": "perk_heal",   "name": "紧急治疗",  "desc": "立刻回复 30 HP",        "type": "perk",    "condition": "" },
 ]
 
-const KNIFE_SCENE := preload("res://scenes/weapons/knife/knife_weapon.tscn")
-const ORB_SCENE := preload("res://scenes/weapons/orb/orb_weapon.tscn")
-const ORB_SHIELD_SCENE := preload("res://scenes/weapons/orb/orb_shield.tscn")
-const EXPLOSION_SCENE := preload("res://scenes/weapons/explosion/explosion_weapon.tscn")
-
 func pick(player: Player, count: int = 3) -> Array[Dictionary]:
 	var available: Array[Dictionary] = []
 	for card in CARDS:
@@ -45,53 +42,17 @@ func apply(card: Dictionary, player: Player) -> void:
 
 	match card["id"]:
 		"knife":
-			player.add_weapon(KNIFE_SCENE)
-			player.owned_weapons["knife"] = 1
+			player.grant_weapon(WeaponDB.get_data("knife"))
 		"orb":
-			player.add_weapon(ORB_SCENE)
-			player.owned_weapons["orb"] = 1
+			player.grant_weapon(WeaponDB.get_data("orb"))
 		"explosion":
-			player.add_weapon(EXPLOSION_SCENE)
-			player.owned_weapons["explosion"] = 1
-		"knife_2":
-			for child in player.get_children():
-				if child is KnifeWeapon:
-					child.cooldown = 0.5
-			player.owned_weapons["knife"] = 2
-		"orb_2":
-			var new_orb := ORB_SHIELD_SCENE.instantiate() as OrbShield
-			player.add_child(new_orb)
-			new_orb.orbit_index = 2
-			new_orb.total_orbs = 3
-			for child in player.get_children():
-				if child is OrbShield:
-					child.total_orbs = 3
-			player.owned_weapons["orb"] = 2
-		"explosion_2":
-			for child in player.get_children():
-				if child is ExplosionWeapon:
-					child.cooldown = 1.5
-			player.owned_weapons["explosion"] = 2
-		"knife_3":
-			for child in player.get_children():
-				if child is KnifeWeapon:
-					child.cooldown = 0.3
-					child.pierce = 4
-			player.owned_weapons["knife"] = 3
-		"orb_3":
-			var extra_orb := ORB_SHIELD_SCENE.instantiate() as OrbShield
-			player.add_child(extra_orb)
-			extra_orb.orbit_index = 3
-			extra_orb.total_orbs = 4
-			for child in player.get_children():
-				if child is OrbShield:
-					child.total_orbs = 4
-			player.owned_weapons["orb"] = 3
-		"explosion_3":
-			for child in player.get_children():
-				if child is ExplosionWeapon:
-					child.cooldown = 1.0
-			player.owned_weapons["explosion"] = 3
+			player.grant_weapon(WeaponDB.get_data("explosion"))
+		"knife_2", "knife_3":
+			player.level_up_weapon("knife")
+		"orb_2", "orb_3":
+			player.level_up_weapon("orb")
+		"explosion_2", "explosion_3":
+			player.level_up_weapon("explosion")
 		"perk_speed":
 			player.speed_mult *= 1.15
 		"perk_hp":
@@ -106,16 +67,13 @@ func apply(card: Dictionary, player: Player) -> void:
 		"perk_heal":
 			player.hp = minf(player.hp + 30.0, player.max_hp)
 
-func register_weapon(player: Player, weapon_id: String) -> void:
-	player.owned_weapons[weapon_id] = 1
-
 func _check_condition(condition: String, player: Player) -> bool:
 	if condition == "":
 		return true
 	if condition.begins_with("no:"):
 		var weapon_id := condition.substr(3)
-		return not player.owned_weapons.has(weapon_id)
+		return not player.has_weapon(weapon_id)
 	if condition.begins_with("upgrade:"):
 		var parts := condition.split(":")  # ["upgrade", "knife", "1"]
-		return player.owned_weapons.get(parts[1], 0) == int(parts[2])
+		return player.get_weapon_level(parts[1]) == int(parts[2])
 	return false

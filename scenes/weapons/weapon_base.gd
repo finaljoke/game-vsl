@@ -2,6 +2,9 @@
 class_name WeaponBase
 extends Node
 
+var data: WeaponData = null
+var level: int = 1
+
 var cooldown: float = 1.0
 var _timer: float = 0.0
 
@@ -19,6 +22,20 @@ func _process(delta: float) -> void:
 
 func attack() -> void:
 	pass
+
+# 把 data.levels[lvl-1] 字典里的每个键反射写到 self。
+# 子类可重写以处理副作用（例如 OrbWeapon 同步护盾球数量）。
+func apply_level(lvl: int) -> void:
+	if data == null:
+		push_warning("WeaponBase.apply_level: data not set on %s" % name)
+		return
+	if lvl < 1 or lvl > data.levels.size():
+		push_warning("WeaponBase.apply_level: invalid level %d for %s" % [lvl, data.id])
+		return
+	level = lvl
+	var stats: Dictionary = data.levels[lvl - 1]
+	for key in stats:
+		set(key, stats[key])
 
 func get_nearest_enemy() -> Node2D:
 	var enemies := get_tree().get_nodes_in_group("enemies")

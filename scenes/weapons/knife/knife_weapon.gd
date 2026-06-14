@@ -8,7 +8,7 @@ var pierce: int = 2  # 飞刀定位：穿透直线，可串多个敌人
 
 func _ready() -> void:
 	super._ready()
-	cooldown = 1.0
+	# cooldown 与 pierce 由 WeaponData.levels 通过 apply_level() 注入
 
 func attack() -> void:
 	var target := get_nearest_enemy()

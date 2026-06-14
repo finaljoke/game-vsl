@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="PackedScene" uid="uid://b3wtsjec1aqh1" path="res://scenes/weapons/explosion/explosion_weapon.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_data")
+id = "explosion"
+display_name = "爆炸"
+base_scene = ExtResource("2_scene")
+max_level = 3
+levels = [{"cooldown": 3.0}, {"cooldown": 1.5}, {"cooldown": 1.0}]
+evolution = {"requires_perk": "perk_damage", "evolved_id": "nuke"}

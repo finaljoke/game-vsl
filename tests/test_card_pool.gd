@@ -15,14 +15,18 @@ func test_pick_returns_at_most_3_cards() -> void:
 	var cards := CardPool.pick(_player, 3)
 	assert_int(cards.size()).is_less_equal(3)
 
+func _stub_owns(id: String, lvl: int) -> void:
+	# 测试 seam：直接注入持有状态而不实例化武器场景（避免副作用如 OrbShield 子节点）
+	_player.owned_weapons[id] = {"node": null, "level": lvl}
+
 func test_pick_excludes_weapon_already_owned() -> void:
-	_player.owned_weapons["knife"] = 1
+	_stub_owns("knife", 1)
 	var cards := CardPool.pick(_player, 10)
 	for card in cards:
 		assert_str(card["id"]).is_not_equal("knife")
 
 func test_pick_includes_upgrade_when_weapon_at_level1() -> void:
-	_player.owned_weapons["knife"] = 1
+	_stub_owns("knife", 1)
 	var cards := CardPool.pick(_player, 10)
 	var found := false
 	for card in cards:
@@ -31,21 +35,21 @@ func test_pick_includes_upgrade_when_weapon_at_level1() -> void:
 	assert_bool(found).is_true()
 
 func test_pick_excludes_upgrade_when_weapon_at_level2() -> void:
-	_player.owned_weapons["knife"] = 2
+	_stub_owns("knife", 2)
 	var cards := CardPool.pick(_player, 10)
 	for card in cards:
 		assert_str(card["id"]).is_not_equal("knife_2")
 
 func test_pick_returns_all_available_when_pool_smaller_than_count() -> void:
 	# 三种武器都升到 Lv.3（满级）→ 只剩 6 张属性牌（5 种有上限 perk + perk_heal 无上限）
-	_player.owned_weapons["knife"] = 3
-	_player.owned_weapons["orb"] = 3
-	_player.owned_weapons["explosion"] = 3
+	_stub_owns("knife", 3)
+	_stub_owns("orb", 3)
+	_stub_owns("explosion", 3)
 	var cards := CardPool.pick(_player, 20)
 	assert_int(cards.size()).is_equal(6)
 
 func test_pick_includes_lv3_upgrade_when_weapon_at_level2() -> void:
-	_player.owned_weapons["knife"] = 2
+	_stub_owns("knife", 2)
 	var cards := CardPool.pick(_player, 20)
 	var found := false
 	for card in cards:
@@ -54,7 +58,7 @@ func test_pick_includes_lv3_upgrade_when_weapon_at_level2() -> void:
 	assert_bool(found).is_true()
 
 func test_pick_excludes_lv3_upgrade_when_weapon_at_level3() -> void:
-	_player.owned_weapons["knife"] = 3
+	_stub_owns("knife", 3)
 	var cards := CardPool.pick(_player, 20)
 	for card in cards:
 		assert_str(card["id"]).is_not_equal("knife_3")
@@ -78,9 +82,9 @@ func test_pick_excludes_perk_at_max_stacks() -> void:
 
 func test_pick_still_has_cards_when_all_capped() -> void:
 	# 所有有上限 perk 全满 + 所有武器升满（Lv.3）→ 只剩 perk_heal
-	_player.owned_weapons["knife"] = 3
-	_player.owned_weapons["orb"] = 3
-	_player.owned_weapons["explosion"] = 3
+	_stub_owns("knife", 3)
+	_stub_owns("orb", 3)
+	_stub_owns("explosion", 3)
 	_player.perk_stacks["perk_speed"] = 8
 	_player.perk_stacks["perk_hp"] = 10
 	_player.perk_stacks["perk_attack"] = 8
@@ -122,7 +126,7 @@ func test_apply_perk_speed_stacks_multiplicatively() -> void:
 
 func test_apply_weapon_registers_in_owned_weapons() -> void:
 	CardPool.apply({"id": "knife"}, _player)
-	assert_int(_player.owned_weapons.get("knife", 0)).is_equal(1)
+	assert_int(_player.get_weapon_level("knife")).is_equal(1)
 
 func test_apply_perk_damage_multiplies_damage_mult() -> void:
 	CardPool.apply({"id": "perk_damage", "type": "perk"}, _player)
@@ -159,8 +163,9 @@ func test_apply_knife_sets_default_pierce() -> void:
 
 func test_apply_knife_3_sets_level_cooldown_and_pierce() -> void:
 	CardPool.apply({"id": "knife"}, _player)
+	CardPool.apply({"id": "knife_2"}, _player)
 	CardPool.apply({"id": "knife_3"}, _player)
-	assert_int(_player.owned_weapons.get("knife", 0)).is_equal(3)
+	assert_int(_player.get_weapon_level("knife")).is_equal(3)
 	for child in _player.get_children():
 		if child is KnifeWeapon:
 			assert_float(child.cooldown).is_equal_approx(0.3, 0.001)
@@ -168,16 +173,18 @@ func test_apply_knife_3_sets_level_cooldown_and_pierce() -> void:
 
 func test_apply_explosion_3_sets_level_and_cooldown() -> void:
 	CardPool.apply({"id": "explosion"}, _player)
+	CardPool.apply({"id": "explosion_2"}, _player)
 	CardPool.apply({"id": "explosion_3"}, _player)
-	assert_int(_player.owned_weapons.get("explosion", 0)).is_equal(3)
+	assert_int(_player.get_weapon_level("explosion")).is_equal(3)
 	for child in _player.get_children():
 		if child is ExplosionWeapon:
 			assert_float(child.cooldown).is_equal_approx(1.0, 0.001)
 
 func test_apply_orb_3_sets_level_and_orb_count() -> void:
 	CardPool.apply({"id": "orb"}, _player)
+	CardPool.apply({"id": "orb_2"}, _player)
 	CardPool.apply({"id": "orb_3"}, _player)
-	assert_int(_player.owned_weapons.get("orb", 0)).is_equal(3)
+	assert_int(_player.get_weapon_level("orb")).is_equal(3)
 	for child in _player.get_children():
 		if child is OrbShield:
 			assert_int(child.total_orbs).is_equal(4)

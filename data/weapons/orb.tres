@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="PackedScene" uid="uid://7pcvefm8c7gy" path="res://scenes/weapons/orb/orb_weapon.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_data")
+id = "orb"
+display_name = "护盾球"
+base_scene = ExtResource("2_scene")
+max_level = 3
+levels = [{"total_orbs": 2}, {"total_orbs": 3}, {"total_orbs": 4}]
+evolution = {"requires_perk": "perk_hp", "evolved_id": "mega_orb"}

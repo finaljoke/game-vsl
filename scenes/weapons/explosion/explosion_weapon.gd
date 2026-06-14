@@ -7,7 +7,7 @@ const EXPLOSION_SCRIPT = preload("res://scenes/weapons/explosion/explosion.gd") 
 
 func _ready() -> void:
 	super._ready()
-	cooldown = 3.0
+	# cooldown 由 WeaponData.levels 通过 apply_level() 注入
 
 func attack() -> void:
 	var enemies := get_tree().get_nodes_in_group("enemies")

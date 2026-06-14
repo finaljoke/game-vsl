@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 GameManager="*res://autoloads/game_manager.gd"
 GameFeel="*res://autoloads/game_feel.gd"
+WeaponDB="*res://autoloads/weapon_db.gd"
 CardPool="*res://autoloads/card_pool.gd"
 SoundManager="*uid://bg6usvpgisg7x"
 PhantomCameraManager="*uid://duq6jhf6unyis"
