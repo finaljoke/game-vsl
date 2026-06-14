@@ -16,14 +16,17 @@ const SPAWN_MARGIN: float = 20.0
 var _spawn_timer: float = 0.0
 var _scale_timer: float = 0.0
 var _spawn_interval: float = INITIAL_INTERVAL
+var _elapsed_time: float = 0.0
 var _ysort: Node = null
+@onready var _gm = get_node("/root/GameManager")
 
 func _ready() -> void:
 	_ysort = get_tree().get_first_node_in_group("ysort")
 
 func _process(delta: float) -> void:
-	if GameManager.current_state != GameManager.State.PLAYING:
+	if _gm.current_state != _gm.State.PLAYING:
 		return
+	_elapsed_time += delta
 	_spawn_timer += delta
 	_scale_timer += delta
 	if _scale_timer >= SCALE_INTERVAL:
@@ -36,7 +39,11 @@ func _process(delta: float) -> void:
 func _try_spawn() -> void:
 	if get_tree().get_nodes_in_group("enemies").size() >= MAX_ENEMIES:
 		return
+	var minutes := _elapsed_time / 60.0
 	var enemy := ENEMY_SCENE.instantiate()
+	enemy.MAX_HP = 20.0 * (1.0 + minutes * 0.25)
+	enemy.hp    = enemy.MAX_HP
+	enemy.SPEED = clampf(80.0 * (1.0 + minutes * 0.15), 80.0, 160.0)
 	_ysort.add_child(enemy)
 	enemy.global_position = _random_edge_pos()
 	enemy.died.connect(_on_enemy_died)

@@ -4,9 +4,9 @@ extends CharacterBody2D
 
 signal died(position: Vector2)
 
-const SPEED: float = 80.0
-const MAX_HP: float = 20.0
-const CONTACT_DAMAGE: float = 8.0
+var SPEED: float = 80.0
+var MAX_HP: float = 20.0
+var CONTACT_DAMAGE: float = 8.0
 
 var hp: float = MAX_HP
 var _player: Node2D = null
