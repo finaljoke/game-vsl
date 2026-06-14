@@ -19,8 +19,13 @@ const ORB_SCENE := preload("res://scenes/weapons/orb/orb_weapon.tscn")
 const ORB_SHIELD_SCENE := preload("res://scenes/weapons/orb/orb_shield.tscn")
 const EXPLOSION_SCENE := preload("res://scenes/weapons/explosion/explosion_weapon.tscn")
 
-func pick(_player: Player, _count: int = 3) -> Array[Dictionary]:
-	return []
+func pick(player: Player, count: int = 3) -> Array[Dictionary]:
+	var available: Array[Dictionary] = []
+	for card in CARDS:
+		if _check_condition(card["condition"], player):
+			available.append(card)
+	available.shuffle()
+	return available.slice(0, min(count, available.size()))
 
 func apply(_card: Dictionary, _player: Player) -> void:
 	pass
@@ -28,5 +33,14 @@ func apply(_card: Dictionary, _player: Player) -> void:
 func register_weapon(player: Player, weapon_id: String) -> void:
 	player.owned_weapons[weapon_id] = 1
 
-func _check_condition(_condition: String, _player: Player) -> bool:
+func _check_condition(condition: String, player: Player) -> bool:
+	if condition == "":
+		return true
+	if condition.begins_with("no:"):
+		var weapon_id := condition.substr(3)
+		return not player.owned_weapons.has(weapon_id)
+	if condition.begins_with("upgrade:"):
+		var weapon_id := condition.substr(8)
+		var lvl: int = player.owned_weapons.get(weapon_id, 0)
+		return lvl >= 1 and lvl < 2
 	return false

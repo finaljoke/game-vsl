@@ -1,0 +1,55 @@
+# tests/test_card_pool.gd
+extends GdUnitTestSuite
+
+var _player: Player
+
+func before_test() -> void:
+	var scene := load("res://scenes/player/player.tscn") as PackedScene
+	_player = auto_free(scene.instantiate() as Player)
+	add_child(_player)
+	await get_tree().process_frame
+
+# ── pick() 条件过滤 ────────────────────────────────────────────────────────
+
+func test_pick_returns_at_most_3_cards() -> void:
+	var cards := CardPool.pick(_player, 3)
+	assert_int(cards.size()).is_less_equal(3)
+
+func test_pick_excludes_weapon_already_owned() -> void:
+	_player.owned_weapons["knife"] = 1
+	var cards := CardPool.pick(_player, 10)
+	for card in cards:
+		assert_str(card["id"]).is_not_equal("knife")
+
+func test_pick_includes_upgrade_when_weapon_at_level1() -> void:
+	_player.owned_weapons["knife"] = 1
+	var cards := CardPool.pick(_player, 10)
+	var found := false
+	for card in cards:
+		if card["id"] == "knife_2":
+			found = true
+	assert_bool(found).is_true()
+
+func test_pick_excludes_upgrade_when_weapon_at_level2() -> void:
+	_player.owned_weapons["knife"] = 2
+	var cards := CardPool.pick(_player, 10)
+	for card in cards:
+		assert_str(card["id"]).is_not_equal("knife_2")
+
+func test_pick_returns_all_available_when_pool_smaller_than_count() -> void:
+	# 三种武器都升到 Lv.2 → 只剩 4 张属性牌
+	_player.owned_weapons["knife"] = 2
+	_player.owned_weapons["orb"] = 2
+	_player.owned_weapons["explosion"] = 2
+	var cards := CardPool.pick(_player, 10)
+	assert_int(cards.size()).is_equal(4)
+
+func test_pick_always_includes_perks() -> void:
+	var cards := CardPool.pick(_player, 10)
+	var perk_ids := ["perk_speed", "perk_hp", "perk_attack", "perk_xp"]
+	for perk_id in perk_ids:
+		var found := false
+		for card in cards:
+			if card["id"] == perk_id:
+				found = true
+		assert_bool(found).is_true()
