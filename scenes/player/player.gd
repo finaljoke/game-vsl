@@ -13,12 +13,16 @@ var xp: float = 0.0
 var xp_threshold: float = 100.0
 var level: int = 1
 var _dead: bool = false
+var owned_weapons: Dictionary = {}
+var speed_mult: float = 1.0
+var attack_speed_mult: float = 1.0
+var xp_mult: float = 1.0
 
 @onready var hurt_box: Area2D = $HurtBox
 
 func _physics_process(delta: float) -> void:
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	velocity = dir * SPEED
+	velocity = dir * SPEED * speed_mult
 	move_and_slide()
 	_check_contact_damage(delta)
 
@@ -39,8 +43,8 @@ func take_damage(amount: float) -> void:
 		died.emit()
 
 func add_xp(amount: float) -> void:
-	xp += amount
-	if xp >= xp_threshold:
+	xp += amount * xp_mult
+	while xp >= xp_threshold:
 		xp -= xp_threshold
 		xp_threshold *= 1.2
 		level += 1
