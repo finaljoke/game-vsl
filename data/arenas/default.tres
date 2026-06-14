@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ArenaConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/arenas/arena_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+size = Vector2(1280, 720)
+player_spawn = Vector2(640, 360)
+spawn_margin = 20.0
+bg_color = Color(0.12, 0.12, 0.15, 1)
+wall_thickness = 10.0

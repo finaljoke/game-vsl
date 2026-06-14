@@ -1,4 +1,6 @@
-[gd_scene format=3 uid="uid://e14wnhvuikit"]
+[gd_scene load_steps=6 format=3 uid="uid://e14wnhvuikit"]
+
+[ext_resource type="Script" path="res://scenes/arena/arena.gd" id="1_arena"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_n62jo"]
 size = Vector2(1280, 10)
@@ -13,6 +15,7 @@ size = Vector2(10, 720)
 size = Vector2(10, 720)
 
 [node name="Arena" type="Node2D" unique_id=1689410502]
+script = ExtResource("1_arena")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1773096149]
 offset_right = 1280.0

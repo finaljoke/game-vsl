@@ -9,9 +9,6 @@ const SCALE_INTERVAL: float = 20.0
 const SCALE_FACTOR: float = 0.85
 const MIN_INTERVAL: float = 0.3
 const MAX_ENEMIES: int = 200
-const ARENA_W: float = 1280.0
-const ARENA_H: float = 720.0
-const SPAWN_MARGIN: float = 20.0
 
 # 敌人原型：hp/spd/con 为在时间缩放基础值上的倍率；after = 解锁所需存活秒数；
 # behavior = 行为树类型（chase/ranged/bomber，由 enemy.gd 经 EnemyBT.build 装配）
@@ -28,10 +25,12 @@ var _scale_timer: float = 0.0
 var _spawn_interval: float = INITIAL_INTERVAL
 var _elapsed_time: float = 0.0
 var _ysort: Node = null
+var _arena: Node = null  # 持有 .config: ArenaConfig
 @onready var _gm = get_node("/root/GameManager")
 
 func _ready() -> void:
 	_ysort = get_tree().get_first_node_in_group("ysort")
+	_arena = get_tree().get_first_node_in_group("arena")
 
 func _process(delta: float) -> void:
 	if _gm.current_state != _gm.State.PLAYING:
@@ -93,8 +92,10 @@ func _on_enemy_died(pos: Vector2) -> void:
 	gem.global_position = pos
 
 func _random_edge_pos() -> Vector2:
+	var s: Vector2 = _arena.config.size
+	var m: float = _arena.config.spawn_margin
 	match randi() % 4:
-		0: return Vector2(randf_range(SPAWN_MARGIN, ARENA_W - SPAWN_MARGIN), SPAWN_MARGIN)
-		1: return Vector2(randf_range(SPAWN_MARGIN, ARENA_W - SPAWN_MARGIN), ARENA_H - SPAWN_MARGIN)
-		2: return Vector2(SPAWN_MARGIN, randf_range(SPAWN_MARGIN, ARENA_H - SPAWN_MARGIN))
-		_: return Vector2(ARENA_W - SPAWN_MARGIN, randf_range(SPAWN_MARGIN, ARENA_H - SPAWN_MARGIN))
+		0: return Vector2(randf_range(m, s.x - m), m)
+		1: return Vector2(randf_range(m, s.x - m), s.y - m)
+		2: return Vector2(m, randf_range(m, s.y - m))
+		_: return Vector2(s.x - m, randf_range(m, s.y - m))
