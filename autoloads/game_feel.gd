@@ -64,7 +64,6 @@ func _process(delta: float) -> void:
 	_shake_magnitude = max(0.0, _shake_magnitude - _shake_decay * delta)
 	var cam := _get_camera()
 	if cam == null:
-		_shake_magnitude = 0.0
 		return
 	if _shake_magnitude < 0.1:
 		cam.offset = Vector2.ZERO
@@ -96,7 +95,7 @@ func _flash_node(node: Node2D, color: Color, duration: float) -> void:
 	if not is_instance_valid(node):
 		return
 	node.modulate = color
-	var tween := create_tween()
+	var tween := create_tween().bind_node(node)
 	tween.tween_property(node, "modulate", Color.WHITE, duration)
 
 func _screen_flash(color: Color, duration: float) -> void:
@@ -141,7 +140,7 @@ func _spawn_damage_number(amount: float, pos: Vector2) -> void:
 	scene.add_child(label)
 	label.global_position = pos
 	var target_y := label.global_position.y - 40.0
-	var tween := create_tween()
+	var tween := create_tween().bind_node(label)
 	tween.set_parallel(true)
 	tween.tween_property(label, "global_position:y", target_y, 0.6)
 	tween.tween_property(label, "modulate:a", 0.0, 0.6)
