@@ -32,6 +32,7 @@ func take_damage(amount: float) -> void:
 	if _dead:
 		return
 	hp = max(0.0, hp - amount)
+	GameFeel.player_hit.emit(amount)
 	if hp <= 0.0:
 		_dead = true
 		died.emit()
@@ -42,6 +43,7 @@ func add_xp(amount: float) -> void:
 		xp -= xp_threshold
 		xp_threshold *= 1.2
 		level += 1
+		GameFeel.player_leveled_up.emit(level)
 		leveled_up.emit(level)
 
 func get_xp_percent() -> float:

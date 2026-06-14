@@ -23,6 +23,8 @@ func _physics_process(_delta: float) -> void:
 
 func take_damage(amount: float) -> void:
 	hp -= amount
+	GameFeel.enemy_hit.emit(amount, global_position, self)
 	if hp <= 0.0:
+		GameFeel.enemy_died.emit(global_position)
 		died.emit(global_position)
 		queue_free()

@@ -22,5 +22,6 @@ func _process(delta: float) -> void:
 		var dir := (_player.global_position - global_position).normalized()
 		global_position += dir * MAGNET_SPEED * delta
 		if global_position.distance_to(_player.global_position) <= COLLECT_DIST:
+			GameFeel.xp_collected.emit(global_position)
 			_player.add_xp(XP_VALUE)
 			queue_free()
