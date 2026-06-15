@@ -14,16 +14,16 @@ func _ready() -> void:
 	# cooldown 由 WeaponData.levels 通过 apply_level() 注入
 
 func attack() -> void:
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	var targets := enemies()
+	if targets.is_empty():
 		return
 	# 爆炸定位：落在最密集人堆，最大化 AoE 价值
 	var positions: Array[Vector2] = []
-	for e in enemies:
+	for e in targets:
 		positions.append((e as Node2D).global_position)
 	var center := densest_center(positions, EXPLOSION_SCRIPT.RADIUS)
 	var explosion := EXPLOSION_SCENE.instantiate()
-	explosion.damage = explosion.BASE_DAMAGE * (_player as Player).damage_mult
+	explosion.damage = damage_for(explosion.BASE_DAMAGE)
 	explosion.base_scale = blast_scale   # 进化形态(核爆)更大
 	explosion.modulate = blast_tint      # 进化形态变色；_process 只动 alpha，RGB 保留
 	get_ysort().add_child(explosion)

@@ -19,15 +19,15 @@ func attack() -> void:
 		return
 	var base_dir := _player.global_position.direction_to(target.global_position)
 	# E3 质变：global_pierce 加穿透；extra_projectiles 多发小角度扇形散开
-	var eff_pierce: int = pierce + _mod_int("global_pierce")
-	var n: int = 1 + _mod_int("extra_projectiles")
+	var eff_pierce: int = pierce + mod_int("global_pierce")
+	var n: int = 1 + mod_int("extra_projectiles")
 	var spread := deg_to_rad(12.0)
 	for i in range(n):
 		var dir := base_dir
 		if n > 1:
 			dir = base_dir.rotated((float(i) - float(n - 1) * 0.5) * spread)
 		var projectile := PROJECTILE_SCENE.instantiate()
-		projectile.damage = projectile.BASE_DAMAGE * (_player as Player).damage_mult
+		projectile.damage = damage_for(projectile.BASE_DAMAGE)
 		projectile.pierce = eff_pierce
 		get_ysort().add_child(projectile)
 		projectile.global_position = _player.global_position
@@ -36,6 +36,3 @@ func attack() -> void:
 		projectile.rotation = dir.angle() + PI / 2
 		projectile.scale *= proj_scale   # 进化形态(千刃)更大
 		projectile.modulate = proj_tint  # 进化形态变色
-
-func _mod_int(field: String) -> int:
-	return int(_player.get(field)) if field in _player else 0

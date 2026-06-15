@@ -22,12 +22,12 @@ func _process(delta: float) -> void:
 		_facing = v.normalized()
 
 func attack() -> void:
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	var targets := enemies()
+	if targets.is_empty():
 		return
-	var dmg: float = BASE_DAMAGE * (_player as Player).damage_mult
+	var dmg: float = damage_for(BASE_DAMAGE)
 	var origin: Vector2 = _player.global_position
-	for e in enemies:
+	for e in targets:
 		var pos: Vector2 = (e as Node2D).global_position
 		var hit := in_cone(pos, origin, _facing, arc_deg, swing_range)
 		if not hit and double_sided:

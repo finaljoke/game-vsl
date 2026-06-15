@@ -44,9 +44,9 @@ func _update_ring() -> void:
 			else Color(0.6, 0.9, 1.0, 0.26)
 
 func attack() -> void:
-	var dmg: float = BASE_DAMAGE * (_player as Player).damage_mult
+	var dmg: float = damage_for(BASE_DAMAGE)
 	var origin: Vector2 = _player.global_position
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in enemies():
 		if not is_instance_valid(e):
 			continue
 		if origin.distance_to((e as Node2D).global_position) <= radius:

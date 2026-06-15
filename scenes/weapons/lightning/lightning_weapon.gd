@@ -12,19 +12,19 @@ func _ready() -> void:
 	super._ready()
 
 func attack() -> void:
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
+	var targets := enemies()
+	if targets.is_empty():
 		return
 	var positions: Array = []
-	for e in enemies:
+	for e in targets:
 		positions.append((e as Node2D).global_position)
 	var idx: Array = chain_targets(_player.global_position, positions, chains, LINK_RANGE)
 	if idx.is_empty():
 		return
-	var dmg: float = BASE_DAMAGE * (_player as Player).damage_mult
+	var dmg: float = damage_for(BASE_DAMAGE)
 	var path: Array = [_player.global_position]
 	for i in idx:
-		var enemy := enemies[i]
+		var enemy := targets[i]
 		if is_instance_valid(enemy):
 			path.append((enemy as Node2D).global_position)
 			enemy.take_damage(dmg)

@@ -5,6 +5,7 @@ extends GdUnitTestSuite
 
 const LightningScript := preload("res://scenes/weapons/lightning/lightning_weapon.gd")
 const WhipScript := preload("res://scenes/weapons/whip/whip_weapon.gd")
+const WeaponBaseScript := preload("res://scenes/weapons/weapon_base.gd")
 
 var _player: Player
 
@@ -122,3 +123,29 @@ func test_evolve_aura_grants_inferno() -> void:
 	CardPool.apply({"id": "evolve_aura", "type": "evolution"}, _player)
 	assert_bool(_player.has_weapon("inferno_aura")).is_true()
 	assert_float(_player.get_weapon_node("inferno_aura").get("radius")).is_equal_approx(170.0, 0.001)
+
+# ── WeaponBase：反射注入字段校验(纯函数，防 .tres 拼错键静默失效)──────────────
+
+func test_filter_unknown_lists_keys_not_in_known() -> void:
+	var unknown: Array = WeaponBaseScript.filter_unknown(["cooldown", "pierce"], {"cooldown": 1, "bogus": 2})
+	assert_int(unknown.size()).is_equal(1)
+	assert_bool(unknown.has("bogus")).is_true()
+
+func test_filter_unknown_empty_when_all_known() -> void:
+	var unknown: Array = WeaponBaseScript.filter_unknown(["cooldown", "pierce"], {"cooldown": 1, "pierce": 4})
+	assert_int(unknown.size()).is_equal(0)
+
+# ── WeaponBase：mod_int 统一全局 modifier 读取(取代 knife._mod_int / boomerang._global_pierce)──
+
+func test_mod_int_reads_player_field() -> void:
+	var w = auto_free(WeaponBaseScript.new())
+	_player.add_child(w)
+	await get_tree().process_frame
+	_player.global_pierce = 3
+	assert_int(w.mod_int("global_pierce")).is_equal(3)
+
+func test_mod_int_zero_when_field_absent() -> void:
+	var w = auto_free(WeaponBaseScript.new())
+	_player.add_child(w)
+	await get_tree().process_frame
+	assert_int(w.mod_int("totally_not_a_field")).is_equal(0)
