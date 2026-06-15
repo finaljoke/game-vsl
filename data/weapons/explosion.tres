@@ -12,4 +12,4 @@ icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 3
 levels = [{"cooldown": 3.0}, {"cooldown": 1.5}, {"cooldown": 1.0}]
-evolution = {"requires_perk": "perk_damage", "requires_perk_stacks": 4, "evolved_id": "nuke"}
+evolution = {"requires_perk": "perk_damage", "requires_perk_stacks": 3, "evolved_id": "nuke"}

@@ -231,12 +231,12 @@ func test_apply_evolve_explosion_grants_nuke() -> void:
 		if child is ExplosionWeapon and child.data != null and child.data.id == "nuke":
 			assert_float(child.cooldown).is_equal_approx(0.5, 0.001)
 
-# ── 进化解锁阈值：读 evolution.requires_perk_stacks（半值），不再要求 perk 满层 ──
+# ── 进化解锁阈值：C1 统一降到 3(配合 XP 提速让进化落在 ~5 分钟)──────────────
 
-func test_evolve_unlocks_at_half_perk_stacks() -> void:
-	# knife Lv.3 + perk_attack 4 层（perk cap 是 8，半值 4）→ evolve_knife 应被 pick 选中
+func test_evolve_unlocks_at_perk_threshold() -> void:
+	# knife Lv.3 + perk_attack 达阈值(3) → evolve_knife 应被 pick 选中
 	_stub_owns("knife", 3)
-	_player.perk_stacks["perk_attack"] = 4
+	_player.perk_stacks["perk_attack"] = 3
 	var cards := CardPool.pick(_player, 20)
 	var found := false
 	for c in cards:
@@ -244,10 +244,10 @@ func test_evolve_unlocks_at_half_perk_stacks() -> void:
 			found = true
 	assert_bool(found).is_true()
 
-func test_evolve_locked_below_half_perk_stacks() -> void:
-	# knife Lv.3 + perk_attack 3 层 → 还差 1 层，进化卡不应出现
+func test_evolve_locked_below_perk_threshold() -> void:
+	# knife Lv.3 + perk_attack 2 层 → 还差 1 层，进化卡不应出现
 	_stub_owns("knife", 3)
-	_player.perk_stacks["perk_attack"] = 3
+	_player.perk_stacks["perk_attack"] = 2
 	var cards := CardPool.pick(_player, 20)
 	for c in cards:
 		assert_str(c["id"]).is_not_equal("evolve_knife")
@@ -301,17 +301,17 @@ func test_base_weapons_have_neutral_visuals() -> void:
 			assert_float(child.proj_scale).is_equal_approx(1.0, 0.001)
 
 func test_evolve_orb_uses_its_own_threshold() -> void:
-	# orb 的 requires_perk_stacks=5（perk_hp cap 是 10）；5 层够、4 层不够
+	# orb 的 requires_perk_stacks=3：3 层够、2 层不够
 	_stub_owns("orb", 3)
-	_player.perk_stacks["perk_hp"] = 5
-	var cards5 := CardPool.pick(_player, 20)
-	var found5 := false
-	for c in cards5:
+	_player.perk_stacks["perk_hp"] = 3
+	var cards3 := CardPool.pick(_player, 20)
+	var found3 := false
+	for c in cards3:
 		if c["id"] == "evolve_orb":
-			found5 = true
-	assert_bool(found5).is_true()
+			found3 = true
+	assert_bool(found3).is_true()
 
-	_player.perk_stacks["perk_hp"] = 4
-	var cards4 := CardPool.pick(_player, 20)
-	for c in cards4:
+	_player.perk_stacks["perk_hp"] = 2
+	var cards2 := CardPool.pick(_player, 20)
+	for c in cards2:
 		assert_str(c["id"]).is_not_equal("evolve_orb")
