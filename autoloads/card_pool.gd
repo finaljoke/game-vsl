@@ -32,6 +32,11 @@ const CARDS: Array[Dictionary] = [
 	{ "id": "boomerang_3", "name": "回旋镖 Lv.3",  "desc": "穿透 +1，射程↑",            "type": "upgrade", "condition": "upgrade:boomerang:2" },
 	{ "id": "aura_2",      "name": "光环 Lv.2",    "desc": "范围 +20，冷却↓",           "type": "upgrade", "condition": "upgrade:aura:1"      },
 	{ "id": "aura_3",      "name": "光环 Lv.3",    "desc": "范围 +20，冷却↓",           "type": "upgrade", "condition": "upgrade:aura:2"      },
+	# 质变卡(E3)：非数值协同，rarity 默认 rare(_assign_default_rarities)
+	{ "id": "synergy_pierce",    "name": "贯穿强化", "desc": "所有投射类武器穿透 +1", "type": "synergy", "condition": "has_any:knife,boomerang,thousand_edge,cyclone", "max_stacks": 3 },
+	{ "id": "synergy_multishot", "name": "多重投射", "desc": "飞刀类额外多发 1 枚",   "type": "synergy", "condition": "has_any:knife,thousand_edge", "max_stacks": 2 },
+	{ "id": "synergy_magnet",    "name": "磁化",     "desc": "XP 拾取范围 ×1.5",      "type": "synergy", "condition": "", "max_stacks": 3 },
+	{ "id": "synergy_lifesteal", "name": "嗜血",     "desc": "每次击杀回 0.5 HP",      "type": "synergy", "condition": "", "max_stacks": 4 },
 	{ "id": "perk_speed",  "name": "移速提升",  "desc": "移动速度永久 +15%",     "type": "perk",    "condition": "", "max_stacks": 8 },
 	{ "id": "perk_hp",     "name": "生命上限",  "desc": "最大 HP +20，当场补满", "type": "perk",    "condition": "", "max_stacks": 10 },
 	{ "id": "perk_attack", "name": "攻速提升",  "desc": "攻击速度永久 +15%",     "type": "perk",    "condition": "", "max_stacks": 8 },
@@ -56,6 +61,7 @@ func _ready() -> void:
 	_register_weapon_effects()
 	_register_perk_effects()
 	_register_evolution_cards()
+	_register_synergy_effects()
 	_assign_default_rarities()
 
 # 给未显式标注 rarity 的卡按类型补默认稀有度。
@@ -97,6 +103,13 @@ func _register_perk_effects() -> void:
 	effect_registry["perk_damage"] = _apply_perk_mult.bind("damage_mult", 1.15)
 	effect_registry["perk_hp"]     = _apply_perk_hp
 	effect_registry["perk_heal"]   = _apply_perk_heal
+
+# 质变卡(E3)：改玩家 modifier，由武器/拾取在运行时读取
+func _register_synergy_effects() -> void:
+	effect_registry["synergy_pierce"]    = _apply_synergy_pierce
+	effect_registry["synergy_multishot"] = _apply_synergy_multishot
+	effect_registry["synergy_magnet"]    = _apply_synergy_magnet
+	effect_registry["synergy_lifesteal"] = _apply_synergy_lifesteal
 
 # 从 WeaponDB 扫描带 evolution.evolved_id 的武器，自动注入进化卡。
 # 进化 evolved 形态 .tres 可缺失（占位通路）；_evolve_weapon 会回退用 source 数据。
@@ -168,7 +181,9 @@ func _weapon_id_of(card: Dictionary) -> String:
 	return ""
 
 func apply(card: Dictionary, player: Player) -> void:
-	if card.get("type", "") == "perk":
+	# perk 与 synergy 都按 id 累计层数(供 pick() 的 max_stacks 封顶)
+	var t: String = card.get("type", "")
+	if t == "perk" or t == "synergy":
 		player.perk_stacks[card["id"]] = player.perk_stacks.get(card["id"], 0) + 1
 	var fn: Callable = effect_registry.get(card["id"], Callable())
 	if not fn.is_valid():
@@ -201,6 +216,19 @@ func _apply_perk_hp(player: Player) -> void:
 
 func _apply_perk_heal(player: Player) -> void:
 	player.hp = minf(player.hp + 30.0, player.max_hp)
+
+# 质变效果(E3)
+func _apply_synergy_pierce(player: Player) -> void:
+	player.global_pierce += 1
+
+func _apply_synergy_multishot(player: Player) -> void:
+	player.extra_projectiles += 1
+
+func _apply_synergy_magnet(player: Player) -> void:
+	player.pickup_range_mult *= 1.5
+
+func _apply_synergy_lifesteal(player: Player) -> void:
+	player.lifesteal += 0.5
 
 func _evolve_weapon(player: Player, source_id: String) -> void:
 	var source_data := WeaponDB.get_data(source_id)
@@ -235,6 +263,14 @@ func _check_condition(condition: String, player: Player) -> bool:
 		return player.get_weapon_level(parts[1]) == int(parts[2])
 	if condition.begins_with("evolve_ready:"):
 		return _is_evolve_ready(player, condition.substr(13))
+	# 质变卡门控(E3)：has:<id> 持有该武器；has_any:<id,id,...> 持有任一
+	if condition.begins_with("has_any:"):
+		for w in condition.substr(8).split(","):
+			if player.has_weapon(w.strip_edges()):
+				return true
+		return false
+	if condition.begins_with("has:"):
+		return player.has_weapon(condition.substr(4))
 	return false
 
 # 进化解锁：武器到 max_level 且关联 perk 累积到阈值。

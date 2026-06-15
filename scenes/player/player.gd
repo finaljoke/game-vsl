@@ -29,6 +29,11 @@ var xp_mult: float = 1.0
 var damage_mult: float = 1.0
 var perk_stacks: Dictionary = {}
 var reroll_tokens: int = 0   # 重抽券：小Boss/终局Boss 掉落，选卡界面消耗(重抽/ban)
+# 质变 modifier(E3)：武器/拾取在运行时读取
+var global_pierce: int = 0        # 所有投射武器额外穿透
+var extra_projectiles: int = 0    # 飞刀类额外弹数
+var pickup_range_mult: float = 1.0  # XP 拾取磁化半径倍率
+var lifesteal: float = 0.0        # 每次击杀回血量
 
 @onready var hurt_box: Area2D = $HurtBox
 @onready var _sprite: Sprite2D = $Sprite2D
@@ -38,6 +43,13 @@ var _walk_t: float = 0.0
 
 func _ready() -> void:
 	_sprite_base_y = _sprite.position.y
+	GameFeel.enemy_died.connect(_lifesteal_on_death)
+
+# 嗜血(E3)：每次敌人死亡回少量血(值小，防高频击杀回满)。
+func _lifesteal_on_death(_position: Vector2, _enemy: Node2D) -> void:
+	if _dead or lifesteal <= 0.0:
+		return
+	hp = minf(hp + lifesteal, max_hp)
 
 func _physics_process(delta: float) -> void:
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")

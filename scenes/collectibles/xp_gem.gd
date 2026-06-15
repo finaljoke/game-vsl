@@ -16,7 +16,9 @@ func _process(delta: float) -> void:
 	if _player == null:
 		return
 	var dist := global_position.distance_to(_player.global_position)
-	if dist <= MAGNET_RADIUS:
+	# E3 磁化：拾取半径随玩家 pickup_range_mult 放大
+	var mult: float = _player.pickup_range_mult if "pickup_range_mult" in _player else 1.0
+	if dist <= MAGNET_RADIUS * mult:
 		_magnetized = true
 	if _magnetized:
 		var dir := (_player.global_position - global_position).normalized()

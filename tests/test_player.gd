@@ -149,3 +149,37 @@ func test_grant_weapon_returns_null_when_slots_full() -> void:
 
 func test_reroll_tokens_default_zero() -> void:
 	assert_int(_player.reroll_tokens).is_equal(0)
+
+# ── 质变 modifier(E3)──────────────────────────────────────────────────────
+
+func test_global_pierce_default_zero() -> void:
+	assert_int(_player.global_pierce).is_equal(0)
+
+func test_extra_projectiles_default_zero() -> void:
+	assert_int(_player.extra_projectiles).is_equal(0)
+
+func test_pickup_range_mult_default_one() -> void:
+	assert_float(_player.pickup_range_mult).is_equal(1.0)
+
+func test_lifesteal_default_zero() -> void:
+	assert_float(_player.lifesteal).is_equal(0.0)
+
+func test_lifesteal_connected_to_enemy_died() -> void:
+	assert_bool(GameFeel.enemy_died.is_connected(_player._lifesteal_on_death)).is_true()
+
+func test_lifesteal_heals_on_death() -> void:
+	_player.hp = 50.0
+	_player.lifesteal = 2.0
+	_player._lifesteal_on_death(Vector2.ZERO, null)
+	assert_float(_player.hp).is_equal_approx(52.0, 0.001)
+
+func test_lifesteal_does_not_overheal() -> void:
+	_player.hp = 99.5
+	_player.lifesteal = 2.0
+	_player._lifesteal_on_death(Vector2.ZERO, null)
+	assert_float(_player.hp).is_equal_approx(100.0, 0.001)
+
+func test_no_lifesteal_when_zero() -> void:
+	_player.hp = 50.0
+	_player._lifesteal_on_death(Vector2.ZERO, null)
+	assert_float(_player.hp).is_equal(50.0)

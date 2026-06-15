@@ -41,12 +41,12 @@ func test_pick_excludes_upgrade_when_weapon_at_level2() -> void:
 		assert_str(card["id"]).is_not_equal("knife_2")
 
 func test_pick_returns_all_available_when_pool_smaller_than_count() -> void:
-	# 占满 6 个武器槽且全满级 → 武器卡(槽满)与升级卡(满级)均被剔除，
-	# 进化卡未达 perk 阈值不出 → 只剩 6 张属性牌（5 种有上限 perk + perk_heal 无上限）
+	# 占满 6 个武器槽且全满级 → 武器卡(槽满)/升级卡(满级)/进化卡(未达阈值)全剔除。
+	# 剩：6 张属性牌 + 4 张质变卡(磁化/嗜血恒可选；贯穿/多重因持有 knife/boomerang 解锁) = 10
 	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang"]:
 		_stub_owns(id, 3)
 	var cards := CardPool.pick(_player, 99)
-	assert_int(cards.size()).is_equal(6)
+	assert_int(cards.size()).is_equal(10)
 
 func test_pick_includes_lv3_upgrade_when_weapon_at_level2() -> void:
 	_stub_owns("knife", 2)
@@ -376,3 +376,51 @@ func test_pick_has_no_duplicate_ids() -> void:
 	for card in cards:
 		assert_bool(seen.has(card["id"])).is_false()
 		seen[card["id"]] = true
+
+# ── E3: 质变卡条件 + 效果 ──────────────────────────────────────────────────
+
+func test_has_condition_true_when_owned() -> void:
+	_stub_owns("knife", 1)
+	assert_bool(CardPool._check_condition("has:knife", _player)).is_true()
+
+func test_has_condition_false_when_not_owned() -> void:
+	assert_bool(CardPool._check_condition("has:knife", _player)).is_false()
+
+func test_has_any_true_when_one_owned() -> void:
+	_stub_owns("boomerang", 1)
+	assert_bool(CardPool._check_condition("has_any:knife,boomerang", _player)).is_true()
+
+func test_has_any_false_when_none_owned() -> void:
+	assert_bool(CardPool._check_condition("has_any:knife,boomerang", _player)).is_false()
+
+func test_synergy_pierce_increments_global_pierce() -> void:
+	CardPool.apply({"id": "synergy_pierce", "type": "synergy"}, _player)
+	assert_int(_player.global_pierce).is_equal(1)
+
+func test_synergy_multishot_increments_extra_projectiles() -> void:
+	CardPool.apply({"id": "synergy_multishot", "type": "synergy"}, _player)
+	assert_int(_player.extra_projectiles).is_equal(1)
+
+func test_synergy_magnet_scales_pickup_range() -> void:
+	CardPool.apply({"id": "synergy_magnet", "type": "synergy"}, _player)
+	assert_float(_player.pickup_range_mult).is_equal_approx(1.5, 0.001)
+
+func test_synergy_lifesteal_increases_lifesteal() -> void:
+	CardPool.apply({"id": "synergy_lifesteal", "type": "synergy"}, _player)
+	assert_float(_player.lifesteal).is_equal_approx(0.5, 0.001)
+
+func test_synergy_tracks_stacks() -> void:
+	CardPool.apply({"id": "synergy_magnet", "type": "synergy"}, _player)
+	CardPool.apply({"id": "synergy_magnet", "type": "synergy"}, _player)
+	assert_int(_player.perk_stacks.get("synergy_magnet", 0)).is_equal(2)
+
+func test_synergy_pierce_gated_by_weapon_ownership() -> void:
+	# 不持有投射武器 → synergy_pierce 不入池；持有 knife → 入池
+	for c in CardPool.pick(_player, 99):
+		assert_str(c["id"]).is_not_equal("synergy_pierce")
+	_stub_owns("knife", 1)
+	var found := false
+	for c in CardPool.pick(_player, 99):
+		if c["id"] == "synergy_pierce":
+			found = true
+	assert_bool(found).is_true()
