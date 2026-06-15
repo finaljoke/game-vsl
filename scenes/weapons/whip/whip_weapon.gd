@@ -3,6 +3,8 @@ class_name WhipWeapon
 extends WeaponBase
 
 const BASE_DAMAGE: float = 30.0
+const SLASH_TEX := preload("res://assets/sprites/kenney/fx/whip_slash.png")  # 新月挥砍弧
+const SWIPE_FADE: float = 0.18    # 挥砍淡出时长
 
 # 由 WeaponData.levels 反射注入
 var arc_deg: float = 120.0        # 扇形张角
@@ -48,18 +50,30 @@ static func in_cone(enemy_pos: Vector2, origin: Vector2, facing: Vector2, arc_de
 	var ang: float = rad_to_deg(absf(facing.normalized().angle_to(to / dist)))
 	return ang <= arc_deg * 0.5
 
-# 朝 _facing 画一段快速淡出的弧线，给横扫的可读视觉。
+# 朝 _facing 甩出一片新月挥砍弧贴图(绕玩家扫动 + 快速淡出)，给横扫的可读视觉。
 func _spawn_swipe(origin: Vector2) -> void:
-	var line := Line2D.new()
-	line.width = 4.0
-	line.default_color = Color(1.0, 0.9, 0.4, 0.9)
-	var base := _facing.angle()
-	var half := deg_to_rad(arc_deg * 0.5)
-	var steps := 10
-	for i in range(steps + 1):
-		var a := base - half + (2.0 * half) * float(i) / float(steps)
-		line.add_point(origin + Vector2(cos(a), sin(a)) * swing_range)
-	get_ysort().add_child(line)
-	var tween := line.create_tween()
-	tween.tween_property(line, "modulate:a", 0.0, 0.16)
-	tween.finished.connect(func() -> void: if is_instance_valid(line): line.queue_free())
+	var ys := get_ysort()
+	if ys == null:
+		return
+	_spawn_slash(ys, origin, _facing)
+	if double_sided:
+		_spawn_slash(ys, origin, -_facing)
+
+func _spawn_slash(ys: Node, origin: Vector2, dir: Vector2) -> void:
+	var s := Sprite2D.new()
+	s.texture = SLASH_TEX
+	# 进化(血鞭 double_sided)染红，基础金色
+	var col := Color(1.0, 0.32, 0.24) if double_sided else Color(1.0, 0.88, 0.42)
+	s.modulate = Color(col.r, col.g, col.b, 0.9)
+	# 贴图凸面朝 +X；以玩家为枢轴旋转，新月弧即在 swing_range 半径处划过
+	s.global_position = origin
+	var ang := dir.angle()
+	s.rotation = ang - deg_to_rad(arc_deg * 0.35)
+	var sc := (2.0 * swing_range) / float(SLASH_TEX.get_width())
+	s.scale = Vector2(sc, sc)
+	ys.add_child(s)
+	var tw := s.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(s, "rotation", ang + deg_to_rad(arc_deg * 0.35), SWIPE_FADE)
+	tw.tween_property(s, "modulate:a", 0.0, SWIPE_FADE)
+	tw.finished.connect(func() -> void: if is_instance_valid(s): s.queue_free())
