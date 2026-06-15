@@ -124,6 +124,24 @@ func test_evolve_aura_grants_inferno() -> void:
 	assert_bool(_player.has_weapon("inferno_aura")).is_true()
 	assert_float(_player.get_weapon_node("inferno_aura").get("radius")).is_equal_approx(170.0, 0.001)
 
+# ── 进化辨识度：4 把新进化武器有(各自不同的)图标，且 thunderstorm 在世特效染白紫 ──
+
+func test_new_evolved_weapons_have_icons() -> void:
+	for id in ["thunderstorm", "bloody_whip", "cyclone", "inferno_aura"]:
+		var data := WeaponDB.get_data(id)
+		assert_object(data).is_not_null()
+		assert_object(data.icon).is_not_null()
+
+func test_thunderstorm_bolt_tint_differs_from_base() -> void:
+	CardPool.apply({"id": "lightning"}, _player)
+	CardPool.apply({"id": "lightning_2"}, _player)
+	CardPool.apply({"id": "lightning_3"}, _player)
+	CardPool.apply({"id": "evolve_lightning", "type": "evolution"}, _player)
+	var tint: Color = _player.get_weapon_node("thunderstorm").get("bolt_tint")
+	# 进化雷暴注入白紫(R≈0.85)，明显区别于基础闪电的青(R≈0.62)
+	assert_float(tint.r).is_equal_approx(0.85, 0.001)
+	assert_float(tint.b).is_equal_approx(1.0, 0.001)
+
 # ── WeaponBase：反射注入字段校验(纯函数，防 .tres 拼错键静默失效)──────────────
 
 func test_filter_unknown_lists_keys_not_in_known() -> void:
