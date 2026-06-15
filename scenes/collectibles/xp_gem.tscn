@@ -1,12 +1,11 @@
 [gd_scene format=3 uid="uid://udbgslwub5ui"]
 
 [ext_resource type="Script" path="res://scenes/collectibles/xp_gem.gd" id="1_3grw8"]
-[ext_resource type="Texture2D" uid="uid://bu6prmfrsmw5f" path="res://icon.svg" id="2_83vc7"]
+[ext_resource type="Texture2D" uid="uid://noyb6ods0niq" path="res://assets/sprites/kenney/items/gem.png" id="2_83vc7"]
 
 [node name="XPGem" type="Node2D" unique_id=829942033]
 script = ExtResource("1_3grw8")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=532024305]
-modulate = Color(0.2, 1, 0.4, 1)
-scale = Vector2(0.3, 0.3)
+scale = Vector2(1.4, 1.4)
 texture = ExtResource("2_83vc7")

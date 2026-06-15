@@ -9,4 +9,6 @@ func _tick(_delta: float) -> Status:
 		return FAILURE
 	if agent.MAX_HP <= 0.0:
 		return FAILURE
-	return SUCCESS if (agent.hp / agent.MAX_HP) < threshold else FAILURE
+	if (agent.hp / agent.MAX_HP) < threshold:
+		return SUCCESS
+	return FAILURE

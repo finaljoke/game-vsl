@@ -1,0 +1,11 @@
+Zpix (最像素) — pixel font with full CJK (Chinese/Japanese/Korean) + Latin coverage.
+
+Author:  SolidZORO
+Source:  https://github.com/SolidZORO/zpix-pixel-font
+License: SIL Open Font License, Version 1.1 (OFL-1.1)
+         https://scripts.sil.org/OFL
+
+Used in game_0_vsl as the unified UI pixel font. Chosen over Kenney's
+pixel fonts because Kenney fonts are Latin-only and the game UI contains
+Chinese text (which would render as missing-glyph boxes). Zpix provides a
+matching pixel aesthetic while fully covering the Chinese UI strings.

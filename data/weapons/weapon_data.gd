@@ -7,6 +7,7 @@ extends Resource
 
 @export var id: String = ""
 @export var display_name: String = ""
+@export var icon: Texture2D  # 升级卡片用图；投射物贴图仍在各武器自己的 projectile 场景里
 @export var base_scene: PackedScene
 @export var max_level: int = 3
 @export var levels: Array = []  # Array[Dictionary]，每元素如 {"cooldown": 0.5, "pierce": 2}

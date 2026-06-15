@@ -1,12 +1,13 @@
 [gd_scene format=3 uid="uid://dfhn6eaviu0ld"]
 
 [ext_resource type="Script" path="res://scenes/weapons/orb/orb_shield.gd" id="1_u8ub1"]
-[ext_resource type="Texture2D" uid="uid://bu6prmfrsmw5f" path="res://icon.svg" id="2_dtt48"]
+[ext_resource type="Texture2D" uid="uid://f6epkvulwyrv" path="res://assets/sprites/kenney/particles/orb_ring.png" id="2_dtt48"]
 
 [node name="OrbShield" type="Node2D" unique_id=205814842]
 script = ExtResource("1_u8ub1")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1870987521]
+texture_filter = 2
 modulate = Color(0.6, 0.2, 1, 1)
-scale = Vector2(0.3, 0.3)
+scale = Vector2(0.09, 0.09)
 texture = ExtResource("2_dtt48")

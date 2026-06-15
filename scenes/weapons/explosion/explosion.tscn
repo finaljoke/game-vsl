@@ -1,12 +1,13 @@
 [gd_scene format=3 uid="uid://dncbfm38t6x0i"]
 
 [ext_resource type="Script" uid="uid://bwxydvr4ytmfc" path="res://scenes/weapons/explosion/explosion.gd" id="1_8su6c"]
-[ext_resource type="Texture2D" uid="uid://bu6prmfrsmw5f" path="res://icon.svg" id="2_1vl2n"]
+[ext_resource type="Texture2D" uid="uid://cra5jddkhs57t" path="res://assets/sprites/kenney/particles/explosion.png" id="2_1vl2n"]
 
 [node name="Explosion" type="Node2D" unique_id=1459988147]
 script = ExtResource("1_8su6c")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1746754512]
+texture_filter = 2
 modulate = Color(1, 0.5, 0.1, 1)
-scale = Vector2(4, 4)
+scale = Vector2(0.85, 0.85)
 texture = ExtResource("2_1vl2n")

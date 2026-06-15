@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://e14wnhvuikit"]
+[gd_scene load_steps=7 format=3 uid="uid://e14wnhvuikit"]
 
 [ext_resource type="Script" path="res://scenes/arena/arena.gd" id="1_arena"]
+[ext_resource type="Script" path="res://scenes/arena/floor.gd" id="2_floor"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_n62jo"]
 size = Vector2(1280, 10)
@@ -17,10 +18,8 @@ size = Vector2(10, 720)
 [node name="Arena" type="Node2D" unique_id=1689410502]
 script = ExtResource("1_arena")
 
-[node name="Background" type="ColorRect" parent="." unique_id=1773096149]
-offset_right = 1280.0
-offset_bottom = 720.0
-color = Color(0.12, 0.12, 0.15, 1)
+[node name="Background" type="Node2D" parent="." unique_id=1773096149]
+script = ExtResource("2_floor")
 
 [node name="WallTop" type="StaticBody2D" parent="." unique_id=70338222]
 position = Vector2(640, -5)

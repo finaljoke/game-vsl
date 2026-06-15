@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scenes/enemies/enemy_projectile.gd" id="1_enproj"]
-[ext_resource type="Texture2D" uid="uid://bu6prmfrsmw5f" path="res://icon.svg" id="2_enproj"]
+[ext_resource type="Texture2D" uid="uid://dyohuygsrfjgn" path="res://assets/sprites/kenney/particles/fireball.png" id="2_enproj"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_enproj"]
 radius = 6.0
@@ -12,8 +12,9 @@ collision_mask = 2
 script = ExtResource("1_enproj")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 2
 modulate = Color(0.4, 1, 0.9, 1)
-scale = Vector2(0.18, 0.18)
+scale = Vector2(0.05, 0.05)
 texture = ExtResource("2_enproj")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cym4lkirigmk7"]
 
 [ext_resource type="Script" path="res://scenes/enemies/enemy.gd" id="1_8e3ao"]
-[ext_resource type="Texture2D" uid="uid://bu6prmfrsmw5f" path="res://icon.svg" id="2_38ino"]
+[ext_resource type="Texture2D" uid="uid://cmix1tssyof3p" path="res://assets/sprites/kenney/characters/enemy_demon.png" id="2_38ino"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fcftc"]
 height = 20.0
@@ -12,8 +12,7 @@ collision_mask = 3
 script = ExtResource("1_8e3ao")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1266334944]
-modulate = Color(1, 0.2, 0.2, 1)
-scale = Vector2(0.3, 0.3)
+scale = Vector2(2.025, 2.025)
 texture = ExtResource("2_38ino")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1778868433]
