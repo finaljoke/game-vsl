@@ -50,6 +50,10 @@ func game_over() -> void:
 	get_tree().paused = true
 	game_over_triggered.emit()
 
+# 供 spawner 在终局 Boss 被击杀时调用 → 直接通关(不必等 WIN_TIME)。
+func trigger_victory() -> void:
+	_win()
+
 func _win() -> void:
 	if current_state == State.DEAD:
 		return

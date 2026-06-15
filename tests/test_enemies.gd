@@ -49,28 +49,40 @@ func test_splitter_locked_before_330s() -> void:
 func test_splitter_unlocks_at_330s() -> void:
 	assert_bool(_ids(_spawner._eligible_archetypes(330.0)).has("splitter")).is_true()
 
-func test_boss_locked_before_420s() -> void:
-	assert_bool(_ids(_spawner._eligible_archetypes(419.0)).has("boss")).is_false()
+func test_boss_never_in_trickle_eligibility() -> void:
+	# Boss 改为脚本化登场(BOSS_EVENTS)，after 设哨兵值 → 永不进随机出怪池
+	assert_bool(_ids(_spawner._eligible_archetypes(600.0)).has("boss")).is_false()
 
-func test_boss_unlocks_at_420s() -> void:
-	assert_bool(_ids(_spawner._eligible_archetypes(420.0)).has("boss")).is_true()
+func test_boss_events_schedule_times_and_kinds() -> void:
+	# 脚本化 Boss：3:00/6:30 幕间小 Boss，9:00 终局 Boss
+	var ev = _spawner.BOSS_EVENTS
+	assert_int(ev.size()).is_equal(3)
+	assert_float(ev[0]["time"]).is_equal(180.0)
+	assert_str(ev[0]["kind"]).is_equal("mini")
+	assert_float(ev[1]["time"]).is_equal(390.0)
+	assert_str(ev[1]["kind"]).is_equal("mini")
+	assert_float(ev[2]["time"]).is_equal(540.0)
+	assert_str(ev[2]["kind"]).is_equal("final")
 
-func test_boss_after_is_420s() -> void:
-	# 解锁推迟到 7:00 当后期精英；HUD 在 420 - BOSS_WARNING_LEAD(=3) = 417s 收到预警
-	assert_float(_by_id("boss")["after"]).is_equal(420.0)
+func test_final_boss_is_last_and_before_win_time() -> void:
+	var ev = _spawner.BOSS_EVENTS
+	var last: Dictionary = ev[ev.size() - 1]
+	assert_str(last["kind"]).is_equal("final")
+	assert_float(last["time"]).is_less(600.0)  # 终局 Boss 在胜利时间前登场，留出决战窗口
 
 func test_eligible_count_grows_by_threshold() -> void:
-	# 解锁铺满全程：每 60~90s 进一个新类型，让"新东西"贯穿整局而非前 2 分钟塞满
+	# 解锁铺满全程：每 60~90s 进一个新类型，让"新东西"贯穿整局而非前 2 分钟塞满。
+	# Boss 不在随机池(脚本化)，所以最多 7 种：
 	# 0s=2(normal,swarm)、60s=3(+ranged)、120s=4(+bomber)、180s=5(+charger)、
-	# 240s=6(+brute)、330s=7(+splitter)、420s=8(+boss)
+	# 240s=6(+brute)、330s=7(+splitter)
 	assert_int(_spawner._eligible_archetypes(0.0).size()).is_equal(2)
 	assert_int(_spawner._eligible_archetypes(60.0).size()).is_equal(3)
 	assert_int(_spawner._eligible_archetypes(120.0).size()).is_equal(4)
 	assert_int(_spawner._eligible_archetypes(180.0).size()).is_equal(5)
 	assert_int(_spawner._eligible_archetypes(240.0).size()).is_equal(6)
 	assert_int(_spawner._eligible_archetypes(330.0).size()).is_equal(7)
-	assert_int(_spawner._eligible_archetypes(420.0).size()).is_equal(8)
-	assert_int(_spawner._eligible_archetypes(600.0).size()).is_equal(8)
+	assert_int(_spawner._eligible_archetypes(420.0).size()).is_equal(7)
+	assert_int(_spawner._eligible_archetypes(600.0).size()).is_equal(7)
 
 # ── 原型三围倍率数学 ──────────────────────────────────────────────────────
 

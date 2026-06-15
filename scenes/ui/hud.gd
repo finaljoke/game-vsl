@@ -8,11 +8,24 @@ extends CanvasLayer
 @onready var _gm = get_node("/root/GameManager")
 
 var _player: Player = null
+var _kills: int = 0
+var _kill_label: Label = null
 
 func _ready() -> void:
 	add_to_group("hud")
 	_player = get_tree().get_first_node_in_group("player") as Player
 	GameFeel.boss_incoming.connect(_show_boss_warning)
+	# 击杀数：代码内建一个 Label(免改 .tscn)，监听 enemy_died 累加，给"积累感"+第二目标。
+	_kill_label = Label.new()
+	_kill_label.add_theme_font_size_override("font_size", 16)
+	_kill_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_kill_label.add_theme_constant_override("outline_size", 4)
+	_kill_label.position = Vector2(10.0, 36.0)  # HP 条(10,10~30)正下方
+	add_child(_kill_label)
+	GameFeel.enemy_died.connect(_on_enemy_killed)
+
+func _on_enemy_killed(_position: Vector2, _enemy: Node2D) -> void:
+	_kills += 1
 
 func _process(_delta: float) -> void:
 	if _player == null:
@@ -22,6 +35,8 @@ func _process(_delta: float) -> void:
 	level_label.text = "Lv.%d" % _player.level
 	var t := int(_gm.elapsed_time)
 	timer_label.text = "%02d:%02d" % [t / 60, t % 60]
+	if _kill_label != null:
+		_kill_label.text = "击杀 %d" % _kills
 
 # Spawner 在 boss 登场前 BOSS_WARNING_LEAD 秒触发，3 秒后自销毁。
 func _show_boss_warning() -> void:

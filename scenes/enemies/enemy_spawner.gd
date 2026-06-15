@@ -31,8 +31,16 @@ const ARCHETYPES: Array[Dictionary] = [
 	{ "id": "brute",    "hp": 3.5,  "spd": 0.6,  "con": 2.0, "tint": Color(0.65, 0.2, 0.85), "scale": 0.46, "weight": 2, "after": 240.0, "behavior": "chase",   "texture": preload("res://assets/sprites/kenney/characters/enemy_werewolf.png") },
 	# Splitter：死亡裂成 2 只小怪(死亡钩子，offspring 从自身时缩属性派生)
 	{ "id": "splitter", "hp": 1.4,  "spd": 0.95, "con": 1.0, "tint": Color(0.35, 0.9, 0.4),  "scale": 0.40, "weight": 2, "after": 330.0, "behavior": "chase",   "split": 2, "texture": preload("res://assets/sprites/kenney/characters/enemy_spider.png")   },
-	# Boss：后期(7:00)解锁的稀有大体型阶段杀手；B 步会改为脚本化幕间/终局 Boss。并发只允许 1 只
-	{ "id": "boss",     "hp": 12.0, "spd": 0.7,  "con": 2.5, "tint": Color(0.9, 0.1, 0.1),   "scale": 0.65, "weight": 1, "after": 420.0, "behavior": "boss",    "texture": preload("res://assets/sprites/kenney/characters/enemy_werewolf.png") },
+	# Boss：脚本化登场(见 BOSS_EVENTS)，不进随机出怪池 → after 设哨兵值(>WIN_TIME)。此条目仅作 Boss 三围/外观来源。
+	{ "id": "boss",     "hp": 12.0, "spd": 0.7,  "con": 2.5, "tint": Color(0.9, 0.1, 0.1),   "scale": 0.65, "weight": 1, "after": 9999.0, "behavior": "boss",    "texture": preload("res://assets/sprites/kenney/characters/enemy_werewolf.png") },
+]
+
+# 脚本化 Boss 时间表：固定时间点登场(不走随机池)。每个登场前 BOSS_WARNING_LEAD 秒预警。
+# kind="mini" 击杀 → 立即升级选卡；kind="final" 击杀 → 直接通关(扛到 WIN_TIME 兜底)。
+const BOSS_EVENTS: Array[Dictionary] = [
+	{ "time": 180.0, "kind": "mini" },   # 3:00 第一幕间小 Boss
+	{ "time": 390.0, "kind": "mini" },   # 6:30 第二幕间小 Boss
+	{ "time": 540.0, "kind": "final" },  # 9:00 终局 Boss(决战)
 ]
 
 var _spawn_timer: float = 0.0
@@ -42,7 +50,8 @@ var _elapsed_time: float = 0.0
 var _ysort: Node = null
 var _arena: Node = null  # 持有 .config: ArenaConfig
 var _boss_alive: bool = false           # 并发锁：同一时刻只允许一只 boss 存活
-var _boss_warning_fired: bool = false   # 预警 signal 只发一次
+var _bosses_spawned: int = 0            # 已登场的脚本化 Boss 数(指向 BOSS_EVENTS 下一项)
+var _boss_warned: int = 0               # 已预警的脚本化 Boss 数
 var _director = SpawnDirectorScript.new()  # 节拍层：在 trickle 之上叠爆发/喘息事件
 @onready var _gm = get_node("/root/GameManager")
 
@@ -59,7 +68,7 @@ func _process(delta: float) -> void:
 	if _scale_timer >= SCALE_INTERVAL:
 		_scale_timer = 0.0
 		_spawn_interval = max(_spawn_interval * SCALE_FACTOR, MIN_INTERVAL)
-	_maybe_fire_boss_warning()
+	_update_boss_schedule()
 	# 节拍层：到点则触发一个爆发/喘息事件，叠在 trickle 之上形成锯齿强度曲线。
 	if _director.is_due(_elapsed_time):
 		_run_event(_director.advance(_elapsed_time))
@@ -67,34 +76,47 @@ func _process(delta: float) -> void:
 		_spawn_timer = 0.0
 		_try_spawn()
 
-# Boss 登场前 BOSS_WARNING_LEAD 秒，单次广播 GameFeel.boss_incoming → HUD 弹预警 Label
-func _maybe_fire_boss_warning() -> void:
-	if _boss_warning_fired:
-		return
-	var boss_after := _boss_after()
-	if boss_after < 0.0:
-		return
-	if _elapsed_time >= boss_after - BOSS_WARNING_LEAD:
-		_boss_warning_fired = true
-		GameFeel.boss_incoming.emit()
+# 脚本化 Boss 调度：到 (time - LEAD) 发预警；到 time 生成对应 kind 的 Boss。
+func _update_boss_schedule() -> void:
+	if _boss_warned < BOSS_EVENTS.size():
+		var w_evt: Dictionary = BOSS_EVENTS[_boss_warned]
+		if _elapsed_time >= float(w_evt["time"]) - BOSS_WARNING_LEAD:
+			_boss_warned += 1
+			GameFeel.boss_incoming.emit()
+	if _bosses_spawned < BOSS_EVENTS.size():
+		var s_evt: Dictionary = BOSS_EVENTS[_bosses_spawned]
+		if _elapsed_time >= float(s_evt["time"]):
+			_bosses_spawned += 1
+			_spawn_boss(String(s_evt["kind"]))
 
-func _boss_after() -> float:
-	for a in ARCHETYPES:
-		if a["id"] == "boss":
-			return float(a["after"])
-	return -1.0
+# 生成一只脚本化 Boss。final 更肉(作为可击杀的通关目标)；按 kind 接不同死亡奖励。
+func _spawn_boss(kind: String) -> void:
+	var arch := _archetype_by_id("boss").duplicate()
+	if kind == "final":
+		arch["hp"] = float(arch["hp"]) * 2.5
+		arch["scale"] = float(arch["scale"]) * 1.25
+	var boss := _spawn_one(arch, _random_edge_pos())
+	if boss == null:
+		return
+	if kind == "final":
+		boss.died.connect(_on_final_boss_died)
+	else:
+		boss.died.connect(_on_mini_boss_died)
+
+func _on_mini_boss_died(_pos: Vector2) -> void:
+	_gm.trigger_level_up()    # 幕间小 Boss 击杀 → 立即升级选卡
+
+func _on_final_boss_died(_pos: Vector2) -> void:
+	_gm.trigger_victory()     # 终局 Boss 击杀 → 直接通关
 
 func _try_spawn() -> void:
 	if _enemy_count() >= _max_enemies(_elapsed_time):
 		return
-	var arch := _pick_archetype()
-	# Boss 并发锁：抽到 boss 但场上已有 → 跳过本轮（下一周期再抽）
-	if arch["id"] == "boss" and _boss_alive:
-		return
-	_spawn_one(arch, _random_edge_pos())
+	# trickle 只刷普通怪；Boss 走 BOSS_EVENTS 脚本化登场。
+	_spawn_one(_pick_eligible_nonboss(), _random_edge_pos())
 
 # 按原型在 pos 实例化一只敌人并注入时缩属性。trickle 与节拍事件共用，stat 逻辑只此一处。
-func _spawn_one(arch: Dictionary, pos: Vector2) -> void:
+func _spawn_one(arch: Dictionary, pos: Vector2) -> Enemy:
 	var minutes := _elapsed_time / 60.0
 	var base_hp := _scaled_base_hp(_elapsed_time)  # 线性曲线 ×幕乘区，后半程超线性递增
 	var base_spd := clampf(80.0 * (1.0 + minutes * 0.15), 80.0, 210.0)  # 上限提至 210，后期逼近玩家速度 200，削弱纯风筝
@@ -114,6 +136,7 @@ func _spawn_one(arch: Dictionary, pos: Vector2) -> void:
 	if arch["id"] == "boss":
 		_boss_alive = true
 		enemy.died.connect(_on_boss_died)
+	return enemy as Enemy
 
 func _on_boss_died(_pos: Vector2) -> void:
 	_boss_alive = false
@@ -211,18 +234,6 @@ func _eligible_archetypes(elapsed: float) -> Array[Dictionary]:
 		if elapsed >= a["after"]:
 			pool.append(a)
 	return pool
-
-func _pick_archetype() -> Dictionary:
-	var pool := _eligible_archetypes(_elapsed_time)
-	var total := 0
-	for a in pool:
-		total += int(a["weight"])
-	var r := randi() % total
-	for a in pool:
-		r -= int(a["weight"])
-		if r < 0:
-			return a
-	return pool[0]
 
 func _on_enemy_died(pos: Vector2) -> void:
 	var gem := XP_GEM_SCENE.instantiate()
