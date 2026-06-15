@@ -202,6 +202,18 @@ func test_max_enemies_nondecreasing() -> void:
 	assert_int(_spawner._max_enemies(179.0)).is_less_equal(_spawner._max_enemies(180.0))
 	assert_int(_spawner._max_enemies(389.0)).is_less_equal(_spawner._max_enemies(390.0))
 
+# ── BGM 选曲：按幕切歌，Boss 存活时切 Boss 曲(纯映射，便于单测)──────────────
+
+func test_music_track_per_act() -> void:
+	assert_str(_spawner._music_track_for(0.0, false)).is_equal("act1")
+	assert_str(_spawner._music_track_for(180.0, false)).is_equal("act2")
+	assert_str(_spawner._music_track_for(390.0, false)).is_equal("act3")
+
+func test_music_track_boss_overrides_act() -> void:
+	# Boss 存活时无论第几幕都放 Boss 曲
+	assert_str(_spawner._music_track_for(0.0, true)).is_equal("boss")
+	assert_str(_spawner._music_track_for(500.0, true)).is_equal("boss")
+
 # ── helpers ───────────────────────────────────────────────────────────────
 
 func _ids(arr: Array) -> Array:
