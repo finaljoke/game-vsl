@@ -11,6 +11,7 @@ const ProjectileScene := preload("res://scenes/enemies/enemy_projectile.tscn")
 const CHASE_PATH    := "res://scenes/enemies/ai/atoms/bt_chase_target.gd"
 const RANGED_PATH   := "res://scenes/enemies/ai/atoms/bt_kite_target.gd"
 const BOMBER_PATH   := "res://scenes/enemies/ai/atoms/bt_bomber_attack.gd"
+const CHARGER_PATH  := "res://scenes/enemies/ai/atoms/bt_charger.gd"
 const MOVE_PATH     := "res://scenes/enemies/ai/atoms/bt_move_to_target.gd"
 const SUMMON_PATH   := "res://scenes/enemies/ai/atoms/bt_spawn_minions.gd"
 const FIRE_PATH     := "res://scenes/enemies/ai/atoms/bt_fire_projectile.gd"
@@ -31,6 +32,10 @@ func test_build_ranged_returns_ranged_root() -> void:
 func test_build_bomber_returns_bomber_root() -> void:
 	var bt := EnemyBT.build("bomber")
 	assert_str(bt.root_task.get_script().resource_path).is_equal(BOMBER_PATH)
+
+func test_build_charger_returns_charger_root() -> void:
+	var bt := EnemyBT.build("charger")
+	assert_str(bt.root_task.get_script().resource_path).is_equal(CHARGER_PATH)
 
 func test_build_unknown_falls_back_to_chase() -> void:
 	var bt := EnemyBT.build("nonsense")

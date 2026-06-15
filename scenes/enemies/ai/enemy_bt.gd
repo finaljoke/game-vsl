@@ -12,6 +12,7 @@ const _SpawnMinions   = preload("res://scenes/enemies/ai/atoms/bt_spawn_minions.
 const _CooldownReady  = preload("res://scenes/enemies/ai/atoms/bt_cooldown_ready.gd")
 const _FireProjectile = preload("res://scenes/enemies/ai/atoms/bt_fire_projectile.gd")
 const _Wait           = preload("res://scenes/enemies/ai/atoms/bt_wait.gd")
+const _Charger        = preload("res://scenes/enemies/ai/atoms/bt_charger.gd")
 
 # 把一组任务塞进 composite。便于把 Selector/Sequence 写成数据。
 static func _compose(composite: BTComposite, tasks: Array) -> BTComposite:
@@ -77,6 +78,8 @@ static func build(behavior: String) -> BehaviorTree:
 			bt.root_task = _KiteTarget.new()
 		"bomber":
 			bt.root_task = _BomberAttack.new()
+		"charger":
+			bt.root_task = _Charger.new()
 		"boss":
 			bt.root_task = _build_boss_phases()
 		_:
