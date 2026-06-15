@@ -155,7 +155,15 @@ func _check_condition(condition: String, player: Player) -> bool:
 	if condition == "":
 		return true
 	if condition.begins_with("no:"):
-		return not player.has_weapon(condition.substr(3))
+		var wid := condition.substr(3)
+		if player.has_weapon(wid):
+			return false
+		# 源武器已进化(replace_weapon 抹掉了源 id) → 别把基础武器卡放回池
+		var data := WeaponDB.get_data(wid)
+		if data != null and data.evolution.has("evolved_id") \
+				and player.has_weapon(String(data.evolution["evolved_id"])):
+			return false
+		return true
 	if condition.begins_with("upgrade:"):
 		var parts := condition.split(":")  # ["upgrade", "knife", "1"]
 		return player.get_weapon_level(parts[1]) == int(parts[2])

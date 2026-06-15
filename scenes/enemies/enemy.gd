@@ -32,7 +32,9 @@ func _ready() -> void:
 	_player = get_tree().get_first_node_in_group("player")
 	if sprite_texture:
 		_sprite.texture = sprite_texture
-	_sprite.modulate = Color.WHITE  # 真贴图按原色显示；tint 仅供 GameFeel 受击闪白
+	# 按原型 tint 给贴图上色，让共用贴图的原型(charger/bomber、splitter/swarm…)也一眼可辨。
+	# 受击闪白由 GameFeel 改根节点 modulate(过曝)叠加在此之上，互不冲突。
+	_sprite.modulate = tint
 	_sprite.scale = Vector2(body_scale, body_scale) * ICON_TO_TILE
 	if behavior == "boss":
 		_start_boss_pulse()

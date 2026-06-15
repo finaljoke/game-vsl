@@ -11,5 +11,5 @@ display_name = "核爆"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"cooldown": 0.5}]
+levels = [{"cooldown": 0.5, "blast_scale": 1.6, "blast_tint": Color(1, 0.55, 0.15, 1)}]
 evolution = {}

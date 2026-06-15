@@ -252,6 +252,54 @@ func test_evolve_locked_below_half_perk_stacks() -> void:
 	for c in cards:
 		assert_str(c["id"]).is_not_equal("evolve_knife")
 
+func test_pick_excludes_base_weapon_after_evolution() -> void:
+	# 回归：进化后 replace_weapon 抹掉源武器 id，no:<id> 条件曾让基础武器卡重新可选。
+	# 进化成 nuke 后，"explosion" 基础卡不应再出现。
+	CardPool.apply({"id": "explosion"}, _player)
+	CardPool.apply({"id": "explosion_2"}, _player)
+	CardPool.apply({"id": "explosion_3"}, _player)
+	CardPool.apply({"id": "evolve_explosion", "type": "evolution"}, _player)
+	var cards := CardPool.pick(_player, 20)
+	for card in cards:
+		assert_str(card["id"]).is_not_equal("explosion")
+		assert_str(card["id"]).is_not_equal("explosion_2")
+		assert_str(card["id"]).is_not_equal("explosion_3")
+
+func test_evolve_explosion_sets_distinct_blast_visuals() -> void:
+	# 进化形态应有区别于基础的视觉(更大/变色)，由 nuke.tres 的 levels 数据驱动注入。
+	CardPool.apply({"id": "explosion"}, _player)
+	CardPool.apply({"id": "explosion_2"}, _player)
+	CardPool.apply({"id": "explosion_3"}, _player)
+	CardPool.apply({"id": "evolve_explosion", "type": "evolution"}, _player)
+	var found := false
+	for child in _player.get_children():
+		if child is ExplosionWeapon and child.data != null and child.data.id == "nuke":
+			found = true
+			assert_float(child.blast_scale).is_greater(1.0)
+	assert_bool(found).is_true()
+
+func test_evolve_knife_sets_distinct_projectile_visuals() -> void:
+	CardPool.apply({"id": "knife"}, _player)
+	CardPool.apply({"id": "knife_2"}, _player)
+	CardPool.apply({"id": "knife_3"}, _player)
+	CardPool.apply({"id": "evolve_knife", "type": "evolution"}, _player)
+	var found := false
+	for child in _player.get_children():
+		if child is KnifeWeapon and child.data != null and child.data.id == "thousand_edge":
+			found = true
+			assert_float(child.proj_scale).is_greater(1.0)
+	assert_bool(found).is_true()
+
+func test_base_weapons_have_neutral_visuals() -> void:
+	# 基础武器不指定视觉键 → 保持默认(scale=1.0)，不被进化视觉影响
+	CardPool.apply({"id": "explosion"}, _player)
+	CardPool.apply({"id": "knife"}, _player)
+	for child in _player.get_children():
+		if child is ExplosionWeapon and child.data != null and child.data.id == "explosion":
+			assert_float(child.blast_scale).is_equal_approx(1.0, 0.001)
+		if child is KnifeWeapon and child.data != null and child.data.id == "knife":
+			assert_float(child.proj_scale).is_equal_approx(1.0, 0.001)
+
 func test_evolve_orb_uses_its_own_threshold() -> void:
 	# orb 的 requires_perk_stacks=5（perk_hp cap 是 10）；5 层够、4 层不够
 	_stub_owns("orb", 3)

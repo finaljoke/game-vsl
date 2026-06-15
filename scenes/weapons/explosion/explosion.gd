@@ -7,11 +7,12 @@ const RADIUS: float = 80.0
 const LIFETIME: float = 0.35
 
 var damage: float = BASE_DAMAGE  # 由 ExplosionWeapon 注入 damage_mult 后设置
+var base_scale: float = 1.0      # 进化形态(核爆)放大视觉用；由 ExplosionWeapon 注入
 var _age: float = 0.0
 
 func _process(delta: float) -> void:
 	_age += delta
-	scale = Vector2.ONE * (1.0 + _age / LIFETIME * 0.5)
+	scale = Vector2.ONE * base_scale * (1.0 + _age / LIFETIME * 0.5)
 	modulate.a = 1.0 - (_age / LIFETIME)
 	if _age >= LIFETIME:
 		queue_free()

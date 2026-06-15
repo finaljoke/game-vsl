@@ -5,6 +5,10 @@ extends WeaponBase
 const EXPLOSION_SCENE = preload("res://scenes/weapons/explosion/explosion.tscn")
 const EXPLOSION_SCRIPT = preload("res://scenes/weapons/explosion/explosion.gd")  # 半径单一来源
 
+# 进化视觉(由 WeaponData.levels 反射注入)：基础武器不指定 → 保持默认无变化。
+var blast_scale: float = 1.0
+var blast_tint: Color = Color.WHITE
+
 func _ready() -> void:
 	super._ready()
 	# cooldown 由 WeaponData.levels 通过 apply_level() 注入
@@ -20,6 +24,8 @@ func attack() -> void:
 	var center := densest_center(positions, EXPLOSION_SCRIPT.RADIUS)
 	var explosion := EXPLOSION_SCENE.instantiate()
 	explosion.damage = explosion.BASE_DAMAGE * (_player as Player).damage_mult
+	explosion.base_scale = blast_scale   # 进化形态(核爆)更大
+	explosion.modulate = blast_tint      # 进化形态变色；_process 只动 alpha，RGB 保留
 	get_ysort().add_child(explosion)
 	explosion.global_position = center
 	explosion.detonate()

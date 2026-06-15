@@ -5,6 +5,9 @@ extends WeaponBase
 const PROJECTILE_SCENE = preload("res://scenes/weapons/knife/knife_projectile.tscn")
 
 var pierce: int = 2  # 飞刀定位：穿透直线，可串多个敌人
+# 进化视觉(由 WeaponData.levels 反射注入)：基础武器不指定 → 保持默认无变化。
+var proj_scale: float = 1.0
+var proj_tint: Color = Color.WHITE
 
 func _ready() -> void:
 	super._ready()
@@ -20,3 +23,7 @@ func attack() -> void:
 	get_ysort().add_child(projectile)
 	projectile.global_position = _player.global_position
 	projectile.direction = (_player.global_position.direction_to(target.global_position))
+	# dagger 贴图默认朝上((0,-1))，+PI/2 把刀尖对齐到飞行方向
+	projectile.rotation = projectile.direction.angle() + PI / 2
+	projectile.scale *= proj_scale   # 进化形态(千刃)更大
+	projectile.modulate = proj_tint  # 进化形态变色
