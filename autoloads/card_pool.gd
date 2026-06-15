@@ -19,6 +19,19 @@ const CARDS: Array[Dictionary] = [
 	{ "id": "knife_3",     "name": "飞刀 Lv.3",    "desc": "冷却 0.5s → 0.3s，穿透 +2",  "type": "upgrade", "condition": "upgrade:knife:2"     },
 	{ "id": "orb_3",       "name": "护盾球 Lv.3",  "desc": "护盾球数量 3 → 4",          "type": "upgrade", "condition": "upgrade:orb:2"       },
 	{ "id": "explosion_3", "name": "爆炸 Lv.3",    "desc": "冷却 1.5s → 1.0s",         "type": "upgrade", "condition": "upgrade:explosion:2" },
+	# 新武器(E1)：机制与飞刀/护盾球/爆炸错开
+	{ "id": "lightning",   "name": "闪电链",       "desc": "向最近敌人劈雷并连锁跳跃",  "type": "weapon",  "condition": "no:lightning"  },
+	{ "id": "whip",        "name": "横扫鞭",       "desc": "朝移动方向横扫一扇形",      "type": "weapon",  "condition": "no:whip"       },
+	{ "id": "boomerang",   "name": "回旋镖",       "desc": "抛出后折返，来回都命中",    "type": "weapon",  "condition": "no:boomerang"  },
+	{ "id": "aura",        "name": "光环",         "desc": "贴身圆形伤害场持续灼烧",    "type": "weapon",  "condition": "no:aura"       },
+	{ "id": "lightning_2", "name": "闪电链 Lv.2",  "desc": "连锁数 3 → 4，冷却↓",       "type": "upgrade", "condition": "upgrade:lightning:1" },
+	{ "id": "lightning_3", "name": "闪电链 Lv.3",  "desc": "连锁数 4 → 5，冷却↓",       "type": "upgrade", "condition": "upgrade:lightning:2" },
+	{ "id": "whip_2",      "name": "横扫鞭 Lv.2",  "desc": "扇形更大，冷却↓",           "type": "upgrade", "condition": "upgrade:whip:1"      },
+	{ "id": "whip_3",      "name": "横扫鞭 Lv.3",  "desc": "扇形更大，冷却↓",           "type": "upgrade", "condition": "upgrade:whip:2"      },
+	{ "id": "boomerang_2", "name": "回旋镖 Lv.2",  "desc": "穿透 +1，射程↑",            "type": "upgrade", "condition": "upgrade:boomerang:1" },
+	{ "id": "boomerang_3", "name": "回旋镖 Lv.3",  "desc": "穿透 +1，射程↑",            "type": "upgrade", "condition": "upgrade:boomerang:2" },
+	{ "id": "aura_2",      "name": "光环 Lv.2",    "desc": "范围 +20，冷却↓",           "type": "upgrade", "condition": "upgrade:aura:1"      },
+	{ "id": "aura_3",      "name": "光环 Lv.3",    "desc": "范围 +20，冷却↓",           "type": "upgrade", "condition": "upgrade:aura:2"      },
 	{ "id": "perk_speed",  "name": "移速提升",  "desc": "移动速度永久 +15%",     "type": "perk",    "condition": "", "max_stacks": 8 },
 	{ "id": "perk_hp",     "name": "生命上限",  "desc": "最大 HP +20，当场补满", "type": "perk",    "condition": "", "max_stacks": 10 },
 	{ "id": "perk_attack", "name": "攻速提升",  "desc": "攻击速度永久 +15%",     "type": "perk",    "condition": "", "max_stacks": 8 },
@@ -41,7 +54,7 @@ func _ready() -> void:
 
 # 静态武器与升级卡（依赖 WeaponDB 提供数据，但 CARDS 数组里的 id/condition 是手写的）
 func _register_weapon_effects() -> void:
-	for id in ["knife", "orb", "explosion"]:
+	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang", "aura"]:
 		effect_registry[id] = _grant_weapon.bind(id)
 		effect_registry["%s_2" % id] = _level_up_weapon.bind(id)
 		effect_registry["%s_3" % id] = _level_up_weapon.bind(id)
@@ -73,8 +86,12 @@ func _register_evolution_cards() -> void:
 
 func pick(player: Player, count: int = 3) -> Array[Dictionary]:
 	var available: Array[Dictionary] = []
+	var slots_full: bool = player.owned_weapons.size() >= player.MAX_WEAPON_SLOTS
 	for card in _runtime_cards:
 		if not _check_condition(card["condition"], player):
+			continue
+		# 武器槽满：新武器卡不再出现(升级/进化不占新槽，照常)
+		if slots_full and card.get("type", "") == "weapon":
 			continue
 		# perk 封顶：达到 max_stacks 后从池中剔除
 		if card.has("max_stacks"):

@@ -126,3 +126,21 @@ func test_xp_mult_scales_xp_gain() -> void:
 	# 100 * 1.25 = 125 XP → 升级（消耗 100）→ xp 剩余 25
 	assert_int(_player.level).is_equal(2)
 	assert_float(_player.xp).is_equal_approx(25.0, 0.001)
+
+# ── 武器槽上限 ────────────────────────────────────────────────────────────
+
+func test_max_weapon_slots_is_positive() -> void:
+	assert_int(_player.MAX_WEAPON_SLOTS).is_greater(0)
+
+func test_grant_weapon_succeeds_below_slot_cap() -> void:
+	var w = _player.grant_weapon(WeaponDB.get_data("knife"))
+	assert_object(w).is_not_null()
+	assert_int(_player.owned_weapons.size()).is_equal(1)
+
+func test_grant_weapon_returns_null_when_slots_full() -> void:
+	# 占满槽位(stub)后 grant 真实武器应被拒，且不改变持有数
+	for i in range(_player.MAX_WEAPON_SLOTS):
+		_player.owned_weapons["slot_%d" % i] = {"node": null, "level": 1}
+	var w = _player.grant_weapon(WeaponDB.get_data("knife"))
+	assert_object(w).is_null()
+	assert_int(_player.owned_weapons.size()).is_equal(_player.MAX_WEAPON_SLOTS)

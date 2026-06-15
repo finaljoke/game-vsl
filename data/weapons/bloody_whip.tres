@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/whip/whip_weapon.tscn" id="2_scene"]
+[ext_resource type="Texture2D" path="res://assets/sprites/kenney/items/dagger.png" id="3_icon"]
+
+[resource]
+script = ExtResource("1_data")
+id = "bloody_whip"
+display_name = "血鞭"
+icon = ExtResource("3_icon")
+base_scene = ExtResource("2_scene")
+max_level = 1
+levels = [{"cooldown": 0.6, "arc_deg": 170.0, "swing_range": 200.0, "double_sided": true}]
+evolution = {}

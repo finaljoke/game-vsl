@@ -7,6 +7,13 @@ signal died
 
 const SPEED: float = 200.0
 const CONTACT_MAX_SOURCES: int = 6  # 每帧最多被多少只敌人造成接触伤害
+const MAX_WEAPON_SLOTS: int = 6     # 武器槽上限：base 武器多于槽位 → 产生"装不下"的取舍
+
+# 行走动感：sin 驱动的轻微上下 bob + 横向 squash（纯视觉，不影响碰撞/移动）
+const BASE_SCALE: float = 2.5
+const BOB_FREQ: float = 12.0
+const BOB_AMP: float = 2.5
+const SETTLE_SPEED: float = 12.0  # 停下时回正速度
 
 var hp: float = 100.0
 var max_hp: float = 100.0
@@ -23,12 +30,34 @@ var damage_mult: float = 1.0
 var perk_stacks: Dictionary = {}
 
 @onready var hurt_box: Area2D = $HurtBox
+@onready var _sprite: Sprite2D = $Sprite2D
+
+var _sprite_base_y: float = 0.0
+var _walk_t: float = 0.0
+
+func _ready() -> void:
+	_sprite_base_y = _sprite.position.y
 
 func _physics_process(delta: float) -> void:
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	velocity = dir * SPEED * speed_mult
 	move_and_slide()
+	_update_visuals(delta)
 	_check_contact_damage(delta)
+
+# 朝向翻转 + 行走 bob/squash；受击闪白由 GameFeel 改 root.modulate，互不干扰。
+func _update_visuals(delta: float) -> void:
+	if velocity.length() > 5.0:
+		if absf(velocity.x) > 1.0:
+			_sprite.flip_h = velocity.x < 0.0
+		_walk_t += delta * BOB_FREQ
+		var s := sin(_walk_t)
+		_sprite.position.y = _sprite_base_y - absf(s) * BOB_AMP
+		_sprite.scale = Vector2(BASE_SCALE + s * 0.06, BASE_SCALE - absf(s) * 0.05)
+	else:
+		_walk_t = 0.0
+		_sprite.position.y = lerpf(_sprite.position.y, _sprite_base_y, delta * SETTLE_SPEED)
+		_sprite.scale = _sprite.scale.lerp(Vector2(BASE_SCALE, BASE_SCALE), delta * SETTLE_SPEED)
 
 func _check_contact_damage(delta: float) -> void:
 	var n := 0
@@ -83,6 +112,10 @@ func get_weapon_node(id: String) -> WeaponBase:
 func grant_weapon(data: WeaponData) -> WeaponBase:
 	if data == null:
 		push_error("Player.grant_weapon: data is null")
+		return null
+	# 槽位已满则拒绝(进化走 replace_weapon：先 erase 再 grant，净不增，安全)
+	if owned_weapons.size() >= MAX_WEAPON_SLOTS:
+		push_warning("Player.grant_weapon: 武器槽已满(%d)，拒绝 %s" % [MAX_WEAPON_SLOTS, data.id])
 		return null
 	var weapon: WeaponBase = data.base_scene.instantiate()
 	weapon.data = data

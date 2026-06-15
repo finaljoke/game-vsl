@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/weapons/lightning/lightning_weapon.gd" id="1_lw"]
+
+[node name="LightningWeapon" type="Node"]
+script = ExtResource("1_lw")
