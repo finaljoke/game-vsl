@@ -5,8 +5,14 @@ extends WeaponBase
 const BASE_DAMAGE: float = 22.0
 const LINK_RANGE: float = 160.0   # 连锁跳跃的最大间距
 
+const BOLT_TEX := preload("res://assets/sprites/kenney/fx/lightning_bolt.png")  # 分叉电弧
+const GLOW_TEX := preload("res://assets/sprites/kenney/fx/fx_glow.png")         # 命中辉光
+const BOLT_FADE: float = 0.18     # 电弧淡出时长
+const BOLT_WIDTH_PX: float = 56.0 # 电弧贴图屏上宽度
+
 # 由 WeaponData.levels 反射注入
 var chains: int = 3               # 一次最多命中(含起跳)的目标数
+var bolt_tint: Color = Color(0.62, 0.86, 1.0)  # 进化(雷暴)可经 levels 注入改白紫
 
 func _ready() -> void:
 	super._ready()
@@ -53,16 +59,55 @@ static func chain_targets(origin: Vector2, positions: Array, max_links: int, lin
 		from = positions[best]
 	return result
 
-# 用一条快速淡出的 Line2D 串起命中路径，给"链"的可读视觉。
+# 沿命中路径逐段铺设分叉电弧贴图(加色发光) + 命中点辉光，给"链"的可读视觉。
 func _spawn_bolt(path: Array) -> void:
 	if path.size() < 2:
 		return
-	var line := Line2D.new()
-	line.width = 3.0
-	line.default_color = Color(0.6, 0.85, 1.0, 0.9)
-	for p in path:
-		line.add_point(p)
-	get_ysort().add_child(line)
-	var tween := line.create_tween()
-	tween.tween_property(line, "modulate:a", 0.0, 0.18)
-	tween.finished.connect(func() -> void: if is_instance_valid(line): line.queue_free())
+	var ys := get_ysort()
+	if ys == null:
+		return
+	for i in range(path.size() - 1):
+		_spawn_segment(ys, path[i], path[i + 1])
+	# 命中点(除起点玩家外)闪一下
+	for j in range(1, path.size()):
+		_spawn_impact(ys, path[j])
+
+# 把一张竖直电弧贴图旋转/拉伸到 a→b 这一段上。
+func _spawn_segment(ys: Node, a: Vector2, b: Vector2) -> void:
+	var seg := b - a
+	var length := seg.length()
+	if length < 1.0:
+		return
+	var s := Sprite2D.new()
+	s.texture = BOLT_TEX
+	s.material = _additive()
+	s.global_position = a + seg * 0.5
+	s.rotation = seg.angle() - PI / 2.0  # 贴图竖直(+Y) → 对齐到段方向
+	s.scale = Vector2(BOLT_WIDTH_PX / float(BOLT_TEX.get_width()), length / float(BOLT_TEX.get_height()))
+	s.modulate = Color(bolt_tint.r, bolt_tint.g, bolt_tint.b, 0.95)
+	ys.add_child(s)
+	var tw := s.create_tween()
+	tw.tween_property(s, "modulate:a", 0.0, BOLT_FADE)
+	tw.finished.connect(func() -> void: if is_instance_valid(s): s.queue_free())
+
+func _spawn_impact(ys: Node, pos: Vector2) -> void:
+	var g := Sprite2D.new()
+	g.texture = GLOW_TEX
+	g.material = _additive()
+	g.global_position = pos
+	g.scale = Vector2(0.12, 0.12)
+	g.modulate = Color(bolt_tint.r, bolt_tint.g, bolt_tint.b, 0.9)
+	ys.add_child(g)
+	var tw := g.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(g, "scale", Vector2(0.22, 0.22), BOLT_FADE)
+	tw.tween_property(g, "modulate:a", 0.0, BOLT_FADE)
+	tw.finished.connect(func() -> void: if is_instance_valid(g): g.queue_free())
+
+# 共享的加色混合材质(发光质感)。
+static var _add_mat: CanvasItemMaterial = null
+static func _additive() -> CanvasItemMaterial:
+	if _add_mat == null:
+		_add_mat = CanvasItemMaterial.new()
+		_add_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	return _add_mat
