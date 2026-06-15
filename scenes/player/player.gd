@@ -28,6 +28,7 @@ var attack_speed_mult: float = 1.0
 var xp_mult: float = 1.0
 var damage_mult: float = 1.0
 var perk_stacks: Dictionary = {}
+var reroll_tokens: int = 0   # 重抽券：小Boss/终局Boss 掉落，选卡界面消耗(重抽/ban)
 
 @onready var hurt_box: Area2D = $HurtBox
 @onready var _sprite: Sprite2D = $Sprite2D

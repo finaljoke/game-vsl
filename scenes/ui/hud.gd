@@ -10,6 +10,7 @@ extends CanvasLayer
 var _player: Player = null
 var _kills: int = 0
 var _kill_label: Label = null
+var _token_label: Label = null
 
 func _ready() -> void:
 	add_to_group("hud")
@@ -23,6 +24,14 @@ func _ready() -> void:
 	_kill_label.position = Vector2(10.0, 36.0)  # HP 条(10,10~30)正下方
 	add_child(_kill_label)
 	GameFeel.enemy_died.connect(_on_enemy_killed)
+	# 重抽券：击杀数下方，仅在持有时显示
+	_token_label = Label.new()
+	_token_label.add_theme_font_size_override("font_size", 16)
+	_token_label.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
+	_token_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_token_label.add_theme_constant_override("outline_size", 4)
+	_token_label.position = Vector2(10.0, 58.0)
+	add_child(_token_label)
 
 func _on_enemy_killed(_position: Vector2, _enemy: Node2D) -> void:
 	_kills += 1
@@ -37,6 +46,9 @@ func _process(_delta: float) -> void:
 	timer_label.text = "%02d:%02d" % [t / 60, t % 60]
 	if _kill_label != null:
 		_kill_label.text = "击杀 %d" % _kills
+	if _token_label != null:
+		_token_label.visible = _player.reroll_tokens > 0
+		_token_label.text = "重抽券 ×%d" % _player.reroll_tokens
 
 # Spawner 在 boss 登场前 BOSS_WARNING_LEAD 秒触发，3 秒后自销毁。
 func _show_boss_warning() -> void:

@@ -106,10 +106,16 @@ func _spawn_boss(kind: String) -> void:
 		boss.died.connect(_on_mini_boss_died)
 
 func _on_mini_boss_died(_pos: Vector2) -> void:
+	_grant_reroll_tokens(2)   # 掉重抽券，在升级选卡里可重抽/ban
 	_gm.trigger_level_up()    # 幕间小 Boss 击杀 → 立即升级选卡
 
 func _on_final_boss_died(_pos: Vector2) -> void:
 	_gm.trigger_victory()     # 终局 Boss 击杀 → 直接通关
+
+func _grant_reroll_tokens(n: int) -> void:
+	var p := get_tree().get_first_node_in_group("player")
+	if p != null and "reroll_tokens" in p:
+		p.reroll_tokens += n
 
 func _try_spawn() -> void:
 	if _enemy_count() >= _max_enemies(_elapsed_time):

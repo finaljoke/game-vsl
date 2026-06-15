@@ -41,16 +41,47 @@ const CARDS: Array[Dictionary] = [
 	{ "id": "perk_heal",   "name": "紧急治疗",  "desc": "立刻回复 30 HP",        "type": "perk",    "condition": "" },
 ]
 
+# 稀有度抽取权重：值越大越常见。强卡(进化/质变)更稀有。
+const RARITY_WEIGHTS := {"common": 100, "uncommon": 50, "rare": 20, "legendary": 6}
+
 # 静态 CARDS + 运行时注入的进化卡。pick() 只读它。
 var _runtime_cards: Array[Dictionary] = []
 # id → Callable(player)。每个 Callable 已绑定该卡所需参数。
 var effect_registry: Dictionary = {}
+# 本局被 ban 掉的卡 id 集合(reset_run 清空)。pick() 跳过。
+var _banished: Dictionary = {}
 
 func _ready() -> void:
-	_runtime_cards = CARDS.duplicate()
+	_runtime_cards = CARDS.duplicate(true)  # 深拷贝：后续给每张卡补 rarity 不污染 const
 	_register_weapon_effects()
 	_register_perk_effects()
 	_register_evolution_cards()
+	_assign_default_rarities()
+
+# 给未显式标注 rarity 的卡按类型补默认稀有度。
+func _assign_default_rarities() -> void:
+	for card in _runtime_cards:
+		if not card.has("rarity"):
+			card["rarity"] = _default_rarity_for(String(card.get("type", "")))
+
+func _default_rarity_for(type: String) -> String:
+	match type:
+		"weapon":    return "uncommon"
+		"evolution": return "legendary"
+		"synergy":   return "rare"
+		_:           return "common"  # perk / upgrade
+
+# 抽取权重(纯映射，便于单测)。
+func rarity_weight(card: Dictionary) -> int:
+	return int(RARITY_WEIGHTS.get(String(card.get("rarity", "common")), 100))
+
+# 永久把某卡移出本局卡池(消耗重抽券，由 UI 调用)。
+func banish(id: String) -> void:
+	_banished[id] = true
+
+# 每局开始重置本局 ban 状态(CardPool 是 autoload 跨场景重载存活)。
+func reset_run() -> void:
+	_banished.clear()
 
 # 静态武器与升级卡（依赖 WeaponDB 提供数据，但 CARDS 数组里的 id/condition 是手写的）
 func _register_weapon_effects() -> void:
@@ -88,6 +119,9 @@ func pick(player: Player, count: int = 3) -> Array[Dictionary]:
 	var available: Array[Dictionary] = []
 	var slots_full: bool = player.owned_weapons.size() >= player.MAX_WEAPON_SLOTS
 	for card in _runtime_cards:
+		# 本局被 ban 的卡永不出现
+		if _banished.has(card["id"]):
+			continue
 		if not _check_condition(card["condition"], player):
 			continue
 		# 武器槽满：新武器卡不再出现(升级/进化不占新槽，照常)
@@ -98,8 +132,23 @@ func pick(player: Player, count: int = 3) -> Array[Dictionary]:
 			if player.perk_stacks.get(card["id"], 0) >= card["max_stacks"]:
 				continue
 		available.append(card)
-	available.shuffle()
-	return available.slice(0, min(count, available.size()))
+	# 按稀有度权重做无放回抽样：稀有卡更少见，且同一次不重复
+	var result: Array[Dictionary] = []
+	while result.size() < count and not available.is_empty():
+		var total := 0
+		for c in available:
+			total += rarity_weight(c)
+		var r := randi() % total
+		var acc := 0
+		var chosen := 0
+		for i in range(available.size()):
+			acc += rarity_weight(available[i])
+			if r < acc:
+				chosen = i
+				break
+		result.append(available[chosen])
+		available.remove_at(chosen)
+	return result
 
 # 卡片图标：从卡关联的武器 WeaponData.icon 取（数据驱动；perk 卡无图标返回 null）。
 func card_icon(card: Dictionary) -> Texture2D:

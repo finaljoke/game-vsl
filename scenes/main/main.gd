@@ -2,6 +2,8 @@
 extends Node
 
 func _ready() -> void:
+	# CardPool 是 autoload，跨场景重载存活 → 每局开始清掉上局的 ban 状态
+	CardPool.reset_run()
 	var gm = get_node("/root/GameManager")
 	var player := $YSort/Player as Player
 	var arena := get_tree().get_first_node_in_group("arena")

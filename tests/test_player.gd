@@ -144,3 +144,8 @@ func test_grant_weapon_returns_null_when_slots_full() -> void:
 	var w = _player.grant_weapon(WeaponDB.get_data("knife"))
 	assert_object(w).is_null()
 	assert_int(_player.owned_weapons.size()).is_equal(_player.MAX_WEAPON_SLOTS)
+
+# ── 重抽券(E2)────────────────────────────────────────────────────────────
+
+func test_reroll_tokens_default_zero() -> void:
+	assert_int(_player.reroll_tokens).is_equal(0)

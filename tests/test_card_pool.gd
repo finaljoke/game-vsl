@@ -27,7 +27,7 @@ func test_pick_excludes_weapon_already_owned() -> void:
 
 func test_pick_includes_upgrade_when_weapon_at_level1() -> void:
 	_stub_owns("knife", 1)
-	var cards := CardPool.pick(_player, 10)
+	var cards := CardPool.pick(_player, 99)
 	var found := false
 	for card in cards:
 		if card["id"] == "knife_2":
@@ -45,12 +45,12 @@ func test_pick_returns_all_available_when_pool_smaller_than_count() -> void:
 	# 进化卡未达 perk 阈值不出 → 只剩 6 张属性牌（5 种有上限 perk + perk_heal 无上限）
 	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang"]:
 		_stub_owns(id, 3)
-	var cards := CardPool.pick(_player, 20)
+	var cards := CardPool.pick(_player, 99)
 	assert_int(cards.size()).is_equal(6)
 
 func test_pick_includes_lv3_upgrade_when_weapon_at_level2() -> void:
 	_stub_owns("knife", 2)
-	var cards := CardPool.pick(_player, 20)
+	var cards := CardPool.pick(_player, 99)
 	var found := false
 	for card in cards:
 		if card["id"] == "knife_3":
@@ -64,7 +64,7 @@ func test_pick_excludes_lv3_upgrade_when_weapon_at_level3() -> void:
 		assert_str(card["id"]).is_not_equal("knife_3")
 
 func test_pick_always_includes_perks() -> void:
-	var cards := CardPool.pick(_player, 20)
+	var cards := CardPool.pick(_player, 99)
 	var perk_ids := ["perk_speed", "perk_hp", "perk_attack", "perk_xp", "perk_damage", "perk_heal"]
 	for perk_id in perk_ids:
 		var found := false
@@ -99,7 +99,7 @@ func test_pick_still_has_cards_when_all_capped() -> void:
 	_player.perk_stacks["perk_attack"] = 8
 	_player.perk_stacks["perk_xp"] = 6
 	_player.perk_stacks["perk_damage"] = 8
-	var cards := CardPool.pick(_player, 20)
+	var cards := CardPool.pick(_player, 99)
 	assert_int(cards.size()).is_greater_equal(1)
 	var has_heal := false
 	for c in cards:
@@ -245,7 +245,7 @@ func test_evolve_unlocks_at_perk_threshold() -> void:
 	# knife Lv.3 + perk_attack 达阈值(3) → evolve_knife 应被 pick 选中
 	_stub_owns("knife", 3)
 	_player.perk_stacks["perk_attack"] = 3
-	var cards := CardPool.pick(_player, 20)
+	var cards := CardPool.pick(_player, 99)
 	var found := false
 	for c in cards:
 		if c["id"] == "evolve_knife":
@@ -312,7 +312,7 @@ func test_evolve_orb_uses_its_own_threshold() -> void:
 	# orb 的 requires_perk_stacks=3：3 层够、2 层不够
 	_stub_owns("orb", 3)
 	_player.perk_stacks["perk_hp"] = 3
-	var cards3 := CardPool.pick(_player, 20)
+	var cards3 := CardPool.pick(_player, 99)
 	var found3 := false
 	for c in cards3:
 		if c["id"] == "evolve_orb":
@@ -320,6 +320,59 @@ func test_evolve_orb_uses_its_own_threshold() -> void:
 	assert_bool(found3).is_true()
 
 	_player.perk_stacks["perk_hp"] = 2
-	var cards2 := CardPool.pick(_player, 20)
+	var cards2 := CardPool.pick(_player, 99)
 	for c in cards2:
 		assert_str(c["id"]).is_not_equal("evolve_orb")
+
+# ── E2: 稀有度加权 / banish / reset_run ────────────────────────────────────
+
+func test_rarity_weight_orders_by_rarity() -> void:
+	var w_common := CardPool.rarity_weight({"rarity": "common"})
+	var w_uncommon := CardPool.rarity_weight({"rarity": "uncommon"})
+	var w_rare := CardPool.rarity_weight({"rarity": "rare"})
+	var w_legendary := CardPool.rarity_weight({"rarity": "legendary"})
+	assert_int(w_common).is_greater(w_uncommon)
+	assert_int(w_uncommon).is_greater(w_rare)
+	assert_int(w_rare).is_greater(w_legendary)
+
+func test_rarity_weight_defaults_to_common() -> void:
+	assert_int(CardPool.rarity_weight({})).is_equal(CardPool.rarity_weight({"rarity": "common"}))
+
+func test_all_runtime_cards_have_rarity() -> void:
+	for card in CardPool._runtime_cards:
+		assert_bool(card.has("rarity")).is_true()
+
+func test_weapon_cards_are_uncommon() -> void:
+	for card in CardPool._runtime_cards:
+		if card.get("type", "") == "weapon":
+			assert_str(card["rarity"]).is_equal("uncommon")
+
+func test_evolution_cards_are_legendary() -> void:
+	for card in CardPool._runtime_cards:
+		if card.get("type", "") == "evolution":
+			assert_str(card["rarity"]).is_equal("legendary")
+
+func test_banish_removes_card_from_pool() -> void:
+	CardPool.reset_run()
+	CardPool.banish("perk_speed")
+	var cards := CardPool.pick(_player, 99)
+	for card in cards:
+		assert_str(card["id"]).is_not_equal("perk_speed")
+	CardPool.reset_run()  # 清理：别污染其他用例
+
+func test_reset_run_restores_banished() -> void:
+	CardPool.banish("perk_speed")
+	CardPool.reset_run()
+	var cards := CardPool.pick(_player, 99)
+	var found := false
+	for card in cards:
+		if card["id"] == "perk_speed":
+			found = true
+	assert_bool(found).is_true()
+
+func test_pick_has_no_duplicate_ids() -> void:
+	var cards := CardPool.pick(_player, 99)
+	var seen := {}
+	for card in cards:
+		assert_bool(seen.has(card["id"])).is_false()
+		seen[card["id"]] = true

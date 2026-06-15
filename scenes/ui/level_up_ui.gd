@@ -2,6 +2,7 @@
 extends CanvasLayer
 
 @onready var card_container: HBoxContainer = $BG/Panel/CardContainer
+@onready var _panel: VBoxContainer = $BG/Panel
 @onready var _gm = get_node("/root/GameManager")
 
 const COLORS := {
@@ -9,13 +10,29 @@ const COLORS := {
 	"upgrade": Color(0xf5a623ff),
 	"perk": Color(0x50fa7bff),
 	"evolution": Color(0xbd93f9ff),
+	"synergy": Color(0xff79c6ff),
 }
 const TYPE_LABELS := {
 	"weapon": "新武器",
 	"upgrade": "★ 强化",
 	"perk": "属性",
 	"evolution": "✦ 进化",
+	"synergy": "◈ 协同",
 }
+# 稀有度 → 边框颜色/粗细(给"强卡稀有感"的视觉锚)
+const RARITY_COLORS := {
+	"common": Color(0.72, 0.72, 0.72),
+	"uncommon": Color(0.30, 0.80, 1.0),
+	"rare": Color(0.75, 0.45, 1.0),
+	"legendary": Color(1.0, 0.65, 0.15),
+}
+const RARITY_BORDER := {"common": 1, "uncommon": 2, "rare": 3, "legendary": 4}
+
+var _player: Player = null
+var _current_cards: Array = []
+var _footer: HBoxContainer = null
+var _reroll_btn: Button = null
+var _token_label: Label = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -23,11 +40,60 @@ func _ready() -> void:
 	_gm.level_up_triggered.connect(_on_level_up)
 	_gm.game_over_triggered.connect(func() -> void: visible = false)
 	_gm.victory_triggered.connect(func() -> void: visible = false)
+	_build_footer()
+
+# 重抽/ban 页脚：重抽券>0 时可用(代码内建，免改 .tscn)
+func _build_footer() -> void:
+	_footer = HBoxContainer.new()
+	_footer.alignment = BoxContainer.ALIGNMENT_CENTER
+	_footer.add_theme_constant_override("separation", 16)
+	_panel.add_child(_footer)
+
+	_reroll_btn = Button.new()
+	_reroll_btn.text = "重抽"
+	_reroll_btn.pressed.connect(_on_reroll)
+	_footer.add_child(_reroll_btn)
+
+	_token_label = Label.new()
+	_token_label.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
+	_footer.add_child(_token_label)
+
+	var hint := Label.new()
+	hint.text = "(右键卡牌 = 永久 Ban，各消耗 1 券)"
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	_footer.add_child(hint)
 
 func _on_level_up() -> void:
 	visible = true
-	var player := get_tree().get_first_node_in_group("player") as Player
-	_build_cards(CardPool.pick(player))
+	_player = get_tree().get_first_node_in_group("player") as Player
+	_current_cards = CardPool.pick(_player)
+	_build_cards(_current_cards)
+	_update_footer()
+
+func _update_footer() -> void:
+	if _player == null:
+		return
+	var tokens: int = _player.reroll_tokens
+	_token_label.text = "重抽券 ×%d" % tokens
+	_reroll_btn.disabled = tokens <= 0
+
+func _on_reroll() -> void:
+	if _player == null or _player.reroll_tokens <= 0:
+		return
+	_player.reroll_tokens -= 1
+	_current_cards = CardPool.pick(_player)
+	_build_cards(_current_cards)
+	_update_footer()
+
+func _on_card_banished(card: Dictionary) -> void:
+	if _player == null or _player.reroll_tokens <= 0:
+		return
+	_player.reroll_tokens -= 1
+	CardPool.banish(String(card["id"]))
+	_current_cards = CardPool.pick(_player)
+	_build_cards(_current_cards)
+	_update_footer()
 
 func _build_cards(cards: Array) -> void:
 	for child in card_container.get_children():
@@ -37,14 +103,17 @@ func _build_cards(cards: Array) -> void:
 
 func _make_card(card: Dictionary) -> Control:
 	var color: Color = COLORS[card["type"]]
+	var rarity := String(card.get("rarity", "common"))
+	var rcolor: Color = RARITY_COLORS.get(rarity, Color(0.72, 0.72, 0.72))
 
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(160, 180)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0x16213eff)
-	style.set_border_width_all(1)
-	style.border_color = color
+	# 边框按稀有度上色/加粗，顶部色条仍按卡型 → 一眼区分 强弱 + 类别
+	style.set_border_width_all(int(RARITY_BORDER.get(rarity, 1)))
+	style.border_color = rcolor
 	style.set_corner_radius_all(6)
 	panel.add_theme_stylebox_override("panel", style)
 
@@ -70,6 +139,16 @@ func _make_card(card: Dictionary) -> Control:
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_theme_constant_override("separation", 4)
 	margin.add_child(content)
+
+	var icon_tex: Texture2D = CardPool.card_icon(card)
+	if icon_tex != null:
+		var icon := TextureRect.new()
+		icon.texture = icon_tex
+		icon.custom_minimum_size = Vector2(0, 56)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		content.add_child(icon)
 
 	var type_lbl := Label.new()
 	type_lbl.text = TYPE_LABELS[card["type"]]
@@ -98,9 +177,11 @@ func _make_card(card: Dictionary) -> Control:
 		panel.scale = Vector2(1.12, 1.12)
 
 	panel.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed \
-				and event.button_index == MOUSE_BUTTON_LEFT:
-			_on_card_picked(card)
+		if event is InputEventMouseButton and event.pressed:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				_on_card_picked(card)
+			elif event.button_index == MOUSE_BUTTON_RIGHT:
+				_on_card_banished(card)
 	)
 
 	return panel
