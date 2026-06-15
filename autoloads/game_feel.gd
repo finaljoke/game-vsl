@@ -2,7 +2,7 @@ extends Node
 
 # ── Signals ───────────────────────────────────────────────────────────────
 signal enemy_hit(amount: float, position: Vector2, enemy: Node2D)
-signal enemy_died(position: Vector2)
+signal enemy_died(position: Vector2, enemy: Node2D)
 signal player_hit(amount: float)
 signal player_leveled_up(level: int)
 signal xp_collected(position: Vector2)
@@ -19,6 +19,13 @@ const SFX_LEVELUP      = preload("res://assets/audio/sfx/level_up.wav")
 const SFX_PLAYER_HURT  = preload("res://assets/audio/sfx/player_hurt.wav")
 const SFX_PLAYER_DEATH = preload("res://assets/audio/sfx/player_death.wav")
 const SFX_ITEM_SELECT  = preload("res://assets/audio/sfx/item_select.wav")
+
+# ── 混音 dB（逐音效，差异化压平反馈层次；config 级，靠实跑听感校准）──────────
+# 高频杂兵命中/击杀压低，避免盖过 BGM 与重要反馈；受击降幅小（重要提示）；选卡音抬高。
+const SFX_HIT_DB: float    = -7.0
+const SFX_DEATH_DB: float  = -9.0
+const SFX_HURT_DB: float   = -5.0
+const SFX_SELECT_DB: float = 4.0
 
 # ── Shake emitters ────────────────────────────────────────────────────────
 var _emitter_hit: PhantomCameraNoiseEmitter2D
@@ -140,13 +147,17 @@ func _on_enemy_hit(amount: float, position: Vector2, enemy: Node2D) -> void:
 	if enemy.has_method("_apply_knockback"):
 		enemy._apply_knockback(position)
 	_spawn_damage_number(amount, position)
-	SoundManager.play_sound(SFX_HIT)
+	var p := SoundManager.play_sound(SFX_HIT)
+	if p: p.volume_db = SFX_HIT_DB
 
-func _on_enemy_died(position: Vector2) -> void:
+func _on_enemy_died(position: Vector2, enemy: Node2D) -> void:
 	_spawn_particles(position)
 	_emitter_hit.emit()
-	_trigger_hitstop(0.05)
-	SoundManager.play_sound(SFX_DEATH)
+	# 顿帧只留给 Boss：割草游戏里杂兵击杀高频，全局 time_scale 会叠成永久慢放。
+	if enemy != null and is_instance_valid(enemy) and enemy.get("behavior") == "boss":
+		_trigger_hitstop(0.05)
+	var p := SoundManager.play_sound(SFX_DEATH)
+	if p: p.volume_db = SFX_DEATH_DB
 
 # Engine.time_scale 全局拖慢制造击杀冲击感；恢复 timer 必须 ignore_time_scale，
 # 否则它自己也会被拖慢导致永远不归位。
@@ -161,7 +172,8 @@ func _on_player_hit(_amount: float) -> void:
 	var p := _get_player()
 	if p != null:
 		_flash_node(p, Color(1.0, 0.2, 0.2), 0.2)
-	SoundManager.play_sound(SFX_PLAYER_HURT)
+	var snd := SoundManager.play_sound(SFX_PLAYER_HURT)
+	if snd: snd.volume_db = SFX_HURT_DB
 
 func _on_player_leveled_up(_level: int) -> void:
 	_screen_flash(Color(1, 1, 1, 0.6), 0.15)
@@ -177,4 +189,5 @@ func _on_player_died() -> void:
 	SoundManager.play_sound(SFX_PLAYER_DEATH)
 
 func _on_item_selected() -> void:
-	SoundManager.play_ui_sound(SFX_ITEM_SELECT)
+	var p := SoundManager.play_ui_sound(SFX_ITEM_SELECT)
+	if p: p.volume_db = SFX_SELECT_DB

@@ -307,13 +307,15 @@ func _resolve_music(track: String) -> String:
 				return p
 	return ""
 
+const MUSIC_DB: float = -10.0  # BGM 整体压低，避免盖过打击/反馈音(config 级，可调)
+
 func _play_music_path(path: String) -> void:
 	var stream := load(path) as AudioStream
 	if stream == null:
 		return
 	if "loop" in stream:
 		stream.loop = true
-	SoundManager.play_music(stream, 1.0)  # 1s 交叉淡入
+	SoundManager.play_music_at_volume(stream, MUSIC_DB, 1.0)  # -10dB + 1s 交叉淡入
 
 # 已解锁原型中按权重抽一个非 boss(节拍事件用，boss 只走 trickle)。
 func _pick_eligible_nonboss() -> Dictionary:
