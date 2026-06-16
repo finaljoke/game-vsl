@@ -183,3 +183,24 @@ func test_no_lifesteal_when_zero() -> void:
 	_player.hp = 50.0
 	_player._lifesteal_on_death(Vector2.ZERO, null)
 	assert_float(_player.hp).is_equal(50.0)
+
+# ── Bot 注入钩子 ───────────────────────────────────────────────────────────
+func test_bot_input_overrides_movement() -> void:
+	var scene := load("res://scenes/player/player.tscn") as PackedScene
+	var p: Player = auto_free(scene.instantiate() as Player)
+	add_child(p)
+	await get_tree().process_frame
+	p.bot_input = Vector2(1, 0)
+	p._physics_process(0.016)
+	assert_float(p.velocity.x).is_greater(0.0)
+	assert_float(p.velocity.y).is_equal_approx(0.0, 0.001)
+
+func test_default_bot_input_is_inf_sentinel() -> void:
+	var scene := load("res://scenes/player/player.tscn") as PackedScene
+	var p: Player = auto_free(scene.instantiate() as Player)
+	add_child(p)
+	await get_tree().process_frame
+	# 默认 INF = 真人路径;无按键时 Input.get_vector 返回 ZERO → 速度 ZERO
+	assert_bool(p.bot_input == Vector2.INF).is_true()
+	p._physics_process(0.016)
+	assert_float(p.velocity.length()).is_equal_approx(0.0, 0.001)

@@ -35,6 +35,9 @@ var extra_projectiles: int = 0    # 飞刀类额外弹数
 var pickup_range_mult: float = 1.0  # XP 拾取磁化半径倍率
 var lifesteal: float = 0.0        # 每次击杀回血量
 
+# Bot 注入钩子:默认 INF=真人(走键盘);RunHarness 每物理帧覆写为移动向量。详见 autoloads/run_harness.gd。
+var bot_input: Vector2 = Vector2.INF
+
 @onready var hurt_box: Area2D = $HurtBox
 @onready var _sprite: Sprite2D = $Sprite2D
 
@@ -64,7 +67,8 @@ func heal(amount: float) -> float:
 	return healed
 
 func _physics_process(delta: float) -> void:
-	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var dir := bot_input if bot_input != Vector2.INF else \
+		Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	velocity = dir * SPEED * speed_mult
 	move_and_slide()
 	_update_visuals(delta)
