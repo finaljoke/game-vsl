@@ -65,6 +65,9 @@ func _build_footer() -> void:
 	_footer.add_child(hint)
 
 func _on_level_up() -> void:
+	# bot 模式:选卡由 RunHarness 单点解决(唯一一次 pick)。UI 早退,避免第二次 pick() 破坏种子复现。
+	if RunHarness.active:
+		return
 	visible = true
 	_player = get_tree().get_first_node_in_group("player") as Player
 	_current_cards = CardPool.pick(_player)

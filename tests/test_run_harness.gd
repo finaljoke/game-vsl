@@ -2,6 +2,13 @@
 extends GdUnitTestSuite
 
 const Harness := preload("res://autoloads/run_harness.gd")
+const LevelUpUI := preload("res://scenes/ui/level_up_ui.gd")
+
+# 全局状态安全网:任一用例若在 inline 还原前断言失败,这里兜底复位,避免泄漏到后续用例。
+func after_each() -> void:
+	RunHarness.active = false
+	RunHarness.base_time_scale = 1.0
+	Engine.time_scale = 1.0
 
 # ── kite 向量:远离敌群 + 避墙拉回中心 ─────────────────────────────────────
 func test_kite_flees_single_enemy_on_left() -> void:
@@ -73,3 +80,18 @@ func test_hitstop_skipped_when_harness_active() -> void:
 	RunHarness.active = prev_active
 	RunHarness.base_time_scale = prev_base_scale
 	Engine.time_scale = prev_scale
+
+# ── level_up_ui 在 bot 模式早退(不二次 pick) ───────────────────────────────────
+func test_level_up_ui_early_returns_when_harness_active() -> void:
+	var prev_active := RunHarness.active
+	RunHarness.active = true
+	var scene := load("res://scenes/ui/level_up_ui.tscn") as PackedScene
+	var ui: LevelUpUI = auto_free(scene.instantiate())
+	add_child(ui)
+	await get_tree().process_frame
+	assert_bool(ui.visible).is_false()  # 前置:_ready() 已把它设为 false
+	ui._on_level_up()
+	# 早退:不显示、不出卡
+	assert_bool(ui.visible).is_false()
+	assert_int(ui._current_cards.size()).is_equal(0)
+	RunHarness.active = prev_active
