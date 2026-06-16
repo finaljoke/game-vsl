@@ -4,6 +4,8 @@ extends Node
 signal enemy_hit(amount: float, position: Vector2, enemy: Node2D)
 signal enemy_died(position: Vector2, enemy: Node2D)
 signal player_hit(amount: float)
+# 纯指标信号(DebugMetrics 订阅)：玩家实际回血增量，封顶后为 0。GameFeel 自身不处理。
+signal player_healed(amount: float)
 signal player_leveled_up(level: int)
 signal xp_collected(position: Vector2)
 signal player_died

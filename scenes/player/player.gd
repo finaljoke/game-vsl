@@ -49,7 +49,19 @@ func _ready() -> void:
 func _lifesteal_on_death(_position: Vector2, _enemy: Node2D) -> void:
 	if _dead or lifesteal <= 0.0:
 		return
-	hp = minf(hp + lifesteal, max_hp)
+	heal(lifesteal)
+
+# 统一回血口径：封顶到 max_hp，返回真实回血增量(满血时为 0)，并发 player_healed 指标信号。
+# 击杀嗜血与光环命中回血都走这里 → 去重封顶逻辑、且埋点能拿到准确(非高估)的有效回血。
+func heal(amount: float) -> float:
+	if amount <= 0.0:
+		return 0.0
+	var before := hp
+	hp = minf(hp + amount, max_hp)
+	var healed := hp - before
+	if healed > 0.0:
+		GameFeel.player_healed.emit(healed)
+	return healed
 
 func _physics_process(delta: float) -> void:
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
