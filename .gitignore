@@ -10,6 +10,7 @@ addons/limboai/
 .playwright-mcp/
 .tmp_limboai/
 reports/
+telemetry/
 .montage_*.png
 .montage_*.png.import
 
