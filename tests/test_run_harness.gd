@@ -95,3 +95,25 @@ func test_level_up_ui_early_returns_when_harness_active() -> void:
 	assert_bool(ui.visible).is_false()
 	assert_int(ui._current_cards.size()).is_equal(0)
 	RunHarness.active = prev_active
+
+# ── 命令行解析 ───────────────────────────────────────────────────────────────
+func test_parse_args_defaults_when_no_bot() -> void:
+	var cfg: Dictionary = RunHarness.parse_args([])
+	assert_bool(cfg["active"]).is_false()
+
+func test_parse_args_reads_bot_and_seed() -> void:
+	var cfg: Dictionary = RunHarness.parse_args(["--bot=kite", "--seed=42"])
+	assert_bool(cfg["active"]).is_true()
+	assert_str(cfg["bot"]).is_equal("kite")
+	assert_int(cfg["seed"]).is_equal(42)
+
+func test_parse_args_defaults_fast_and_cards() -> void:
+	var cfg: Dictionary = RunHarness.parse_args(["--bot=still"])
+	assert_float(cfg["fast"]).is_equal_approx(3.0, 0.001)
+	assert_str(cfg["cards"]).is_equal("default")
+
+func test_parse_args_reads_fast_out_maxtime() -> void:
+	var cfg: Dictionary = RunHarness.parse_args(["--bot=kite", "--fast=5", "--out=telemetry/run_x", "--maxtime=30"])
+	assert_float(cfg["fast"]).is_equal_approx(5.0, 0.001)
+	assert_str(cfg["out"]).is_equal("telemetry/run_x")
+	assert_float(cfg["maxtime"]).is_equal_approx(30.0, 0.001)

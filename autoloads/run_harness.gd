@@ -55,3 +55,113 @@ static func _card_matches(card: Dictionary, matcher: String) -> bool:
 	if matcher.begins_with("type:"):
 		return String(card.get("type", "")) == matcher.substr(5)
 	return String(card.get("id", "")) == matcher
+
+# ── 运行时状态(Task 7) ──────────────────────────────────────────────────────
+var _bot_mode: String = "kite"
+var _profile: Array = DEFAULT_PROFILE
+var _out: String = "telemetry/run"
+var _maxtime: float = 0.0                # 0 = 不设上限(只靠自然终局)
+var _player: Player = null
+var _arena_center: Vector2 = Vector2(640, 360)  # 1280×720 中心;_ready 再从 arena 校正
+var _finished: bool = false
+
+# 命令行解析(纯函数,单测)。无 --bot → active=false。返回配置字典。
+static func parse_args(user_args: Array) -> Dictionary:
+	var cfg := {
+		"active": false, "bot": "kite", "cards": "default",
+		"seed": 0, "fast": DEFAULT_FAST, "out": "telemetry/run", "maxtime": 0.0,
+	}
+	for raw in user_args:
+		var a := String(raw)
+		if a == "--bot" or a.begins_with("--bot="):
+			cfg["active"] = true
+			if "=" in a:
+				cfg["bot"] = a.split("=")[1]
+		elif a.begins_with("--cards="):
+			cfg["cards"] = a.split("=")[1]
+		elif a.begins_with("--seed="):
+			cfg["seed"] = int(a.split("=")[1])
+		elif a.begins_with("--fast="):
+			cfg["fast"] = float(a.split("=")[1])
+		elif a.begins_with("--out="):
+			cfg["out"] = a.split("=")[1]
+		elif a.begins_with("--maxtime="):
+			cfg["maxtime"] = float(a.split("=")[1])
+	return cfg
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	var cfg := parse_args(OS.get_cmdline_user_args())
+	active = cfg["active"]
+	if not active:
+		return   # 真人模式:全惰性
+	_bot_mode = cfg["bot"]
+	_profile = PROFILES.get(cfg["cards"], DEFAULT_PROFILE)
+	_out = cfg["out"]
+	_maxtime = cfg["maxtime"]
+	base_time_scale = cfg["fast"]
+	seed(int(cfg["seed"]))                 # 早于任何 randi():首个 randi 在主场景 _ready 之后
+	Engine.time_scale = base_time_scale
+	GameManager.level_up_triggered.connect(_on_level_up)
+	GameManager.victory_triggered.connect(func() -> void: _finish("victory"))
+	GameManager.game_over_triggered.connect(func() -> void: _finish("death"))
+	RunRecorder.begin(_out, DEFAULT_INTERVAL, {
+		"bot": _bot_mode, "cards": cfg["cards"], "fast": base_time_scale,
+		"seed": int(cfg["seed"]), "maxtime": _maxtime,
+	})
+	print("[RunHarness] bot=%s cards=%s seed=%d fast=%.1f out=%s maxtime=%.0f"
+			% [_bot_mode, cfg["cards"], int(cfg["seed"]), base_time_scale, _out, _maxtime])
+
+func _physics_process(_delta: float) -> void:
+	if not active or _finished:
+		return
+	if GameManager.current_state != GameManager.State.PLAYING:
+		return
+	var p := _get_player()
+	if p == null:
+		return
+	if _maxtime > 0.0 and DebugMetrics.get_elapsed() >= _maxtime:
+		_finish("timeout")
+		return
+	p.bot_input = _compute_input(p)
+
+func _compute_input(p: Player) -> Vector2:
+	if _bot_mode == "still":
+		return Vector2.ZERO
+	var positions: Array = []
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e is Node2D:
+			positions.append(e.global_position)
+	return compute_kite_dir(p.global_position, positions, _arena_center, PERCEPTION_RADIUS)
+
+# 升级:唯一一次 pick → 按 profile 选 → apply → 通知 recorder → resume。
+func _on_level_up() -> void:
+	if _finished:
+		return   # 终局帧可能仍有排队的升级信号:已 finalize/quit,不再选卡/翻状态(与 _physics_process/_finish 一致)
+	var p := _get_player()
+	if p == null:
+		return
+	var offered: Array = CardPool.pick(p)
+	var picked := choose_card(offered, _profile)
+	if picked.is_empty():
+		GameManager.resume_game()
+		return
+	var offered_ids: Array = []
+	for c in offered:
+		offered_ids.append(c.get("id", ""))
+	CardPool.apply(picked, p)
+	RunRecorder.log_levelup(p.level, String(picked.get("id", "")), offered_ids)
+	GameManager.resume_game()
+
+func _finish(outcome: String) -> void:
+	if _finished:
+		return
+	_finished = true
+	RunRecorder.finalize(outcome)
+	print("[RunHarness] 终局=%s,退出。" % outcome)
+	get_tree().quit()
+
+func _get_player() -> Player:
+	if _player == null or not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group("player") as Player
+	return _player
