@@ -164,9 +164,14 @@ func _on_enemy_died(position: Vector2, enemy: Node2D) -> void:
 # Engine.time_scale 全局拖慢制造击杀冲击感；恢复 timer 必须 ignore_time_scale，
 # 否则它自己也会被拖慢导致永远不归位。
 func _trigger_hitstop(duration: float) -> void:
+	# bot/headless 模式跳过:顿帧用实时计时器,其窗口内物理帧数依赖真机 wall-clock,会破坏确定性。
+	# 且 headless 下顿帧无视觉意义。详见 RunHarness。
+	if RunHarness.active:
+		return
 	Engine.time_scale = 0.05
 	var t := get_tree().create_timer(duration, false, true, true)
-	t.timeout.connect(func() -> void: Engine.time_scale = 1.0)
+	# 恢复到快进基线(惰性时=1.0)而非写死 1.0,避免冲掉 --fast。
+	t.timeout.connect(func() -> void: Engine.time_scale = RunHarness.base_time_scale)
 
 func _on_player_hit(_amount: float) -> void:
 	_emitter_player.emit()

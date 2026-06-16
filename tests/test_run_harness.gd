@@ -57,3 +57,19 @@ func test_choose_card_falls_back_to_first_when_no_match() -> void:
 
 func test_default_profile_is_nonempty() -> void:
 	assert_int(Harness.DEFAULT_PROFILE.size()).is_greater(0)
+
+# ── hitstop 在 bot 模式跳过(确定性) ───────────────────────────────────────
+func test_hitstop_skipped_when_harness_active() -> void:
+	var prev_active := RunHarness.active
+	var prev_base_scale := RunHarness.base_time_scale
+	var prev_scale := Engine.time_scale
+	RunHarness.active = true
+	RunHarness.base_time_scale = 3.0
+	Engine.time_scale = 3.0
+	GameFeel._trigger_hitstop(0.05)
+	# bot 模式应直接跳过,不把 time_scale 砸到 0.05
+	assert_float(Engine.time_scale).is_equal_approx(3.0, 0.001)
+	# 还原,避免污染其他用例(对称保存/还原,不写死)
+	RunHarness.active = prev_active
+	RunHarness.base_time_scale = prev_base_scale
+	Engine.time_scale = prev_scale
