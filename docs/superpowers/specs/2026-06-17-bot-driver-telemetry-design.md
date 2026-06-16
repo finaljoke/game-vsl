@@ -120,7 +120,14 @@ func _physics_process(delta: float) -> void:
   2. `Engine.time_scale = fast` 压缩 sim 时间。
   - 纯 headless（time_scale=1）对本 CPU-轻游戏仍≈实时；真正压缩 10 分钟靠 time_scale>1。
   - 代价：高 time_scale 放大每物理帧 `delta`，过高会碰撞穿透/不稳定。
-  - 策略：默认 `--fast=3`；用"**同种子跑两遍 diff summary**"验确定性——能复现就升，发散就降。这是旋钮非魔法。
+  - 策略：默认 `--fast=3`；用"**同种子跑两遍 diff summary**"验确定性。
+- **确定性真正的杠杆（2026-06-17 执行实测修正）**：仅靠 `--fast` **不足**——`enemy_spawner.gd` 的出怪节拍跑在
+  `_process(delta)`（帧时间）且 `_spawn_timer=0.0` 重置丢溢出量，headless 帧 delta run-to-run 抖动 →
+  每次 spawn 的全局 `randi()/randf()` 调用数失步 → 与 `card_pool` 共用的 RNG 序列发散 → 整局级联分叉。
+  实测**任何 `--fast`（含 fast=1）在有升级的长局都会发散**。**正解**：启动加引擎参数 `--fixed-fps 60`
+  （放在 `--` 之前）强制每帧 `delta=1/60` 恒定，spawner 累加变逐位一致 → **`--fixed-fps 60 --fast=3`
+  跨种子鲁棒确定**（seed7×3、seed42×2 实测 summary 完全相等）。`--fixed-fps` 同时解耦实时同步，本身即快进。
+  零游戏代码改动（纯 harness 命令行约定，不触碰 spawner WIP）。
 - **快进陷阱（必须处理）**：`game_feel.gd:166-169` hitstop 结束时**硬恢复 `time_scale=1.0`**，会冲掉快进值。
   修法：hitstop 恢复到基线变量（`RunHarness.base_time_scale`，默认 1.0）而非写死 1.0。
 - **终局**：harness 连 `victory_triggered` / `game_over_triggered` + `--maxtime` 兜底 →
@@ -130,10 +137,11 @@ func _physics_process(delta: float) -> void:
 
 - 单跑（Windows 须用 `_console.exe` + headless）：
   ```
-  Godot_v4.6.3-stable_win64_console.exe --headless --path . -- \
+  Godot_v4.6.3-stable_win64_console.exe --headless --fixed-fps 60 --path . -- \
     --bot=kite --cards=default --seed=42 --fast=3 --out=telemetry/run_42
   ```
-  harness 经 `OS.get_cmdline_user_args()` 读 `--` 之后的参数。
+  harness 经 `OS.get_cmdline_user_args()` 读 `--` 之后的参数;`--fixed-fps 60` 是引擎参数(在 `--` 之前),
+  确定性必需(见 §7 实测修正)。批量 A/B 同理每条命令都带 `--fixed-fps 60`。
 - agent 用 Bash 起进程（长则后台）→ harness 终局 `quit` → `Read` summary + CSV。
 - **批量 A/B**：shell 循环 `5 seeds × 2 配置 = 10 局`，收 summary 对比；改一个数值前后各一批，输出威胁轴/存活/心流差异。
 - 依赖：项目需已装 LimboAI GDExtension（enemy AI），headless 会加载——既有约束，不新增。

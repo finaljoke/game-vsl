@@ -1238,9 +1238,10 @@ git commit -m "chore(telemetry): gitignore telemetry/ 输出目录"
 
 Run:
 ```
-& "C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe" --headless --path . -- --bot=kite --cards=default --seed=42 --fast=3 --maxtime=20 --out=telemetry/smoke_42
+& "C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe" --headless --fixed-fps 60 --path . -- --bot=kite --cards=default --seed=42 --fast=3 --maxtime=20 --out=telemetry/smoke_42
 ```
 Expected: 进程在 ~数秒内自行退出(打印 `[RunHarness] 终局=...,退出。`),不崩、不挂。
+（`--fixed-fps 60` 是引擎参数,在 `--` 之前;确定性必需,见 Step 3 实测修正。）
 
 - [ ] **Step 2: 验证三类产物非空**
 
@@ -1254,14 +1255,21 @@ Expected: 三个文件都存在且大小 > 0。用 Read 打开 `telemetry/smoke_
 
 Run:
 ```
-& "C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe" --headless --path . -- --bot=kite --cards=default --seed=7 --fast=3 --maxtime=60 --out=telemetry/det_a
-& "C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe" --headless --path . -- --bot=kite --cards=default --seed=7 --fast=3 --maxtime=60 --out=telemetry/det_b
+& "C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe" --headless --fixed-fps 60 --path . -- --bot=kite --cards=default --seed=7 --fast=3 --maxtime=60 --out=telemetry/det_a
+& "C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe" --headless --fixed-fps 60 --path . -- --bot=kite --cards=default --seed=7 --fast=3 --maxtime=60 --out=telemetry/det_b
 ```
 然后比较:
 ```bash
 diff telemetry/det_a.summary.json telemetry/det_b.summary.json
 ```
-Expected: 两份 summary 关键字段相等(`survived_s / final_level / kills / dmg_taken_total / build`)。`out`/`config.out` 路径不同属预期,可忽略。若发散:先确认无 hitstop 漏跳(Task 3),再把 `--fast` 调低(如 2)重试——这是 spec §7 的"旋钮非魔法"取舍。**把实测稳定的 fast 档记到 memory。**
+Expected: 两份 summary 完全相等(out 不入 config,故连路径都不影响)。
+
+> **2026-06-17 执行实测修正(关键):** 一开始**不带 `--fixed-fps`** 跑,同种子在有升级的长局(maxtime≥60)**必发散**,
+> 且把 `--fast` 一路调到 1 也照散——发散与 fast **无关**。根因:`enemy_spawner.gd` 出怪节拍在 `_process(delta)`
+> (帧时间)累加 + `_spawn_timer=0.0` 丢溢出量,headless 帧 delta 抖动 → 每次 spawn 的全局 `randi()/randf()` 调用数
+> 失步 → 与 `card_pool` 共用 RNG 序列发散。**正解:启动加引擎参数 `--fixed-fps 60`(在 `--` 之前)**,强制每帧
+> `delta=1/60` 恒定 → spawner 累加逐位一致 → `--fixed-fps 60 --fast=3` 跨种子鲁棒确定(seed7×3、seed42×2 实测
+> summary 完全相等)。零游戏代码改动(纯命令行,不碰 spawner WIP)。**稳定档与基线已记入 memory。**
 
 - [ ] **Step 4: 验证真人模式零回归(无 --bot)**
 
