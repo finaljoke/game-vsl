@@ -22,14 +22,14 @@ const CARDS: Array[Dictionary] = [
 	# 新武器(E1)：机制与飞刀/护盾球/爆炸错开
 	{ "id": "lightning",   "name": "闪电链",       "desc": "向最近敌人劈雷并连锁跳跃",  "type": "weapon",  "condition": "no:lightning"  },
 	{ "id": "whip",        "name": "斩",           "desc": "朝移动方向快速弧劈，高频近身",  "type": "weapon",  "condition": "no:whip"       },
-	{ "id": "boomerang",   "name": "回旋镖",       "desc": "抛出后折返，来回都命中",    "type": "weapon",  "condition": "no:boomerang"  },
+	{ "id": "boomerang",   "name": "回旋斧",       "desc": "抛出后折返，去回各结算穿透",  "type": "weapon",  "condition": "no:boomerang"  },
 	{ "id": "aura",        "name": "光环",         "desc": "贴身圆形伤害场持续灼烧",    "type": "weapon",  "condition": "no:aura"       },
 	{ "id": "lightning_2", "name": "闪电链 Lv.2",  "desc": "连锁数 3 → 4，冷却↓",       "type": "upgrade", "condition": "upgrade:lightning:1" },
 	{ "id": "lightning_3", "name": "闪电链 Lv.3",  "desc": "连锁数 4 → 5，冷却↓",       "type": "upgrade", "condition": "upgrade:lightning:2" },
 	{ "id": "whip_2",      "name": "斩 Lv.2",      "desc": "弧更宽，冷却↓",             "type": "upgrade", "condition": "upgrade:whip:1"      },
 	{ "id": "whip_3",      "name": "斩 Lv.3",      "desc": "弧更宽，冷却↓",             "type": "upgrade", "condition": "upgrade:whip:2"      },
-	{ "id": "boomerang_2", "name": "回旋镖 Lv.2",  "desc": "穿透 +1，射程↑",            "type": "upgrade", "condition": "upgrade:boomerang:1" },
-	{ "id": "boomerang_3", "name": "回旋镖 Lv.3",  "desc": "穿透 +1，射程↑",            "type": "upgrade", "condition": "upgrade:boomerang:2" },
+	{ "id": "boomerang_2", "name": "回旋斧 Lv.2",  "desc": "穿透 +1，射程↑",            "type": "upgrade", "condition": "upgrade:boomerang:1" },
+	{ "id": "boomerang_3", "name": "回旋斧 Lv.3",  "desc": "穿透 +1，射程↑",            "type": "upgrade", "condition": "upgrade:boomerang:2" },
 	{ "id": "aura_2",      "name": "光环 Lv.2",    "desc": "范围 +20，冷却↓",           "type": "upgrade", "condition": "upgrade:aura:1"      },
 	{ "id": "aura_3",      "name": "光环 Lv.3",    "desc": "范围 +20，冷却↓",           "type": "upgrade", "condition": "upgrade:aura:2"      },
 	# 质变卡(E3)：非数值协同，rarity 默认 rare(_assign_default_rarities)

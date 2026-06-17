@@ -3,9 +3,9 @@ class_name BoomerangWeapon
 extends WeaponBase
 
 const PROJECTILE := preload("res://scenes/weapons/boomerang/boomerang_projectile.gd")
-const BASE_DAMAGE: float = 20.0
 
 # 由 WeaponData.levels 反射注入
+var damage: float = 20.0          # 由 WeaponData.levels 反射注入(默认=旧 BASE_DAMAGE；进化不注入则不变)
 var pierce: int = 3
 var throw_range: float = 240.0
 var count: int = 1                # 进化形态(旋风)同时抛多发
@@ -28,7 +28,7 @@ func attack() -> void:
 		base_dir = _player.global_position.direction_to(target.global_position)
 	if base_dir == Vector2.ZERO:
 		base_dir = Vector2.RIGHT
-	var dmg: float = damage_for(BASE_DAMAGE)
+	var dmg: float = damage_for(damage)
 	var eff_pierce: int = pierce + mod_int("global_pierce")
 	# count>1 时围绕 base_dir 做小角度扇形铺开
 	var spread := deg_to_rad(28.0)

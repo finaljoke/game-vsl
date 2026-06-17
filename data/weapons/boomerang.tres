@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1_data")
 id = "boomerang"
-display_name = "回旋镖"
+display_name = "回旋斧"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 3
-levels = [{"cooldown": 1.6, "pierce": 3, "throw_range": 220.0}, {"cooldown": 1.3, "pierce": 4, "throw_range": 250.0}, {"cooldown": 1.0, "pierce": 5, "throw_range": 280.0}]
+levels = [{"cooldown": 1.5, "pierce": 3, "throw_range": 220.0, "damage": 20.0}, {"cooldown": 1.2, "pierce": 4, "throw_range": 250.0, "damage": 20.0}, {"cooldown": 1.0, "pierce": 5, "throw_range": 280.0, "damage": 20.0}]
 evolution = {"requires_perk": "perk_speed", "requires_perk_stacks": 3, "evolved_id": "cyclone"}
