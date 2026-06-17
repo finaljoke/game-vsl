@@ -204,3 +204,24 @@ func test_default_bot_input_is_inf_sentinel() -> void:
 	assert_bool(p.bot_input == Vector2.INF).is_true()
 	p._physics_process(0.016)
 	assert_float(p.velocity.length()).is_equal_approx(0.0, 0.001)
+
+# ── 接触伤害结算(W0)：硬直敌人不结算、最多累计 CONTACT_MAX_SOURCES 个来源 ──────
+func test_sum_contact_damage_skips_stunned() -> void:
+	var entries := [
+		{"damage": 8.0, "stunned": false},
+		{"damage": 8.0, "stunned": true},   # 硬直 → 跳过
+		{"damage": 8.0, "stunned": false},
+	]
+	# 0.5s：两个非硬直 × 8 × 0.5 = 8.0
+	assert_float(Player.sum_contact_damage(entries, 0.5, 6)).is_equal_approx(8.0, 0.001)
+
+func test_sum_contact_damage_caps_at_max_sources() -> void:
+	var entries: Array = []
+	for i in range(10):
+		entries.append({"damage": 10.0, "stunned": false})
+	# 上限 6 个来源 × 10 × 1.0s = 60
+	assert_float(Player.sum_contact_damage(entries, 1.0, 6)).is_equal_approx(60.0, 0.001)
+
+func test_sum_contact_damage_all_stunned_is_zero() -> void:
+	var entries := [{"damage": 8.0, "stunned": true}, {"damage": 8.0, "stunned": true}]
+	assert_float(Player.sum_contact_damage(entries, 1.0, 6)).is_equal(0.0)

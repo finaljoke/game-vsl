@@ -89,16 +89,27 @@ func _update_visuals(delta: float) -> void:
 		_sprite.scale = _sprite.scale.lerp(Vector2(BASE_SCALE, BASE_SCALE), delta * SETTLE_SPEED)
 
 func _check_contact_damage(delta: float) -> void:
-	var n := 0
-	var total := 0.0
+	var entries: Array = []
 	for body in hurt_box.get_overlapping_bodies():
 		if body.is_in_group("enemies"):
-			total += body.CONTACT_DAMAGE * delta
-			n += 1
-			if n >= CONTACT_MAX_SOURCES:
-				break
+			var stunned: bool = body.has_method("is_stunned") and body.is_stunned()
+			entries.append({"damage": body.CONTACT_DAMAGE, "stunned": stunned})
+	var total := sum_contact_damage(entries, delta, CONTACT_MAX_SOURCES)
 	if total > 0.0:
 		take_damage(total)
+
+# 纯函数(便于单测)：累计接触伤害；硬直敌人不结算且不占来源上限；最多累计 max_sources 个。
+static func sum_contact_damage(entries: Array, delta: float, max_sources: int) -> float:
+	var total := 0.0
+	var n := 0
+	for e in entries:
+		if e["stunned"]:
+			continue
+		total += float(e["damage"]) * delta
+		n += 1
+		if n >= max_sources:
+			break
+	return total
 
 func take_damage(amount: float) -> void:
 	if _dead:

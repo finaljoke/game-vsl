@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 # 后续 Task 3/4 会向本文件追加击退与移动门控的测试。
 
 const EnemyScene := preload("res://scenes/enemies/enemy.tscn")
+const PlayerScene := preload("res://scenes/player/player.tscn")
 
 # 建一只敌人并入树(触发 _enter_tree 建 BT + _ready)。无玩家时 chase atom 直接 FAILURE 不移动，
 # 适合隔离验证状态/外力本身。
@@ -66,3 +67,34 @@ func test_resolve_velocity_uses_status_and_external() -> void:
 	e.apply_impulse(Vector2(0, 100), 1.0)   # external = (0,100)
 	var v := e.resolve_velocity(Vector2(80, 0))
 	assert_vector(v).is_equal(Vector2(40, 100))   # 80*0.5 + (0,100)
+
+# 在 (px,0) 放一名玩家(入 "player" 组供 BT 索敌)，返回玩家。
+func _make_player(px: float) -> Player:
+	var p: Player = PlayerScene.instantiate()
+	add_child(p)
+	p.add_to_group("player")
+	p.global_position = Vector2(px, 0)
+	return auto_free(p)
+
+func test_frozen_enemy_does_not_chase_player() -> void:
+	_make_player(400.0)
+	await get_tree().process_frame
+	var e := _make_enemy("chase")
+	e.global_position = Vector2.ZERO
+	await get_tree().process_frame
+	e.apply_status(&"freeze", 0.0, 5.0)
+	var start_x := e.global_position.x
+	for i in range(20):
+		await get_tree().physics_frame
+	# 冻结期间 resolve_velocity → 仅外力(=0) → 不应朝玩家(+x)移动
+	assert_float(e.global_position.x).is_equal_approx(start_x, 2.0)
+
+func test_unimpeded_enemy_chases_player() -> void:
+	_make_player(400.0)
+	await get_tree().process_frame
+	var e := _make_enemy("chase")
+	e.global_position = Vector2.ZERO
+	var start_x := e.global_position.x
+	for i in range(20):
+		await get_tree().physics_frame
+	assert_float(e.global_position.x).is_greater(start_x + 1.0)

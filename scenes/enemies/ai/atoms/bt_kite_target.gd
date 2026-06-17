@@ -27,10 +27,10 @@ func _tick(delta: float) -> Status:
 	var dist := _dist_to_player(target)
 	var dir := _dir_to_player(target)
 	var move := kite_move(dist, preferred, band)
-	agent.velocity = dir * agent.SPEED * float(move)
+	agent.velocity = agent.resolve_velocity(dir * agent.SPEED * float(move))
 	agent.move_and_slide()
 	_cd -= delta
-	if move == 0 and _cd <= 0.0:
+	if move == 0 and _cd <= 0.0 and not agent.is_stunned():
 		_cd = shoot_cooldown
 		_shoot(dir)
 	return RUNNING

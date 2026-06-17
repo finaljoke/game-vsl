@@ -18,14 +18,16 @@ func _tick(delta: float) -> Status:
 	var dist := _dist_to_player(target)
 	if _fuse < 0.0:
 		# 阶段一：追击直到进入引信范围
-		agent.velocity = _dir_to_player(target) * agent.SPEED
+		agent.velocity = agent.resolve_velocity(_dir_to_player(target) * agent.SPEED)
 		agent.move_and_slide()
 		if dist <= fuse_range:
 			_fuse = fuse_time
 		return RUNNING
-	# 阶段二：停下倒计时
-	agent.velocity = Vector2.ZERO
-	_fuse -= delta
+	# 阶段二：停下倒计时(硬直会暂停引信；仍受击退外力推动)
+	agent.velocity = agent.resolve_velocity(Vector2.ZERO)
+	agent.move_and_slide()
+	if not agent.is_stunned():
+		_fuse -= delta
 	if _fuse <= 0.0:
 		_detonate(target)
 		return SUCCESS

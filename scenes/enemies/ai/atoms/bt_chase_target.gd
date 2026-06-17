@@ -6,6 +6,6 @@ func _tick(_delta: float) -> Status:
 	var target := _player()
 	if target == null:
 		return FAILURE
-	agent.velocity = _dir_to_player(target) * agent.SPEED
+	agent.velocity = agent.resolve_velocity(_dir_to_player(target) * agent.SPEED)
 	agent.move_and_slide()
 	return RUNNING
