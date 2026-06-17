@@ -20,6 +20,7 @@ var split_count: int = 0                 # >0 时死亡分裂出 N 只小怪(由
 var hp: float = MAX_HP
 var _player: Node2D = null
 var _pulse_tween: Tween = null  # boss 专属红脉冲；受击期间被 kill 让位给白闪
+var status: StatusComponent = StatusComponent.new()   # 燃烧/减速/冻结/硬直底座(4.1)
 
 @onready var _sprite: Sprite2D = $Sprite2D
 
@@ -45,6 +46,26 @@ func _process(_delta: float) -> void:
 		_sprite.flip_h = velocity.x < 0.0
 
 # 移动逻辑已迁至行为树（agent 即本节点，由 BT 任务调用 move_and_slide）。
+
+# 物理帧驱动状态底座：结算燃烧 DoT。(external_velocity 衰减在 Task3 追加到本函数。)
+func _physics_process(delta: float) -> void:
+	var burn := status.tick(delta)
+	if burn > 0.0:
+		take_damage(burn)
+
+# ── 状态底座对外接口 ───────────────────────────────────────────────────────
+# 武器命中调 apply_status；BT move atom / 玩家接触结算读 move_speed_mult / is_stunned。
+func apply_status(kind: StringName, magnitude: float, duration: float) -> void:
+	status.apply(kind, magnitude, duration)
+
+func move_speed_mult() -> float:
+	return status.move_speed_mult()
+
+func is_stunned() -> bool:
+	return status.is_stunned()
+
+func has_status(kind: StringName) -> bool:
+	return status.has(kind)
 
 func take_damage(amount: float) -> void:
 	hp -= amount

@@ -1,0 +1,48 @@
+extends GdUnitTestSuite
+# Enemy 接入状态/击退的集成验证(实例化 enemy.tscn → 依赖 LimboAI；headless 测试进程会加载)。
+# 后续 Task 3/4 会向本文件追加击退与移动门控的测试。
+
+const EnemyScene := preload("res://scenes/enemies/enemy.tscn")
+
+# 建一只敌人并入树(触发 _enter_tree 建 BT + _ready)。无玩家时 chase atom 直接 FAILURE 不移动，
+# 适合隔离验证状态/外力本身。
+func _make_enemy(behavior: String = "chase") -> Enemy:
+	var e: Enemy = EnemyScene.instantiate()
+	e.behavior = behavior
+	add_child(e)
+	e.add_to_group("enemies")
+	return auto_free(e)
+
+func test_apply_burn_damages_over_physics_frames() -> void:
+	var e := _make_enemy()
+	e.MAX_HP = 100.0
+	e.hp = 100.0
+	e.apply_status(&"burn", 8.0, 1.0)   # 8 dps, 1s
+	for i in range(60):                  # ~1 秒 @60fps
+		await get_tree().physics_frame
+	# 8 dps × ~1s ≈ 8 伤害(4 拍 × 2.0)；给 ±2 容差吸收帧边界
+	assert_float(e.hp).is_less(100.0)
+	assert_float(e.hp).is_equal_approx(92.0, 2.0)
+
+func test_freeze_stuns_and_zeroes_speed_mult() -> void:
+	var e := _make_enemy()
+	e.apply_status(&"freeze", 0.0, 1.0)
+	assert_bool(e.is_stunned()).is_true()
+	assert_float(e.move_speed_mult()).is_equal(0.0)
+
+func test_slow_reduces_speed_mult_without_stun() -> void:
+	var e := _make_enemy()
+	e.apply_status(&"slow", 0.5, 1.0)
+	assert_float(e.move_speed_mult()).is_equal_approx(0.5, 0.001)
+	assert_bool(e.is_stunned()).is_false()
+
+func test_stun_sets_stunned() -> void:
+	var e := _make_enemy()
+	e.apply_status(&"stun", 0.0, 1.0)
+	assert_bool(e.is_stunned()).is_true()
+
+func test_has_status_reports_active() -> void:
+	var e := _make_enemy()
+	e.apply_status(&"slow", 0.5, 1.0)
+	assert_bool(e.has_status(&"slow")).is_true()
+	assert_bool(e.has_status(&"freeze")).is_false()
