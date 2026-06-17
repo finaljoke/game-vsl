@@ -83,12 +83,10 @@ func test_frozen_enemy_does_not_chase_player() -> void:
 	e.global_position = Vector2.ZERO
 	await get_tree().process_frame   # 让 BT 初始化(可能 tick 一次)
 	e.apply_status(&"freeze", 999.0, 999.0)   # 长时长，确保测试期间不过期
-	e.global_position = Vector2.ZERO          # 清除初始化 tick 造成的位移
-	var start_x := e.global_position.x
 	for i in range(20):
-		await get_tree().process_frame        # BT 走 IDLE，process_frame 驱动其 tick
-	# 冻结 → resolve_velocity 仅外力(=0) → 即使 BT 持续 tick 也不应移动
-	assert_float(e.global_position.x).is_equal_approx(start_x, 2.0)
+		await get_tree().process_frame   # BT 走 IDLE，process_frame 驱动其 tick
+	# 冻结 → chase atom 每 tick 经 resolve_velocity 得零自身运动(仅外力=0) → velocity 恒为零
+	assert_vector(e.velocity).is_equal(Vector2.ZERO)
 
 func test_unimpeded_enemy_chases_player() -> void:
 	_make_player(400.0)
