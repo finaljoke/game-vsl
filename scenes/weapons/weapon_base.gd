@@ -63,9 +63,20 @@ func mod_int(field: String) -> int:
 		return int(_player.get(field))
 	return 0
 
-# 伤害 = 基础伤害 × 玩家全局伤害加成。各武器统一走这里，改平衡只动一处口径。
-func damage_for(base: float) -> float:
-	return base * (_player as Player).damage_mult
+# 伤害 = 基础 × 玩家全局伤害加成；可选暴击(弓等)：按 (crit_chance+crit_bonus) 概率 ×crit_mult。
+# 改平衡只动一处口径。向后兼容：默认 can_crit=false 时等价旧 damage_for(base)。
+func damage_for(base: float, can_crit: bool = false, crit_bonus: float = 0.0) -> float:
+	var dmg := base * (_player as Player).damage_mult
+	if can_crit:
+		var p := _player as Player
+		dmg *= crit_multiplier(randf(), p.crit_chance, crit_bonus, p.crit_mult)
+	return dmg
+
+# 纯函数(便于单测)：roll∈[0,1) 落在 (chance+crit_bonus，clamp 到[0,1]) 内则暴击。
+static func crit_multiplier(roll: float, chance: float, crit_bonus: float, crit_mult: float) -> float:
+	if roll < clampf(chance + crit_bonus, 0.0, 1.0):
+		return crit_mult
+	return 1.0
 
 # 当前场上所有敌人节点(薄封装，统一组查询写法)。
 # 返回 Array[Node]（与 get_nodes_in_group 一致），保留下游索引取值的类型可推断。

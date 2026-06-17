@@ -27,6 +27,8 @@ var speed_mult: float = 1.0
 var attack_speed_mult: float = 1.0
 var xp_mult: float = 1.0
 var damage_mult: float = 1.0
+var crit_chance: float = 0.0   # 暴击率(武器/构筑叠加)；默认 0 保持现有手感
+var crit_mult: float = 2.0     # 暴击伤害倍率
 var perk_stacks: Dictionary = {}
 var reroll_tokens: int = 0   # 重抽券：小Boss/终局Boss 掉落，选卡界面消耗(重抽/ban)
 # 质变 modifier(E3)：武器/拾取在运行时读取

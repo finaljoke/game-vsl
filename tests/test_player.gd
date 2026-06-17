@@ -225,3 +225,10 @@ func test_sum_contact_damage_caps_at_max_sources() -> void:
 func test_sum_contact_damage_all_stunned_is_zero() -> void:
 	var entries := [{"damage": 8.0, "stunned": true}, {"damage": 8.0, "stunned": true}]
 	assert_float(Player.sum_contact_damage(entries, 1.0, 6)).is_equal(0.0)
+
+# ── 暴击口径默认值(W0)──────────────────────────────────────────────────────
+func test_crit_chance_default_zero() -> void:
+	assert_float(_player.crit_chance).is_equal(0.0)
+
+func test_crit_mult_default_two() -> void:
+	assert_float(_player.crit_mult).is_equal(2.0)
