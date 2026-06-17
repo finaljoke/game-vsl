@@ -95,7 +95,7 @@ func test_grant_lightning_reflects_level1_chains() -> void:
 func test_grant_whip_reflects_level1_arc() -> void:
 	CardPool.apply({"id": "whip"}, _player)
 	var node := _player.get_weapon_node("whip")
-	assert_float(node.get("arc_deg")).is_equal_approx(120.0, 0.001)
+	assert_float(node.get("arc_deg")).is_equal_approx(100.0, 0.001)   # 斩 Lv1 = 100（原 120）
 
 func test_grant_boomerang_reflects_level1_pierce() -> void:
 	CardPool.apply({"id": "boomerang"}, _player)
