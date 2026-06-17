@@ -97,6 +97,11 @@ func test_grant_whip_reflects_level1_arc() -> void:
 	var node := _player.get_weapon_node("whip")
 	assert_float(node.get("arc_deg")).is_equal_approx(100.0, 0.001)   # 斩 Lv1 = 100（原 120）
 
+func test_grant_whip_reflects_level1_damage() -> void:
+	CardPool.apply({"id": "whip"}, _player)
+	var node := _player.get_weapon_node("whip")
+	assert_float(node.get("damage")).is_equal_approx(22.0, 0.001)   # 斩 Lv1 damage 数据驱动生效
+
 func test_grant_boomerang_reflects_level1_pierce() -> void:
 	CardPool.apply({"id": "boomerang"}, _player)
 	var node := _player.get_weapon_node("boomerang")

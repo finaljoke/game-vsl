@@ -2,11 +2,11 @@
 class_name WhipWeapon
 extends WeaponBase
 
-const BASE_DAMAGE: float = 30.0
 const SLASH_TEX := preload("res://assets/sprites/kenney/fx/whip_slash.png")  # 新月挥砍弧
 const SWIPE_FADE: float = 0.18    # 挥砍淡出时长
 
 # 由 WeaponData.levels 反射注入
+var damage: float = 30.0          # 由 WeaponData.levels 反射注入(默认=旧 BASE_DAMAGE；进化不注入则不变)
 var arc_deg: float = 120.0        # 扇形张角
 var swing_range: float = 130.0    # 扇形半径
 var double_sided: bool = false    # 进化形态：前后双向横扫
@@ -27,7 +27,7 @@ func attack() -> void:
 	var targets := enemies()
 	if targets.is_empty():
 		return
-	var dmg: float = damage_for(BASE_DAMAGE)
+	var dmg: float = damage_for(damage)
 	var origin: Vector2 = _player.global_position
 	for e in targets:
 		var pos: Vector2 = (e as Node2D).global_position
