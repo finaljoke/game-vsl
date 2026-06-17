@@ -5,6 +5,9 @@ extends WeaponBase
 const ORB_SCENE = preload("res://scenes/weapons/orb/orb_shield.tscn")
 
 var total_orbs: int = 0  # 由 WeaponData.levels 通过 apply_level() 注入
+var damage: float = 8.0
+var orbit_radius: float = 60.0      # 缚灵数据驱动(注入给每个 OrbShield)
+var hit_cooldown: float = 0.5
 
 func _ready() -> void:
 	super._ready()
@@ -28,6 +31,9 @@ func _sync_shields() -> void:
 	for i in range(existing.size()):
 		existing[i].total_orbs = total_orbs
 		existing[i].orbit_index = i
+		existing[i].damage = damage
+		existing[i].orbit_radius = orbit_radius
+		existing[i].hit_cooldown = hit_cooldown
 
 func attack() -> void:
 	pass

@@ -29,3 +29,10 @@ func test_throwing_axe_lv1_cooldown() -> void:
 func test_throwing_axe_lv1_damage() -> void:
 	CardPool.apply({"id": "boomerang"}, _player)
 	assert_float(_player.get_weapon_node("boomerang").get("damage")).is_equal_approx(20.0, 0.001)
+
+# ── 缚灵(spectral wisps) orbit_radius 数据驱动 ──
+func test_spectral_wisps_data_drives_orbit_radius() -> void:
+	CardPool.apply({"id": "orb"}, _player)
+	for c in _player.get_children():
+		if c is OrbShield:
+			assert_float(c.orbit_radius).is_equal_approx(60.0, 0.001)  # 缚灵 Lv1=60
