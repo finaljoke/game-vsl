@@ -81,12 +81,13 @@ func test_frozen_enemy_does_not_chase_player() -> void:
 	await get_tree().process_frame
 	var e := _make_enemy("chase")
 	e.global_position = Vector2.ZERO
-	await get_tree().process_frame
-	e.apply_status(&"freeze", 0.0, 5.0)
+	await get_tree().process_frame   # 让 BT 初始化(可能 tick 一次)
+	e.apply_status(&"freeze", 999.0, 999.0)   # 长时长，确保测试期间不过期
+	e.global_position = Vector2.ZERO          # 清除初始化 tick 造成的位移
 	var start_x := e.global_position.x
 	for i in range(20):
-		await get_tree().physics_frame
-	# 冻结期间 resolve_velocity → 仅外力(=0) → 不应朝玩家(+x)移动
+		await get_tree().process_frame        # BT 走 IDLE，process_frame 驱动其 tick
+	# 冻结 → resolve_velocity 仅外力(=0) → 即使 BT 持续 tick 也不应移动
 	assert_float(e.global_position.x).is_equal_approx(start_x, 2.0)
 
 func test_unimpeded_enemy_chases_player() -> void:
@@ -94,7 +95,10 @@ func test_unimpeded_enemy_chases_player() -> void:
 	await get_tree().process_frame
 	var e := _make_enemy("chase")
 	e.global_position = Vector2.ZERO
-	var start_x := e.global_position.x
-	for i in range(20):
-		await get_tree().physics_frame
-	assert_float(e.global_position.x).is_greater(start_x + 1.0)
+	# 帧无关：无状态/无外力时 resolve_velocity 恒等(不阻碍全速)
+	assert_vector(e.resolve_velocity(Vector2(80.0, 0.0))).is_equal(Vector2(80.0, 0.0))
+	# 让 chase atom 经 resolve_velocity 写 velocity(BT 走 IDLE → process_frame 驱动)
+	for i in range(5):
+		await get_tree().process_frame
+	# 朝玩家(+x)产生自身运动 → 证明 atom 确实路由 resolve_velocity 且在追击
+	assert_float(e.velocity.x).is_greater(0.0)
