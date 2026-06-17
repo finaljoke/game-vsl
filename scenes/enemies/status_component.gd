@@ -28,13 +28,8 @@ static func _is_stronger(kind: StringName, new_mag: float, old_mag: float) -> bo
 		return new_mag < old_mag
 	return new_mag > old_mag
 
-# 每物理帧驱动：递减所有时长、清过期，返回本帧应结算的燃烧伤害(无燃烧时为 0)。
+# 每物理帧驱动：先结算本帧燃烧伤害(到期同帧仍结算最后一拍)，再递减时长、清过期。
 func tick(delta: float) -> float:
-	for kind in _durations.keys():   # keys() 返回拷贝，循环内 erase 安全
-		_durations[kind] -= delta
-		if _durations[kind] <= 0.0:
-			_durations.erase(kind)
-			_magnitudes.erase(kind)
 	var burn_damage := 0.0
 	if _durations.has(&"burn"):
 		_burn_accum += delta
@@ -43,6 +38,11 @@ func tick(delta: float) -> float:
 			burn_damage += _magnitudes[&"burn"] * BURN_INTERVAL
 	else:
 		_burn_accum = 0.0
+	for kind in _durations.keys():   # keys() 返回拷贝，循环内 erase 安全
+		_durations[kind] -= delta
+		if _durations[kind] <= 0.0:
+			_durations.erase(kind)
+			_magnitudes.erase(kind)
 	return burn_damage
 
 # 速度乘子：冻结=0；否则取最强减速；无减速=1.0。供 BT move atom 读取。

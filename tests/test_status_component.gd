@@ -56,6 +56,11 @@ func test_burn_refresh_takes_strongest_dps() -> void:
 	s.apply(&"burn", 8.0, 2.0)   # 更高 dps → 取代
 	assert_float(s.tick(0.25)).is_equal_approx(2.0, 0.001)   # 8×0.25
 
+func test_burn_damage_on_expiry_tick() -> void:
+	var s = _sc()
+	s.apply(&"burn", 8.0, 0.25)   # 时长恰好等于一拍 → 到期同帧仍应结算这一拍
+	assert_float(s.tick(0.25)).is_equal_approx(2.0, 0.001)   # 不能为 0
+
 func test_no_burn_tick_returns_zero() -> void:
 	assert_float(_sc().tick(1.0)).is_equal(0.0)
 
