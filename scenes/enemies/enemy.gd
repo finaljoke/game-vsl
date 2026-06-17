@@ -7,6 +7,8 @@ signal died(position: Vector2)
 const EnemyBT = preload("res://scenes/enemies/ai/enemy_bt.gd")
 const ENEMY_SCENE = preload("res://scenes/enemies/enemy.tscn")
 const ICON_TO_TILE := 6.75  # 旧 icon.svg(108px)→ Kenney tile(16px)换算，保持原有显示尺寸
+const EXTERNAL_VELOCITY_DECAY: float = 0.85   # 每物理帧外力衰减(真击退,4.2)
+const EXTERNAL_VELOCITY_CUTOFF: float = 1.0   # 低于此速度归零，防长尾抖动
 
 var SPEED: float = 80.0
 var MAX_HP: float = 20.0
@@ -21,6 +23,7 @@ var hp: float = MAX_HP
 var _player: Node2D = null
 var _pulse_tween: Tween = null  # boss 专属红脉冲；受击期间被 kill 让位给白闪
 var status: StatusComponent = StatusComponent.new()   # 燃烧/减速/冻结/硬直底座(4.1)
+var external_velocity: Vector2 = Vector2.ZERO   # 随物理帧衰减的外力速度(击退/拉拽)
 
 @onready var _sprite: Sprite2D = $Sprite2D
 
@@ -47,11 +50,14 @@ func _process(_delta: float) -> void:
 
 # 移动逻辑已迁至行为树（agent 即本节点，由 BT 任务调用 move_and_slide）。
 
-# 物理帧驱动状态底座：结算燃烧 DoT。(external_velocity 衰减在 Task3 追加到本函数。)
+# 物理帧驱动状态底座：结算燃烧 DoT；衰减外力速度。
 func _physics_process(delta: float) -> void:
 	var burn := status.tick(delta)
 	if burn > 0.0:
 		take_damage(burn)
+	external_velocity *= EXTERNAL_VELOCITY_DECAY
+	if external_velocity.length() < EXTERNAL_VELOCITY_CUTOFF:
+		external_velocity = Vector2.ZERO
 
 # ── 状态底座对外接口 ───────────────────────────────────────────────────────
 # 武器命中调 apply_status；BT move atom / 玩家接触结算读 move_speed_mult / is_stunned。
@@ -66,6 +72,21 @@ func is_stunned() -> bool:
 
 func has_status(kind: StringName) -> bool:
 	return status.has(kind)
+
+# 真击退/拉拽：把方向冲量累加到随帧衰减的外力速度(被 BT move atom 并入移动)。
+func apply_impulse(dir: Vector2, strength: float) -> void:
+	external_velocity += dir * strength
+
+# 纯函数(便于单测)：把 atom 的期望速度按状态+外力合成最终速度。
+# 硬直时自身不动但仍受外力推动。
+static func compose_velocity(desired: Vector2, speed_mult: float, stunned: bool, external: Vector2) -> Vector2:
+	if stunned:
+		return external
+	return desired * speed_mult + external
+
+# BT move atom 调用：传入期望速度，返回应写入 velocity 的合成速度(仍只调一次 move_and_slide)。
+func resolve_velocity(desired: Vector2) -> Vector2:
+	return compose_velocity(desired, move_speed_mult(), is_stunned(), external_velocity)
 
 func take_damage(amount: float) -> void:
 	hp -= amount

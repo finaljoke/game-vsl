@@ -46,3 +46,23 @@ func test_has_status_reports_active() -> void:
 	e.apply_status(&"slow", 0.5, 1.0)
 	assert_bool(e.has_status(&"slow")).is_true()
 	assert_bool(e.has_status(&"freeze")).is_false()
+
+func test_apply_impulse_sets_external_velocity() -> void:
+	var e := _make_enemy()
+	e.apply_impulse(Vector2.RIGHT, 200.0)
+	assert_vector(e.external_velocity).is_equal(Vector2(200.0, 0.0))
+
+func test_external_velocity_decays_over_physics_frames() -> void:
+	var e := _make_enemy()   # 无玩家 → chase atom FAILURE 不写 velocity，隔离衰减
+	e.apply_impulse(Vector2.RIGHT, 200.0)
+	var before := e.external_velocity.length()
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	assert_float(e.external_velocity.length()).is_less(before)
+
+func test_resolve_velocity_uses_status_and_external() -> void:
+	var e := _make_enemy()
+	e.apply_status(&"slow", 0.5, 1.0)
+	e.apply_impulse(Vector2(0, 100), 1.0)   # external = (0,100)
+	var v := e.resolve_velocity(Vector2(80, 0))
+	assert_vector(v).is_equal(Vector2(40, 100))   # 80*0.5 + (0,100)
