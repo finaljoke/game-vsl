@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/gravity_well/gravity_well_weapon.tscn" id="2_scene"]
+[ext_resource type="Texture2D" path="res://assets/sprites/kenney/particles/orb_ring.png" id="3_icon"]
+
+[resource]
+script = ExtResource("1_data")
+id = "gravity_well"
+display_name = "引力井"
+icon = ExtResource("3_icon")
+base_scene = ExtResource("2_scene")
+max_level = 3
+levels = [{"cooldown": 4.0, "field_dur": 2.0, "radius": 140.0, "pull_strength": 120.0, "tick_damage": 3.0}, {"cooldown": 3.4, "field_dur": 2.5, "radius": 160.0, "pull_strength": 140.0, "tick_damage": 4.0}, {"cooldown": 3.0, "field_dur": 3.0, "radius": 180.0, "pull_strength": 160.0, "tick_damage": 5.0}]
+evolution = {}
