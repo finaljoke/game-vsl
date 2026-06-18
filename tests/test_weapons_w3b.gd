@@ -140,3 +140,19 @@ func test_orb_dashes_toward_enemy_when_due() -> void:
 	for i in range(10):
 		await get_tree().process_frame
 	assert_float((orb as Node2D).global_position.distance_to(e.global_position)).is_less(d0)
+
+# ── 震地 Earthshatter ──
+func test_evolve_maul_grants_earthshatter() -> void:
+	var w := _evolve("maul", "earthshatter")
+	assert_bool(_player.has_weapon("earthshatter")).is_true()
+	assert_float(w.get("shockwave_radius")).is_greater(0.0)
+
+func test_earthshatter_shockwave_hits_far_ring_and_slows() -> void:
+	var w := _evolve("maul", "earthshatter")
+	_player.global_position = Vector2.ZERO
+	# 落在初始 radius(170) 外、shockwave_radius(280) 内
+	var e := _tough_enemy_at(Vector2(240, 0))
+	await get_tree().process_frame
+	w._apply_shockwave(Vector2.ZERO)
+	assert_float(e.hp).is_less(500.0)
+	assert_bool(e.has_status(&"slow")).is_true()

@@ -6,10 +6,10 @@
 
 [resource]
 script = ExtResource("1_data")
-id = "maul"
-display_name = "碎"
+id = "earthshatter"
+display_name = "震地"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
-max_level = 3
-levels = [{"cooldown": 2.2, "radius": 130.0, "damage": 60.0, "knockback": 220.0, "stun_dur": 0.4}, {"cooldown": 1.9, "radius": 150.0, "damage": 66.0, "knockback": 250.0, "stun_dur": 0.5}, {"cooldown": 1.6, "radius": 170.0, "damage": 72.0, "knockback": 280.0, "stun_dur": 0.6}]
-evolution = {"requires_perk": "perk_hp", "requires_perk_stacks": 3, "evolved_id": "earthshatter"}
+max_level = 1
+levels = [{"cooldown": 1.6, "radius": 170.0, "damage": 72.0, "knockback": 300.0, "stun_dur": 0.6, "shockwave_radius": 280.0, "shockwave_damage": 40.0, "shockwave_slow": 0.5, "shockwave_slow_dur": 1.5}]
+evolution = {}
