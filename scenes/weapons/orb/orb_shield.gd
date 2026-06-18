@@ -24,6 +24,9 @@ var _dash_target: Node2D = null
 
 func _ready() -> void:
 	_player = get_parent()
+	var spr := get_node_or_null("Sprite2D")
+	if spr != null:
+		(spr as Sprite2D).material = Vfx.make_shader_material(&"summon")
 	# 灵体幽蓝辉光拖尾(加色发光)
 	add_child(Vfx.make_trail(Color(0.5, 0.6, 1.0, 0.8), true))
 

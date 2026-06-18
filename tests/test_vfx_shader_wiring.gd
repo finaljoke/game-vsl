@@ -36,3 +36,14 @@ func test_lightning_bolt_uses_electric_shader() -> void:
 	assert_bool(found).is_true()
 	player.queue_free()
 	if is_instance_valid(enemy): enemy.queue_free()
+
+func test_orb_shield_sprite_has_summon_shader() -> void:
+	var player := _make_player()
+	await get_tree().process_frame
+	var orb: Node2D = (load("res://scenes/weapons/orb/orb_shield.tscn") as PackedScene).instantiate() as Node2D
+	player.add_child(orb)
+	await get_tree().process_frame
+	var spr: Node = orb.get_node_or_null("Sprite2D")
+	assert_object(spr).is_not_null()
+	assert_bool((spr as Sprite2D).material is ShaderMaterial).is_true()
+	player.queue_free()
