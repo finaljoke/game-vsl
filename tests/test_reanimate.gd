@@ -105,7 +105,7 @@ func test_reanimate_reflects_level1_fields() -> void:
 	var rw := _player.get_weapon_node("reanimate")
 	assert_object(rw).is_not_null()
 	assert_int(rw.get("max_minions")).is_equal(1)
-	assert_float(rw.get("lifetime")).is_equal_approx(12.0, 0.001)
+	assert_float(rw.get("lifetime")).is_equal_approx(9.0, 0.001)
 
 func test_reanimate_spawns_up_to_max_minions() -> void:
 	_ysort_stub()

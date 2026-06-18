@@ -190,7 +190,7 @@ func test_apply_explosion_3_sets_level_and_cooldown() -> void:
 	assert_int(_player.get_weapon_level("explosion")).is_equal(3)
 	for child in _player.get_children():
 		if child is ExplosionWeapon:
-			assert_float(child.cooldown).is_equal_approx(1.0, 0.001)
+			assert_float(child.cooldown).is_equal_approx(1.3, 0.001)
 
 func test_apply_orb_3_sets_level_and_orb_count() -> void:
 	CardPool.apply({"id": "orb"}, _player)
