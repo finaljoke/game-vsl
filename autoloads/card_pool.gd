@@ -12,13 +12,13 @@ signal weapon_evolved(old_id: String, new_id: String)
 const CARDS: Array[Dictionary] = [
 	{ "id": "knife",       "name": "长弓",      "desc": "瞄准最近敌射出穿透箭，远距暴击", "type": "weapon",  "condition": "no:knife"      },
 	{ "id": "orb",         "name": "缚灵",      "desc": "环绕自身的守卫灵，接触伤害",   "type": "weapon",  "condition": "no:orb"        },
-	{ "id": "explosion",   "name": "爆炸",      "desc": "随机位置触发范围爆炸",  "type": "weapon",  "condition": "no:explosion"  },
+	{ "id": "explosion",   "name": "火球",      "desc": "投向最密集敌群的范围爆炸 + 地火",  "type": "weapon",  "condition": "no:explosion"  },
 	{ "id": "knife_2",     "name": "长弓 Lv.2",    "desc": "冷却 0.9s → 0.7s，穿透↑",   "type": "upgrade", "condition": "upgrade:knife:1"     },
 	{ "id": "orb_2",       "name": "缚灵 Lv.2",  "desc": "灵体数量 2 → 3",            "type": "upgrade", "condition": "upgrade:orb:1"       },
-	{ "id": "explosion_2", "name": "爆炸 Lv.2",    "desc": "冷却 3.0s → 1.5s",         "type": "upgrade", "condition": "upgrade:explosion:1" },
+	{ "id": "explosion_2", "name": "火球 Lv.2",    "desc": "冷却 2.6s → 1.6s，地火↑",  "type": "upgrade", "condition": "upgrade:explosion:1" },
 	{ "id": "knife_3",     "name": "长弓 Lv.3",    "desc": "冷却 0.7s → 0.5s，穿透 +1",  "type": "upgrade", "condition": "upgrade:knife:2"     },
 	{ "id": "orb_3",       "name": "缚灵 Lv.3",  "desc": "灵体数量 3 → 4",            "type": "upgrade", "condition": "upgrade:orb:2"       },
-	{ "id": "explosion_3", "name": "爆炸 Lv.3",    "desc": "冷却 1.5s → 1.0s",         "type": "upgrade", "condition": "upgrade:explosion:2" },
+	{ "id": "explosion_3", "name": "火球 Lv.3",    "desc": "冷却 1.6s → 1.0s，地火↑",  "type": "upgrade", "condition": "upgrade:explosion:2" },
 	# 新武器(E1)：机制与飞刀/护盾球/爆炸错开
 	{ "id": "lightning",   "name": "连锁闪电",     "desc": "向最近敌劈雷并连锁，附感电硬直", "type": "weapon",  "condition": "no:lightning"  },
 	{ "id": "whip",        "name": "斩",           "desc": "朝移动方向快速弧劈，高频近身",  "type": "weapon",  "condition": "no:whip"       },

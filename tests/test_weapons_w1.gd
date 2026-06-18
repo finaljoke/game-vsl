@@ -101,3 +101,10 @@ func test_longbow_reflects_crit_fields() -> void:
 func test_longbow_lv1_damage_is_data_driven() -> void:
 	CardPool.apply({"id": "knife"}, _player)
 	assert_float(_player.get_weapon_node("knife").get("damage")).is_equal_approx(18.0, 0.001)
+
+func test_fireball_reflects_burn_field_data() -> void:
+	CardPool.apply({"id": "explosion"}, _player)
+	var node := _player.get_weapon_node("explosion")
+	assert_float(node.get("blast_radius")).is_equal_approx(80.0, 0.001)
+	assert_float(node.get("burn_dps")).is_equal_approx(6.0, 0.001)
+	assert_float(node.get("field_dur")).is_equal_approx(2.0, 0.001)
