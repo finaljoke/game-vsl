@@ -72,3 +72,30 @@ func test_explosion_anim_has_fire_shader() -> void:
 				found = true
 	assert_bool(found).is_true()
 	if is_instance_valid(expl): expl.queue_free()
+
+const GravityWellScript := preload("res://scenes/weapons/gravity_well/gravity_well.gd")
+
+func test_gravity_well_distort_lens_has_shader_material() -> void:
+	var well: GravityWell = GravityWellScript.new() as GravityWell
+	well.radius = 140.0
+	add_child(well)
+	await get_tree().process_frame
+	var found := false
+	for c: Node in well.get_children():
+		if c is CanvasItem and (c as CanvasItem).material is ShaderMaterial:
+			found = true
+	assert_bool(found).is_true()
+	well.queue_free()
+
+const RoamingMinionScript := preload("res://scenes/weapons/reanimate/roaming_minion.gd")
+
+func test_roaming_minion_sprite_has_summon_shader() -> void:
+	var minion: RoamingMinion = RoamingMinionScript.new() as RoamingMinion
+	add_child(minion)
+	await get_tree().process_frame
+	var found := false
+	for c: Node in minion.get_children():
+		if c is Sprite2D and (c as Sprite2D).material is ShaderMaterial:
+			found = true
+	assert_bool(found).is_true()
+	minion.queue_free()
