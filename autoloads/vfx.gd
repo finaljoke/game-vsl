@@ -71,3 +71,42 @@ func spawn_burst(pos: Vector2, preset: StringName, parent: Node = null) -> CPUPa
 			if is_instance_valid(p): p.queue_free()
 	)
 	return p
+
+# ── 序列帧工厂 ────────────────────────────────────────────────────────────────
+
+var _frames_cache := {}  # StringName -> SpriteFrames
+
+func build_frames(name: StringName) -> SpriteFrames:
+	if _frames_cache.has(name):
+		return _frames_cache[name]
+	var cfg: Dictionary = ANIM_PRESETS.get(name, {})
+	if cfg.is_empty():
+		return null
+	var sf := SpriteFrames.new()
+	sf.set_animation_speed(&"default", cfg["fps"])
+	sf.set_animation_loop(&"default", false)
+	for i in range(cfg["count"]):
+		var idx := str(i).pad_zeros(2)  # 0->"00", 8->"08"
+		var tex := load(cfg["dir"] + cfg["base"] + idx + ".png") as Texture2D
+		if tex != null:
+			sf.add_frame(&"default", tex)
+	_frames_cache[name] = sf
+	return sf
+
+func spawn_anim(pos: Vector2, name: StringName, parent: Node = null) -> AnimatedSprite2D:
+	var sf := build_frames(name)
+	if sf == null:
+		return null
+	var host: Node = parent if parent != null else get_tree().current_scene
+	if host == null:
+		return null
+	var a := AnimatedSprite2D.new()
+	a.sprite_frames = sf
+	host.add_child(a)
+	a.global_position = pos
+	a.play(&"default")
+	a.animation_finished.connect(
+		func() -> void:
+			if is_instance_valid(a): a.queue_free()
+	)
+	return a

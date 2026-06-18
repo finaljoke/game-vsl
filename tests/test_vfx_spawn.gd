@@ -23,3 +23,25 @@ func test_spawn_burst_unknown_preset_returns_null() -> void:
 	var host: Node2D = auto_free(Node2D.new())
 	add_child(host)
 	assert_object(Vfx.spawn_burst(Vector2.ZERO, &"nope", host)).is_null()
+
+func test_build_frames_count() -> void:
+	var sf: SpriteFrames = Vfx.build_frames(&"explosion_regular")
+	assert_object(sf).is_not_null()
+	assert_int(sf.get_frame_count(&"default")).is_equal(9)
+
+func test_build_frames_cached() -> void:
+	var a: SpriteFrames = Vfx.build_frames(&"explosion_regular")
+	var b: SpriteFrames = Vfx.build_frames(&"explosion_regular")
+	assert_object(a).is_same(b)
+
+func test_build_frames_unknown_null() -> void:
+	assert_object(Vfx.build_frames(&"nope")).is_null()
+
+func test_spawn_anim_plays_and_parents() -> void:
+	var host: Node2D = auto_free(Node2D.new())
+	add_child(host)
+	var a: AnimatedSprite2D = Vfx.spawn_anim(Vector2(5, 5), &"explosion_sonic", host)
+	assert_object(a).is_not_null()
+	assert_bool(a is AnimatedSprite2D).is_true()
+	assert_bool(a.is_playing()).is_true()
+	assert_object(a.get_parent()).is_same(host)
