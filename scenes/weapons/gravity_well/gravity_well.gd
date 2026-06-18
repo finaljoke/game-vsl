@@ -10,6 +10,7 @@ var radius: float = 140.0
 var pull_strength: float = 120.0   # 朝井心的拉力(经 apply_impulse*delta；最终强度 W4 调)
 var field_dur: float = 2.0
 var tick_damage: float = 3.0       # 每秒轻伤(每拍结算 *TICK)
+var collapse_damage: float = 0.0   # 到期坍缩引爆伤害(0=无效果，奇点进化专用)
 var _age: float = 0.0
 var _tick_accum: float = 0.0
 
@@ -26,7 +27,16 @@ func _physics_process(delta: float) -> void:
 		_tick_accum -= TICK
 		_apply_tick_damage()
 	if _age >= field_dur:
+		_collapse()
 		queue_free()
+
+# 坍缩引爆：场到期时对半径内敌人一次高伤(奇点)。
+func _collapse() -> void:
+	if collapse_damage <= 0.0:
+		return
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(e) and global_position.distance_to((e as Node2D).global_position) <= radius:
+			e.take_damage(collapse_damage)
 
 func _apply_tick_damage() -> void:
 	if tick_damage <= 0.0:

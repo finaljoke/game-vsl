@@ -177,3 +177,25 @@ func test_snow_field_slows_enemy_in_radius() -> void:
 	for i in range(20):
 		await get_tree().physics_frame
 	assert_bool(e.has_status(&"slow") or e.has_status(&"freeze")).is_true()
+
+# ── 奇点 Singularity ──
+const GravityWellScript2 := preload("res://scenes/weapons/gravity_well/gravity_well.gd")
+
+func test_evolve_gravity_well_grants_singularity() -> void:
+	var w := _evolve("gravity_well", "singularity")
+	assert_bool(_player.has_weapon("singularity")).is_true()
+	assert_float(w.get("collapse_damage")).is_greater(0.0)
+
+func test_singularity_collapse_damages_clustered_enemies() -> void:
+	var well = auto_free(GravityWellScript2.new())
+	well.radius = 140.0
+	well.field_dur = 0.05
+	well.pull_strength = 0.0
+	well.tick_damage = 0.0
+	well.collapse_damage = 60.0
+	add_child(well)
+	well.global_position = Vector2.ZERO
+	var e := _tough_enemy_at(Vector2(50, 0))
+	for i in range(10):
+		await get_tree().physics_frame   # _age 超过 field_dur → 坍缩并 queue_free
+	assert_float(e.hp).is_less(500.0)
