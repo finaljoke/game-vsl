@@ -109,7 +109,7 @@ func _spawn_segment(ys: Node, a: Vector2, b: Vector2) -> void:
 		return
 	var s := Sprite2D.new()
 	s.texture = BOLT_TEX
-	s.material = _additive()
+	s.material = Vfx.make_shader_material(&"electric")
 	s.global_position = a + seg * 0.5
 	s.rotation = seg.angle() - PI / 2.0  # 贴图竖直(+Y) → 对齐到段方向
 	s.scale = Vector2(BOLT_WIDTH_PX / float(BOLT_TEX.get_width()), length / float(BOLT_TEX.get_height()))
@@ -122,7 +122,7 @@ func _spawn_segment(ys: Node, a: Vector2, b: Vector2) -> void:
 func _spawn_impact(ys: Node, pos: Vector2) -> void:
 	var g := Sprite2D.new()
 	g.texture = GLOW_TEX
-	g.material = _additive()
+	g.material = Vfx.make_shader_material(&"electric")
 	g.global_position = pos
 	g.scale = Vector2(0.12, 0.12)
 	g.modulate = Color(bolt_tint.r, bolt_tint.g, bolt_tint.b, 0.9)
