@@ -24,3 +24,17 @@ func test_summon_shader_loads_with_uniforms() -> void:
 
 func test_distort_shader_loads_with_uniforms() -> void:
 	assert_array(_uniform_names("res://shaders/radial_distort.gdshader")).contains(["strength"])
+
+func test_make_shader_material_returns_shader_material() -> void:
+	var m: ShaderMaterial = Vfx.make_shader_material(&"fire")
+	assert_bool(m is ShaderMaterial).is_true()
+	assert_object(m.shader).is_not_null()
+
+func test_shared_material_is_cached() -> void:
+	assert_object(Vfx.make_shader_material(&"ice")).is_same(Vfx.make_shader_material(&"ice"))
+
+func test_unique_material_is_distinct() -> void:
+	assert_object(Vfx.make_shader_material(&"ice", true)).is_not_same(Vfx.make_shader_material(&"ice", true))
+
+func test_unknown_shader_returns_null() -> void:
+	assert_object(Vfx.make_shader_material(&"nope")).is_null()

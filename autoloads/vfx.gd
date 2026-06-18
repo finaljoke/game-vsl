@@ -171,3 +171,29 @@ func _status_overlay(tex_path: String, color: Color, offset: Vector2, scale: flo
 	s.position = offset
 	s.scale = Vector2(scale, scale)
 	return s
+
+# ── Shader 材质工厂 ────────────────────────────────────────────────────────────
+# unique=false 返回共享缓存实例；unique=true 返回 duplicate() 独立副本；未知 name 返回 null。
+
+const SHADERS := {
+	&"fire":     "res://shaders/fire_distort.gdshader",
+	&"ice":      "res://shaders/ice_edge.gdshader",
+	&"electric": "res://shaders/electric_jitter.gdshader",
+	&"summon":   "res://shaders/summon_glow.gdshader",
+	&"distort":  "res://shaders/radial_distort.gdshader",
+}
+var _shader_mat_cache := {}  # StringName -> ShaderMaterial(共享)
+
+func make_shader_material(name: StringName, unique: bool = false) -> ShaderMaterial:
+	var path: String = SHADERS.get(name, "")
+	if path == "":
+		return null
+	if not _shader_mat_cache.has(name):
+		var sh := load(path) as Shader
+		if sh == null:
+			return null
+		var base := ShaderMaterial.new()
+		base.shader = sh
+		_shader_mat_cache[name] = base
+	var shared: ShaderMaterial = _shader_mat_cache[name]
+	return shared.duplicate() as ShaderMaterial if unique else shared
