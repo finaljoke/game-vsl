@@ -29,6 +29,8 @@ func attack() -> void:
 	var dist := _player.global_position.distance_to(target.global_position)
 	var full_hp: bool = ("hp" in target) and ("MAX_HP" in target) and target.hp >= target.MAX_HP
 	var applied_bonus := longbow_crit_bonus(dist, crit_range, full_hp, crit_bonus)
+	# 确定性装饰标志：crit_chance + applied_bonus >= 1.0 时本轮齐射必定暴击(纯读取,不改 damage_for 内的概率 roll)
+	var guaranteed_crit: bool = (_player.crit_chance + applied_bonus) >= 1.0
 	# E3 质变：global_pierce 加穿透；extra_projectiles 多发小角度扇形
 	var eff_pierce: int = pierce + mod_int("global_pierce")
 	var base_count: int = volley if volley > 0 else 1
@@ -42,12 +44,15 @@ func attack() -> void:
 		projectile.damage = damage_for(damage, true, applied_bonus)
 		projectile.pierce = eff_pierce
 		projectile.speed = proj_speed
+		projectile.is_crit = guaranteed_crit
 		get_ysort().add_child(projectile)
 		projectile.global_position = _player.global_position
 		projectile.rotation = dir.angle() + PI / 2
 		projectile.scale *= proj_scale
 		projectile.modulate = proj_tint
 		projectile.direction = dir
+	if guaranteed_crit:
+		GameFeel.shake(&"medium")
 
 # 纯函数(便于单测)：目标距离 > crit_range 或满血 → 返回 crit_bonus，否则 0。
 # crit_bonus 为 0(进化默认)时恒返回 0 → 配合 player.crit_chance=0 永不暴击。

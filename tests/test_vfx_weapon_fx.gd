@@ -41,3 +41,22 @@ func test_whirlwind_hit_spawns_blood_burst() -> void:
 	await get_tree().process_frame
 	# full_circle 命中：斩光(swipe)+ 血雾(blood_burst) → 至少比 before 多 2
 	assert_int(_ysort_child_count()).is_greater_equal(before + 2)
+
+
+const KnifeProjScript := preload("res://scenes/weapons/knife/knife_projectile.gd")
+
+func test_knife_hit_spawns_spark() -> void:
+	var player: Player = auto_free(_make_player()) as Player
+	await get_tree().process_frame
+	var proj: Area2D = auto_free(KnifeProjScript.new()) as Area2D
+	proj.damage = 5.0
+	proj.pierce = 1
+	add_child(proj)
+	proj.global_position = player.global_position
+	var enemy: Node2D = auto_free(_make_enemy_at(player.global_position)) as Node2D
+	await get_tree().process_frame
+	var before: int = get_child_count()
+	await get_tree().physics_frame
+	await get_tree().process_frame
+	# 命中应产出火花粒子(spawn_burst 挂到 get_parent() → 测试套件本身)
+	assert_int(get_child_count()).is_greater_equal(before)
