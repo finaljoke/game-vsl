@@ -66,7 +66,7 @@
 **Interfaces:**
 - Produces: 5 个可加载的 `Shader` 资源，uniform 名固定（`fire`:speed/strength/tint；`ice`:edge_color/rim；`electric`:jitter/speed；`summon`:glow_color/width；`distort`:strength）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/test_vfx_shaders.gd`：
 
@@ -99,12 +99,12 @@ func test_distort_shader_loads_with_uniforms() -> void:
 	assert_array(_uniform_names("res://shaders/radial_distort.gdshader")).contains(["strength"])
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `… -a res://tests/test_vfx_shaders.gd`
 Expected: FAIL — 着色器文件不存在，`load` 返回 null，uniform 列表为空。
 
-- [ ] **Step 3: 写 5 个着色器**
+- [x] **Step 3: 写 5 个着色器**
 
 `shaders/fire_distort.gdshader`：
 
@@ -199,12 +199,12 @@ void fragment() {
 }
 ```
 
-- [ ] **Step 4: 跑测试确认通过 + 检查无编译错误**
+- [x] **Step 4: 跑测试确认通过 + 检查无编译错误**
 
 Run: `… -a res://tests/test_vfx_shaders.gd`
 Expected: PASS（5 个方法全绿）；输出**无** `SHADER ERROR`。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```powershell
 git add shaders tests/test_vfx_shaders.gd
@@ -230,7 +230,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
   - `const SHADERS: Dictionary` — `{&"fire","ice","electric","summon","distort"} -> 路径`。
   - `func make_shader_material(name: StringName, unique: bool = false) -> ShaderMaterial` — `unique=false` 返回缓存共享实例；`unique=true` 返回 `duplicate()` 的独立副本；未知 name 返回 `null`。
 
-- [ ] **Step 1: 写失败测试（追加）**
+- [x] **Step 1: 写失败测试（追加）**
 
 ```gdscript
 func test_make_shader_material_returns_shader_material() -> void:
@@ -248,11 +248,11 @@ func test_unknown_shader_returns_null() -> void:
 	assert_object(Vfx.make_shader_material(&"nope")).is_null()
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `… -a res://tests/test_vfx_shaders.gd` → FAIL（`SHADERS`/`make_shader_material` 未定义）。
 
-- [ ] **Step 3: 改 `autoloads/vfx.gd`**
+- [x] **Step 3: 改 `autoloads/vfx.gd`**
 
 ```gdscript
 const SHADERS := {
@@ -279,7 +279,7 @@ func make_shader_material(name: StringName, unique: bool = false) -> ShaderMater
 	return shared.duplicate() as ShaderMaterial if unique else shared
 ```
 
-- [ ] **Step 4: 跑测试确认通过 → 提交**
+- [x] **Step 4: 跑测试确认通过 → 提交**
 
 Run: `… -a res://tests/test_vfx_shaders.gd` → PASS。
 
@@ -304,7 +304,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 - Consumes: `Vfx.make_shader_material(&"electric")`。
 - 现状锚点：`_spawn_segment`/`_spawn_impact` 用 `s.material = _additive()`。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/test_vfx_shader_wiring.gd`：
 
@@ -346,11 +346,11 @@ func test_lightning_bolt_uses_electric_shader() -> void:
 	if is_instance_valid(enemy): enemy.queue_free()
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `… -a res://tests/test_vfx_shader_wiring.gd` → FAIL（电弧用的是 CanvasItemMaterial 非 ShaderMaterial）。
 
-- [ ] **Step 3: 改 `lightning_weapon.gd`**
+- [x] **Step 3: 改 `lightning_weapon.gd`**
 
 把 `_spawn_segment` 与 `_spawn_impact` 里的 `s.material = _additive()` / `g.material = _additive()` 改为：
 
@@ -363,7 +363,7 @@ Run: `… -a res://tests/test_vfx_shader_wiring.gd` → FAIL（电弧用的是 C
 
 （`_additive()` 静态保留无妨，或一并删除——但删除前确认无其他引用。最小改动：仅替换两处赋值。）
 
-- [ ] **Step 4: 跑测试确认通过 → 提交**
+- [x] **Step 4: 跑测试确认通过 → 提交**
 
 Run: `… -a res://tests/test_vfx_shader_wiring.gd` → PASS；输出无 `SHADER ERROR`。
 
@@ -388,7 +388,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 - Consumes: `Vfx.make_shader_material(&"summon")`。
 - 现状锚点：`OrbShield._ready()`；精灵为 `.tscn` 里的 `Sprite2D` 子节点。
 
-- [ ] **Step 1: 写失败测试（追加）**
+- [x] **Step 1: 写失败测试（追加）**
 
 ```gdscript
 func test_orb_shield_sprite_has_summon_shader() -> void:
@@ -403,11 +403,11 @@ func test_orb_shield_sprite_has_summon_shader() -> void:
 	player.queue_free()
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `… -a res://tests/test_vfx_shader_wiring.gd` → FAIL。
 
-- [ ] **Step 3: 改 `orb_shield.gd` 的 `_ready()`**
+- [x] **Step 3: 改 `orb_shield.gd` 的 `_ready()`**
 
 ```gdscript
 func _ready() -> void:
@@ -421,7 +421,7 @@ func _ready() -> void:
 
 > 若 VFX-W2 已加 `add_child(Vfx.make_trail(...))`，保留它，仅新增描边两行；勿重复添加拖尾。
 
-- [ ] **Step 4: 跑测试确认通过 → 提交**
+- [x] **Step 4: 跑测试确认通过 → 提交**
 
 Run: `… -a res://tests/test_vfx_shader_wiring.gd` → PASS。
 
@@ -446,7 +446,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 - Consumes: `Vfx.make_shader_material(&"ice")`。
 - 现状锚点：VFX-W1 的 `make_status_indicator(&"freeze")` 返回一个 `Sprite2D` overlay。
 
-- [ ] **Step 1: 写失败测试（追加，纯——无场景）**
+- [x] **Step 1: 写失败测试（追加，纯——无场景）**
 
 ```gdscript
 func test_freeze_indicator_uses_ice_shader() -> void:
@@ -456,11 +456,11 @@ func test_freeze_indicator_uses_ice_shader() -> void:
 	n.free()
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `… -a res://tests/test_vfx_shaders.gd` → FAIL（freeze overlay 无 material）。
 
-- [ ] **Step 3: 改 `autoloads/vfx.gd` 的 `_status_overlay`/freeze 分支**
+- [x] **Step 3: 改 `autoloads/vfx.gd` 的 `_status_overlay`/freeze 分支**
 
 让冻结 overlay 带冰着色器。改 `make_status_indicator` 的 freeze 分支或 `_status_overlay`，最小做法——在 freeze 分支构造后赋 material：
 
@@ -476,7 +476,7 @@ Run: `… -a res://tests/test_vfx_shaders.gd` → FAIL（freeze overlay 无 mate
 		_:         return null
 ```
 
-- [ ] **Step 4: 跑测试确认通过 → 提交**
+- [x] **Step 4: 跑测试确认通过 → 提交**
 
 Run: `… -a res://tests/test_vfx_shaders.gd` → PASS。
 
@@ -501,7 +501,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 - Consumes: `Vfx.make_shader_material(&"fire")`。
 - 现状锚点：VFX-W2 的 `Explosion.detonate()` 里 `var fx := Vfx.spawn_anim(...)`。
 
-- [ ] **Step 1: 写失败测试（追加）**
+- [x] **Step 1: 写失败测试（追加）**
 
 ```gdscript
 const ExplosionScript := preload("res://scenes/weapons/explosion/explosion.gd")
@@ -526,11 +526,11 @@ func test_explosion_anim_has_fire_shader() -> void:
 	if is_instance_valid(expl): expl.queue_free()
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `… -a res://tests/test_vfx_shader_wiring.gd` → FAIL（anim 无 material）。
 
-- [ ] **Step 3: 改 `explosion.gd` 的 `detonate()`**
+- [x] **Step 3: 改 `explosion.gd` 的 `detonate()`**
 
 在 `var fx := Vfx.spawn_anim(...)` 赋 scale 处追加 material：
 
@@ -541,7 +541,7 @@ Run: `… -a res://tests/test_vfx_shader_wiring.gd` → FAIL（anim 无 material
 		fx.material = Vfx.make_shader_material(&"fire")
 ```
 
-- [ ] **Step 4: 跑测试确认通过 → 提交**
+- [x] **Step 4: 跑测试确认通过 → 提交**
 
 Run: `… -a res://tests/test_vfx_shader_wiring.gd` → PASS；无 `SHADER ERROR`。
 
@@ -567,7 +567,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 **Interfaces:**
 - Consumes: `Vfx.make_shader_material(&"distort", true)`（井各自独立 strength）、`Vfx.make_shader_material(&"summon")`。
 
-- [ ] **Step 1: 写失败测试（追加，路径以 W2/W3a 实际为准）**
+- [x] **Step 1: 写失败测试（追加，路径以 W2/W3a 实际为准）**
 
 ```gdscript
 func test_gravity_well_visual_has_distort_shader() -> void:
@@ -586,11 +586,11 @@ func test_gravity_well_visual_has_distort_shader() -> void:
 	well.queue_free()
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `… -a res://tests/test_vfx_shader_wiring.gd` → FAIL。
 
-- [ ] **Step 3: 接线**
+- [x] **Step 3: 接线**
 
 引力井视觉节点（W2 产出的井心 Sprite2D，或 `_ready` 里自建的视觉）：
 
@@ -608,7 +608,7 @@ Run: `… -a res://tests/test_vfx_shader_wiring.gd` → FAIL。
 		_sprite.material = Vfx.make_shader_material(&"summon")
 ```
 
-- [ ] **Step 4: 跑测试确认通过 → 提交**
+- [x] **Step 4: 跑测试确认通过 → 提交**
 
 Run: `… -a res://tests/test_vfx_shader_wiring.gd` → PASS。
 
@@ -625,19 +625,19 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 
 ## Task 8: 全量回归 + 视觉冒烟
 
-- [ ] **Step 1: 跑全部测试套件**
+- [x] **Step 1: 跑全部测试套件**
 
 Run: `… -a res://tests`
 Expected: 全绿；**输出无 `SHADER ERROR` / `ERROR`**（着色器编译干净）。
 
-- [ ] **Step 2: 视觉冒烟（godot-ai MCP，非阻塞）**
+- [x] **Step 2: 视觉冒烟（godot-ai MCP，非阻塞）**
 
 `project_run` 主场景，`editor_screenshot` 逐项确认：
 - 闪电电弧有抖动噼啪感、火球/核爆有热浪、冻结敌人有冰晶白边、护盾球/随从有幽蓝描边、引力井把背景向心吸入扭曲。
 - **可读性复核（spec §2.4/§6.4）**：描边窄、白边不糊轮廓、扭曲 strength 不晕走位空间、电抖动不致癫痫感。超标则调对应 uniform（`width`/`rim`/`strength`/`jitter`）。
 - 低端机性能：屏读 `distort` 是唯一较贵项；若引力井同屏多个掉帧，限制同时启用的扭曲井数或降 strength。
 
-- [ ] **Step 3: 提交（若调了 uniform）**
+- [x] **Step 3: 提交（若调了 uniform）**
 
 ```powershell
 git add -A
