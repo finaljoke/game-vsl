@@ -11,5 +11,5 @@ display_name = "炼狱光环"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"cooldown": 0.4, "radius": 170.0, "lifesteal_on_hit": 0.3}]
+levels = [{"cooldown": 0.4, "radius": 170.0, "lifesteal_on_hit": 0.3, "burn_dps": 10.0, "damage": 12.0}]
 evolution = {}

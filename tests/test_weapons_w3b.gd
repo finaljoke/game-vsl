@@ -95,3 +95,10 @@ func test_cataclysm_reflects_quale_fields() -> void:
 	assert_float(w.get("blast_radius")).is_greater(80.0)   # ×1.6
 	assert_float(w.get("burn_dps")).is_greater(0.0)        # 炼狱地火
 	assert_int(w.get("secondary_count")).is_greater(0)     # 二次引爆
+
+# ── 炼狱 Inferno ──
+func test_inferno_reflects_burn_and_lifesteal() -> void:
+	var w := _evolve("aura", "inferno_aura")
+	assert_float(w.get("burn_dps")).is_greater(0.0)
+	assert_float(w.get("lifesteal_on_hit")).is_greater(0.0)
+	assert_float(w.get("radius")).is_equal_approx(170.0, 0.001)
