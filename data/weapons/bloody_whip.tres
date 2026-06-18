@@ -11,5 +11,5 @@ display_name = "血鞭"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"cooldown": 0.6, "arc_deg": 170.0, "swing_range": 200.0, "double_sided": true}]
+levels = [{"cooldown": 0.6, "arc_deg": 170.0, "swing_range": 200.0, "full_circle": true, "bleed_dps": 8.0, "lifesteal_on_hit": 0.5, "damage": 30.0}]
 evolution = {}
