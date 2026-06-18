@@ -45,6 +45,8 @@ func attack() -> void:
 		if is_instance_valid(tail) and tail.has_method("apply_status"):
 			tail.apply_status(&"stun", 0.0, shock_dur)
 	_spawn_bolt(path)
+	GameFeel.shake(&"medium")
+	GameFeel.hitstop(0.04)  # 噼啪顿挫;headless 自动跳过
 	if sky_strikes > 0 and sky_damage > 0.0:
 		_sky_strike(targets)
 
@@ -130,6 +132,7 @@ func _spawn_impact(ys: Node, pos: Vector2) -> void:
 	tw.tween_property(g, "scale", Vector2(0.22, 0.22), BOLT_FADE)
 	tw.tween_property(g, "modulate:a", 0.0, BOLT_FADE)
 	tw.finished.connect(func() -> void: if is_instance_valid(g): g.queue_free())
+	Vfx.spawn_burst(pos, &"shock_spark", ys)
 
 # 共享的加色混合材质(发光质感)。
 static var _add_mat: CanvasItemMaterial = null

@@ -100,3 +100,23 @@ func _suite_has_animated_sprite() -> bool:
 		if c is AnimatedSprite2D:
 			return true
 	return false
+
+
+const LightningScript := preload("res://scenes/weapons/lightning/lightning_weapon.gd")
+
+func test_lightning_attack_sparks_and_no_crash() -> void:
+	var ys: Node2D = auto_free(Node2D.new()) as Node2D
+	add_child(ys)
+	ys.add_to_group("ysort")
+	var player: Player = auto_free(_make_player()) as Player
+	var lit: LightningWeapon = auto_free(LightningScript.new()) as LightningWeapon
+	lit.data = null
+	player.add_child(lit)
+	await get_tree().process_frame
+	var enemy: Node2D = auto_free(_make_enemy_at(player.global_position + Vector2(60, 0))) as Node2D
+	await get_tree().process_frame
+	var before: int = _ysort_child_count()
+	lit.attack()
+	await get_tree().process_frame
+	assert_int(_ysort_child_count()).is_greater(before)  # 电弧+辉光+火花
+	if is_instance_valid(enemy): enemy.queue_free()
