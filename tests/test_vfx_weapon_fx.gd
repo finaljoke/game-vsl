@@ -137,3 +137,19 @@ func test_aura_has_orbit_particles() -> void:
 			has_particles = true
 	assert_bool(has_particles).is_true()
 	player.queue_free()
+
+
+const OrbShieldScene := "res://scenes/weapons/orb/orb_shield.tscn"
+
+func test_orb_shield_has_glow_trail() -> void:
+	var player: Player = auto_free(_make_player()) as Player
+	await get_tree().process_frame
+	var orb: Node2D = auto_free(load(OrbShieldScene).instantiate()) as Node2D
+	player.add_child(orb)
+	await get_tree().process_frame
+	var has_trail: bool = false
+	for c: Node in orb.get_children():
+		if c is CPUParticles2D:
+			has_trail = true
+	assert_bool(has_trail).is_true()
+	player.queue_free()

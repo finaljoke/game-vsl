@@ -24,6 +24,8 @@ var _dash_target: Node2D = null
 
 func _ready() -> void:
 	_player = get_parent()
+	# 灵体幽蓝辉光拖尾(加色发光)
+	add_child(Vfx.make_trail(Color(0.5, 0.6, 1.0, 0.8), true))
 
 func _process(delta: float) -> void:
 	if _player == null:
