@@ -36,6 +36,9 @@ const CARDS: Array[Dictionary] = [
 	{ "id": "maul",        "name": "碎",           "desc": "慢速大范围砸击，强击退+硬直",   "type": "weapon",  "condition": "no:maul"       },
 	{ "id": "maul_2",      "name": "碎 Lv.2",      "desc": "范围/击退/硬直↑，冷却↓",        "type": "upgrade", "condition": "upgrade:maul:1"     },
 	{ "id": "maul_3",      "name": "碎 Lv.3",      "desc": "范围/击退/硬直↑，冷却↓",        "type": "upgrade", "condition": "upgrade:maul:2"     },
+	{ "id": "frostbite",   "name": "霜噬",         "desc": "冰爆减速，再命中则冻结",       "type": "weapon",  "condition": "no:frostbite"  },
+	{ "id": "frostbite_2", "name": "霜噬 Lv.2",    "desc": "范围/减速/冻结↑，冷却↓",        "type": "upgrade", "condition": "upgrade:frostbite:1" },
+	{ "id": "frostbite_3", "name": "霜噬 Lv.3",    "desc": "范围/减速/冻结↑，冷却↓",        "type": "upgrade", "condition": "upgrade:frostbite:2" },
 	# 质变卡(E3)：非数值协同，rarity 默认 rare(_assign_default_rarities)
 	{ "id": "synergy_pierce",    "name": "贯穿强化", "desc": "所有投射类武器穿透 +1", "type": "synergy", "condition": "has_any:knife,boomerang,thousand_edge,cyclone", "max_stacks": 3 },
 	{ "id": "synergy_multishot", "name": "多重投射", "desc": "飞刀类额外多发 1 枚",   "type": "synergy", "condition": "has_any:knife,thousand_edge", "max_stacks": 2 },
@@ -95,7 +98,7 @@ func reset_run() -> void:
 
 # 静态武器与升级卡（依赖 WeaponDB 提供数据，但 CARDS 数组里的 id/condition 是手写的）
 func _register_weapon_effects() -> void:
-	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang", "aura", "maul"]:
+	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang", "aura", "maul", "frostbite"]:
 		effect_registry[id] = _grant_weapon.bind(id)
 		effect_registry["%s_2" % id] = _level_up_weapon.bind(id)
 		effect_registry["%s_3" % id] = _level_up_weapon.bind(id)

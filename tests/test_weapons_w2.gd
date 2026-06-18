@@ -50,3 +50,28 @@ func test_maul_ignores_enemy_out_of_radius() -> void:
 	maul.attack()
 	assert_float(e.hp).is_equal(500.0)
 	assert_bool(e.is_stunned()).is_false()
+
+# ── 霜噬 Frostbite ──
+func test_frostbite_reflects_level1_fields() -> void:
+	CardPool.apply({"id": "frostbite"}, _player)
+	var node := _player.get_weapon_node("frostbite")
+	assert_object(node).is_not_null()
+	assert_float(node.get("area")).is_equal_approx(90.0, 0.001)
+	assert_float(node.get("slow_factor")).is_equal_approx(0.6, 0.001)
+
+func test_frostbite_slows_then_freezes_on_second_hit() -> void:
+	CardPool.apply({"id": "frostbite"}, _player)
+	var fb := _player.get_weapon_node("frostbite")
+	var e := _tough_enemy_at(_player.global_position + Vector2(20, 0))  # 唯一敌=最密集落点, 在 area 内
+	await get_tree().process_frame
+	fb.attack()
+	assert_bool(e.has_status(&"slow")).is_true()    # 首次命中 → 减速
+	assert_bool(e.has_status(&"freeze")).is_false()
+	fb.attack()
+	assert_bool(e.has_status(&"freeze")).is_true()  # 已减速 → 升级冻结
+
+func test_frostbite_no_target_is_safe() -> void:
+	CardPool.apply({"id": "frostbite"}, _player)
+	var fb := _player.get_weapon_node("frostbite")
+	fb.attack()   # 无敌人 → 不崩
+	assert_bool(true).is_true()
