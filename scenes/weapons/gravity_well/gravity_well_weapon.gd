@@ -29,3 +29,5 @@ func attack() -> void:
 	well.collapse_damage = damage_for(collapse_damage)
 	get_ysort().add_child(well)
 	well.global_position = center
+	Vfx.spawn_burst(center, &"magic_burst", get_ysort())
+	well.add_child(Vfx.make_trail(Color(0.7, 0.5, 1.0, 0.6), true))

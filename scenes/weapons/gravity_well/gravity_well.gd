@@ -37,6 +37,7 @@ func _collapse() -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(e) and global_position.distance_to((e as Node2D).global_position) <= radius:
 			e.take_damage(collapse_damage)
+	GameFeel.shake(&"medium")
 
 func _apply_tick_damage() -> void:
 	if tick_damage <= 0.0:

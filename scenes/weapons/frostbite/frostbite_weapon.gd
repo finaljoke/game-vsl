@@ -23,6 +23,7 @@ func attack() -> void:
 		positions.append((e as Node2D).global_position)
 	var center: Vector2 = ExplosionWeaponScript.densest_center(positions, area)
 	var dmg: float = damage_for(damage)
+	var any_hit := false
 	for e in targets:
 		if not is_instance_valid(e):
 			continue
@@ -31,6 +32,8 @@ func attack() -> void:
 		e.take_damage(dmg)
 		if not is_instance_valid(e):
 			continue
+		Vfx.spawn_burst((e as Node2D).global_position, &"ice_shard", get_ysort())
+		any_hit = true
 		if e.has_method("apply_status") and e.has_method("has_status"):
 			if e.has_status(&"slow"):
 				e.apply_status(&"freeze", 0.0, freeze_dur)   # 二次命中 → 冻结
@@ -44,3 +47,5 @@ func attack() -> void:
 		field.field_dur = field_dur
 		get_ysort().add_child(field)
 		field.global_position = center
+	if any_hit:
+		GameFeel.shake(&"light")

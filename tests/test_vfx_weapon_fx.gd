@@ -153,3 +153,69 @@ func test_orb_shield_has_glow_trail() -> void:
 			has_trail = true
 	assert_bool(has_trail).is_true()
 	player.queue_free()
+
+
+# ── Task 9: W2 武器 FX ──────────────────────────────────────────────────
+
+func _scene_has_animated_sprite() -> bool:
+	var ys: Node = get_tree().get_first_node_in_group("ysort")
+	var root: Node = ys if ys != null else get_tree().current_scene
+	for c: Node in root.get_children():
+		if c is AnimatedSprite2D:
+			return true
+	return false
+
+const MaulWeaponScene := "res://scenes/weapons/maul/maul_weapon.tscn"
+
+func test_maul_hit_heavy_feedback() -> void:
+	var ys: Node2D = auto_free(Node2D.new()) as Node2D
+	add_child(ys)
+	ys.add_to_group("ysort")
+	var player: Player = auto_free(_make_player()) as Player
+	var maul: MaulWeapon = auto_free(load(MaulWeaponScene).instantiate()) as MaulWeapon
+	player.add_child(maul)
+	await get_tree().process_frame
+	var enemy: Node2D = auto_free(_make_enemy_at(player.global_position + Vector2(30, 0))) as Node2D
+	await get_tree().process_frame
+	maul.attack()
+	await get_tree().process_frame
+	assert_bool(_scene_has_animated_sprite()).is_true()
+	if is_instance_valid(enemy): enemy.queue_free()
+
+
+const FrostbiteWeaponScene := "res://scenes/weapons/frostbite/frostbite_weapon.tscn"
+
+func test_frostbite_hit_ice_burst() -> void:
+	var ys: Node2D = auto_free(Node2D.new()) as Node2D
+	add_child(ys)
+	ys.add_to_group("ysort")
+	var player: Player = auto_free(_make_player()) as Player
+	var frost: FrostbiteWeapon = auto_free(load(FrostbiteWeaponScene).instantiate()) as FrostbiteWeapon
+	player.add_child(frost)
+	await get_tree().process_frame
+	var enemy: Node2D = auto_free(_make_enemy_at(player.global_position + Vector2(40, 0))) as Node2D
+	await get_tree().process_frame
+	var before: int = _ysort_child_count()
+	frost.attack()
+	await get_tree().process_frame
+	assert_int(_ysort_child_count()).is_greater(before)
+	if is_instance_valid(enemy): enemy.queue_free()
+
+
+const GravityWellWeaponScene := "res://scenes/weapons/gravity_well/gravity_well_weapon.tscn"
+
+func test_gravity_well_spawns_burst_and_trail() -> void:
+	var ys: Node2D = auto_free(Node2D.new()) as Node2D
+	add_child(ys)
+	ys.add_to_group("ysort")
+	var player: Player = auto_free(_make_player()) as Player
+	var gw: GravityWellWeapon = auto_free(load(GravityWellWeaponScene).instantiate()) as GravityWellWeapon
+	player.add_child(gw)
+	await get_tree().process_frame
+	var enemy: Node2D = auto_free(_make_enemy_at(player.global_position + Vector2(50, 0))) as Node2D
+	await get_tree().process_frame
+	var before: int = _ysort_child_count()
+	gw.attack()
+	await get_tree().process_frame
+	assert_int(_ysort_child_count()).is_greater(before)
+	if is_instance_valid(enemy): enemy.queue_free()

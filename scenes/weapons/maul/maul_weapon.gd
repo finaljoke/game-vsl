@@ -38,6 +38,11 @@ func attack() -> void:
 	if shockwave_radius > 0.0:
 		var c: Vector2 = origin
 		get_tree().create_timer(SHOCKWAVE_DELAY).timeout.connect(func() -> void: _apply_shockwave(c))
+	var fx := Vfx.spawn_anim(origin, &"explosion_ground", get_ysort())
+	if fx != null:
+		fx.scale = Vector2(0.7, 0.7)
+	GameFeel.shake(&"heavy")
+	GameFeel.hitstop(0.06)
 
 # 冲击波：命中初始 radius 之外、shockwave_radius 之内的一圈敌人 + 地裂减速。
 func _apply_shockwave(origin: Vector2) -> void:
