@@ -60,3 +60,19 @@ func test_knife_hit_spawns_spark() -> void:
 	await get_tree().process_frame
 	# 命中应产出火花粒子(spawn_burst 挂到 get_parent() → 测试套件本身)
 	assert_int(get_child_count()).is_greater_equal(before)
+
+
+const BoomerangProjScript := preload("res://scenes/weapons/boomerang/boomerang_projectile.gd")
+
+func test_boomerang_has_trail_child() -> void:
+	var player: Player = auto_free(_make_player()) as Player
+	await get_tree().process_frame
+	var proj: Node2D = auto_free(BoomerangProjScript.new()) as Node2D
+	add_child(proj)
+	await get_tree().process_frame
+	var has_trail: bool = false
+	for c: Node in proj.get_children():
+		if c is CPUParticles2D:
+			has_trail = true
+	assert_bool(has_trail).is_true()
+	player.queue_free(); proj.queue_free()

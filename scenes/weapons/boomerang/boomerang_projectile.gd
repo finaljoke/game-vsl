@@ -31,6 +31,8 @@ func _ready() -> void:
 	_sprite.texture = SPRITE_TEX
 	_sprite.scale = Vector2(0.8, 0.8)
 	add_child(_sprite)
+	# 旋斧残影拖尾(冷钢青白)
+	add_child(Vfx.make_trail(Color(0.8, 0.9, 1.0, 0.7)))
 
 func _physics_process(delta: float) -> void:
 	if _sprite != null:
