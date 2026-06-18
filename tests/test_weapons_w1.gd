@@ -36,3 +36,22 @@ func test_spectral_wisps_data_drives_orbit_radius() -> void:
 	for c in _player.get_children():
 		if c is OrbShield:
 			assert_float(c.orbit_radius).is_equal_approx(60.0, 0.001)  # 缚灵 Lv1=60
+
+# ── 烈焰护体(flame cloak) burn 附着 ──
+func test_flame_cloak_applies_burn_to_enemy_in_radius() -> void:
+	CardPool.apply({"id": "aura"}, _player)
+	var aura := _player.get_weapon_node("aura")
+	var e := _spawn_enemy_near(30.0)   # 在 Lv1 radius=90 内
+	await get_tree().process_frame
+	aura.attack()
+	assert_bool(e.has_status(&"burn")).is_true()
+
+func test_flame_cloak_no_burn_when_dps_zero() -> void:
+	# 进化 inferno_aura 不注入 burn_dps → 默认 0 → 不附 burn（W1 不改进化行为）
+	CardPool.apply({"id": "aura"}, _player)
+	var aura := _player.get_weapon_node("aura")
+	aura.burn_dps = 0.0
+	var e := _spawn_enemy_near(30.0)
+	await get_tree().process_frame
+	aura.attack()
+	assert_bool(e.has_status(&"burn")).is_false()

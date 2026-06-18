@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1_data")
 id = "aura"
-display_name = "光环"
+display_name = "烈焰护体"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 3
-levels = [{"cooldown": 0.8, "radius": 90.0}, {"cooldown": 0.65, "radius": 110.0}, {"cooldown": 0.5, "radius": 130.0}]
+levels = [{"cooldown": 0.8, "radius": 90.0, "damage": 12.0, "burn_dps": 4.0}, {"cooldown": 0.65, "radius": 110.0, "damage": 13.0, "burn_dps": 5.0}, {"cooldown": 0.5, "radius": 130.0, "damage": 14.0, "burn_dps": 6.0}]
 evolution = {"requires_perk": "perk_hp", "requires_perk_stacks": 3, "evolved_id": "inferno_aura"}

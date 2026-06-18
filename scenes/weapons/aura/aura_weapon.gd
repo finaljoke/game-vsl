@@ -2,11 +2,13 @@
 class_name AuraWeapon
 extends WeaponBase
 
-const BASE_DAMAGE: float = 12.0
+const BURN_REFRESH: float = 0.5   # burn 状态刷新时长(高频脉冲持续覆盖)
 const RING_TEX := preload("res://assets/sprites/kenney/particles/orb_ring.png")
 
 # 由 WeaponData.levels 反射注入
+var damage: float = 12.0
 var radius: float = 90.0
+var burn_dps: float = 0.0           # >0 时命中附燃烧 DoT(基础注入；进化不注入→0→不附)
 var lifesteal_on_hit: float = 0.0   # 进化形态(炼狱)：每命中一敌回血
 
 var _ring: Sprite2D = null
@@ -44,12 +46,14 @@ func _update_ring() -> void:
 			else Color(0.6, 0.9, 1.0, 0.26)
 
 func attack() -> void:
-	var dmg: float = damage_for(BASE_DAMAGE)
+	var dmg: float = damage_for(damage)
 	var origin: Vector2 = _player.global_position
 	for e in enemies():
 		if not is_instance_valid(e):
 			continue
 		if origin.distance_to((e as Node2D).global_position) <= radius:
 			e.take_damage(dmg)
-			if lifesteal_on_hit > 0.0 and "hp" in _player:
-				_player.hp = minf(_player.hp + lifesteal_on_hit, _player.max_hp)
+			if burn_dps > 0.0 and e.has_method("apply_status"):
+				e.apply_status(&"burn", burn_dps, BURN_REFRESH)
+			if lifesteal_on_hit > 0.0 and _player.has_method("heal"):
+				_player.heal(lifesteal_on_hit)
