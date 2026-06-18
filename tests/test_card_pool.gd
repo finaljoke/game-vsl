@@ -180,7 +180,7 @@ func test_apply_knife_3_sets_level_cooldown_and_pierce() -> void:
 	assert_int(_player.get_weapon_level("knife")).is_equal(3)
 	for child in _player.get_children():
 		if child is KnifeWeapon:
-			assert_float(child.cooldown).is_equal_approx(0.3, 0.001)
+			assert_float(child.cooldown).is_equal_approx(0.5, 0.001)   # 长弓 Lv3=0.5(原 0.3)
 			assert_int(child.pierce).is_equal(4)
 
 func test_apply_explosion_3_sets_level_and_cooldown() -> void:

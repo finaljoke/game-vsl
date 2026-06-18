@@ -1,18 +1,19 @@
 # scenes/weapons/knife/knife_projectile.gd
 extends Area2D
 
-const SPEED: float = 400.0
+const SPEED: float = 400.0   # 默认弹速
 const BASE_DAMAGE: float = 15.0
 const LIFETIME: float = 3.0
 
 var damage: float = BASE_DAMAGE  # 由 KnifeWeapon 注入 damage_mult 后设置
 var direction: Vector2 = Vector2.RIGHT
 var pierce: int = 1  # 可穿透的敌人数；由 KnifeWeapon 注入
+var speed: float = SPEED      # 由 KnifeWeapon 注入(长弓更快)
 var _age: float = 0.0
 var _hit_ids: Dictionary = {}  # 已命中敌人去重，避免同一目标重复扣血
 
 func _physics_process(delta: float) -> void:
-	global_position += direction * SPEED * delta
+	global_position += direction * speed * delta
 	_age += delta
 	if _age >= LIFETIME:
 		queue_free()

@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1_data")
 id = "knife"
-display_name = "飞刀"
+display_name = "长弓"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 3
-levels = [{"cooldown": 1.0, "pierce": 2}, {"cooldown": 0.5, "pierce": 2}, {"cooldown": 0.3, "pierce": 4}]
+levels = [{"cooldown": 0.9, "pierce": 2, "damage": 18.0, "crit_range": 260.0, "crit_bonus": 0.25, "proj_speed": 520.0}, {"cooldown": 0.7, "pierce": 3, "damage": 18.0, "crit_range": 260.0, "crit_bonus": 0.30, "proj_speed": 520.0}, {"cooldown": 0.5, "pierce": 4, "damage": 18.0, "crit_range": 240.0, "crit_bonus": 0.35, "proj_speed": 560.0}]
 evolution = {"requires_perk": "perk_attack", "requires_perk_stacks": 3, "evolved_id": "thousand_edge"}

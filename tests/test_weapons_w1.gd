@@ -73,3 +73,31 @@ func test_chain_lightning_no_stun_when_dur_zero() -> void:
 	await get_tree().process_frame
 	lw.attack()
 	assert_bool(e.is_stunned()).is_false()
+
+# ── 长弓距离/满血暴击口径(纯函数)──
+func test_longbow_crit_bonus_far_target() -> void:
+	# dist 300 > crit_range 260 → 给 bonus
+	assert_float(KnifeScript.longbow_crit_bonus(300.0, 260.0, false, 0.25)).is_equal_approx(0.25, 0.001)
+
+func test_longbow_crit_bonus_full_hp_target() -> void:
+	# 近距但满血 → 给 bonus
+	assert_float(KnifeScript.longbow_crit_bonus(100.0, 260.0, true, 0.25)).is_equal_approx(0.25, 0.001)
+
+func test_longbow_crit_bonus_near_and_hurt_no_bonus() -> void:
+	# 近距且非满血 → 不给
+	assert_float(KnifeScript.longbow_crit_bonus(100.0, 260.0, false, 0.25)).is_equal(0.0)
+
+func test_longbow_zero_bonus_field_never_crits() -> void:
+	# 进化 thousand_edge crit_bonus 默认 0 → 任何情况返回 0
+	assert_float(KnifeScript.longbow_crit_bonus(999.0, 260.0, true, 0.0)).is_equal(0.0)
+
+func test_longbow_reflects_crit_fields() -> void:
+	CardPool.apply({"id": "knife"}, _player)
+	var node := _player.get_weapon_node("knife")
+	assert_float(node.get("crit_range")).is_equal_approx(260.0, 0.001)
+	assert_float(node.get("crit_bonus")).is_equal_approx(0.25, 0.001)
+	assert_float(node.get("proj_speed")).is_greater(400.0)
+
+func test_longbow_lv1_damage_is_data_driven() -> void:
+	CardPool.apply({"id": "knife"}, _player)
+	assert_float(_player.get_weapon_node("knife").get("damage")).is_equal_approx(18.0, 0.001)
