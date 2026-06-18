@@ -67,3 +67,24 @@ func test_arrow_storm_fires_volley_projectiles() -> void:
 	w.attack()
 	# 齐射 5 发 → ysort 下至少 5 个投射体
 	assert_int(ys.get_child_count()).is_greater_equal(5)
+
+# ── 旋风斧 Cyclone ──
+const BoomerangProjScript := preload("res://scenes/weapons/boomerang/boomerang_projectile.gd")
+
+func test_cyclone_reflects_orbit_return() -> void:
+	var w := _evolve("boomerang", "cyclone")
+	assert_bool(w.get("orbit_return")).is_true()
+	assert_int(w.get("count")).is_equal(3)
+
+func test_cyclone_projectile_orbits_not_homes() -> void:
+	var p = auto_free(BoomerangProjScript.new())
+	p.max_range = 200.0
+	p.orbit_return = true
+	add_child(p)
+	await get_tree().process_frame   # _ready 抓 player(=本测试的 _player)
+	p.global_position = _player.global_position + Vector2(80, 0)
+	p._returning = true              # 进入折返(环绕)阶段
+	for i in range(15):
+		await get_tree().physics_frame
+	# 环绕态不应归位到玩家(距离仍 > 折返阈值)
+	assert_float(p.global_position.distance_to(_player.global_position)).is_greater(20.0)

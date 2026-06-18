@@ -11,5 +11,5 @@ display_name = "旋风镖"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"cooldown": 0.7, "pierce": 8, "throw_range": 300.0, "count": 3}]
+levels = [{"cooldown": 0.7, "pierce": 8, "throw_range": 300.0, "count": 3, "orbit_return": true, "damage": 20.0}]
 evolution = {}

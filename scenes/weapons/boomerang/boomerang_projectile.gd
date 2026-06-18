@@ -12,6 +12,12 @@ var direction: Vector2 = Vector2.RIGHT
 var pierce: int = 3              # 每个航程(去/回)最多命中的敌人数
 var max_range: float = 240.0
 
+var orbit_return: bool = false      # 进化(旋风)：折返改环绕玩家旋转
+const ORBIT_DURATION: float = 1.5
+const ORBIT_ANG_SPEED: float = 6.0
+var _orbit_t: float = 0.0
+var _orbit_angle: float = 0.0
+
 var _player: Node2D = null
 var _traveled: float = 0.0
 var _returning: bool = false
@@ -40,11 +46,20 @@ func _physics_process(delta: float) -> void:
 		if _player == null or not is_instance_valid(_player):
 			queue_free()
 			return
-		var to: Vector2 = _player.global_position - global_position
-		if to.length() <= RETURN_THRESHOLD:
-			queue_free()
-			return
-		global_position += to.normalized() * SPEED * delta
+		if orbit_return:
+			_orbit_t += delta
+			_orbit_angle += ORBIT_ANG_SPEED * delta
+			var r: float = max_range * 0.4
+			global_position = _player.global_position + Vector2(cos(_orbit_angle), sin(_orbit_angle)) * r
+			if _orbit_t >= ORBIT_DURATION:
+				queue_free()
+				return
+		else:
+			var to: Vector2 = _player.global_position - global_position
+			if to.length() <= RETURN_THRESHOLD:
+				queue_free()
+				return
+			global_position += to.normalized() * SPEED * delta
 	_check_hits()
 
 func _check_hits() -> void:
