@@ -34,6 +34,15 @@ var _emitter_hit: PhantomCameraNoiseEmitter2D
 var _emitter_player: PhantomCameraNoiseEmitter2D
 var _emitter_levelup: PhantomCameraNoiseEmitter2D
 
+# 武器手感专用震屏分级(与 player/levelup 解耦,调武器手感不影响受击/升级反馈)。
+# 各档:[amplitude, frequency, duration, decay]。
+const SHAKE_PRESETS := {
+	&"light":  [6.0,  9.0, 0.10, 0.06],
+	&"medium": [12.0, 7.0, 0.16, 0.10],
+	&"heavy":  [22.0, 5.0, 0.24, 0.14],
+}
+var _weapon_emitters := {}  # StringName -> PhantomCameraNoiseEmitter2D
+
 # ── Cached references ─────────────────────────────────────────────────────
 var _player_node: Node2D = null
 var _flash_rect: ColorRect = null
@@ -71,6 +80,9 @@ func _setup_shake_emitters() -> void:
 	_emitter_hit     = _make_emitter(4.0,  8.0, 0.08, 0.05, false)
 	_emitter_player  = _make_emitter(24.0, 5.0, 0.25, 0.15, false)
 	_emitter_levelup = _make_emitter(10.0, 6.0, 0.15, 0.10, false)
+	for key in SHAKE_PRESETS:
+		var p: Array = SHAKE_PRESETS[key]
+		_weapon_emitters[key] = _make_emitter(p[0], p[1], p[2], p[3], false)
 
 func _make_emitter(amplitude: float, frequency: float, duration: float, decay: float, rotational: bool) -> PhantomCameraNoiseEmitter2D:
 	var noise := PhantomCameraNoise2D.new()
@@ -86,6 +98,12 @@ func _make_emitter(amplitude: float, frequency: float, duration: float, decay: f
 	emitter.continuous = false
 	add_child(emitter)
 	return emitter
+
+# 武器/系统按手感分级请求震屏。未知预设安全 no-op。
+func shake(preset: StringName) -> void:
+	var e: PhantomCameraNoiseEmitter2D = _weapon_emitters.get(preset)
+	if e != null:
+		e.emit()
 
 func _flash_node(node: Node2D, color: Color, duration: float) -> void:
 	if not is_instance_valid(node):
@@ -157,13 +175,13 @@ func _on_enemy_died(position: Vector2, enemy: Node2D) -> void:
 	_emitter_hit.emit()
 	# 顿帧只留给 Boss：割草游戏里杂兵击杀高频，全局 time_scale 会叠成永久慢放。
 	if enemy != null and is_instance_valid(enemy) and enemy.get("behavior") == "boss":
-		_trigger_hitstop(0.05)
+		hitstop(0.05)
 	var p := SoundManager.play_sound(SFX_DEATH)
 	if p: p.volume_db = SFX_DEATH_DB
 
 # Engine.time_scale 全局拖慢制造击杀冲击感；恢复 timer 必须 ignore_time_scale，
 # 否则它自己也会被拖慢导致永远不归位。
-func _trigger_hitstop(duration: float) -> void:
+func hitstop(duration: float) -> void:
 	# bot/headless 模式跳过:顿帧用实时计时器,其窗口内物理帧数依赖真机 wall-clock,会破坏确定性。
 	# 且 headless 下顿帧无视觉意义。详见 RunHarness。
 	if RunHarness.active:
