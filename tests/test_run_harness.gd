@@ -73,7 +73,7 @@ func test_hitstop_skipped_when_harness_active() -> void:
 	RunHarness.active = true
 	RunHarness.base_time_scale = 3.0
 	Engine.time_scale = 3.0
-	GameFeel._trigger_hitstop(0.05)
+	GameFeel.hitstop(0.05)
 	# bot 模式应直接跳过,不把 time_scale 砸到 0.05
 	assert_float(Engine.time_scale).is_equal_approx(3.0, 0.001)
 	# 还原,避免污染其他用例(对称保存/还原,不写死)
