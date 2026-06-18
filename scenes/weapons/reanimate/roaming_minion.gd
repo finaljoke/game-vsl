@@ -30,6 +30,7 @@ func _ready() -> void:
 	spr.scale = Vector2(0.4, 0.4)
 	spr.modulate = Color(0.6, 0.9, 0.7)   # 幽绿，区分友军
 	add_child(spr)
+	add_child(Vfx.make_trail(Color(0.5, 0.6, 1.0, 0.8), true))
 
 func _physics_process(delta: float) -> void:
 	_age += delta

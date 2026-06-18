@@ -219,3 +219,22 @@ func test_gravity_well_spawns_burst_and_trail() -> void:
 	await get_tree().process_frame
 	assert_int(_ysort_child_count()).is_greater(before)
 	if is_instance_valid(enemy): enemy.queue_free()
+
+
+# ── Task 10: 亡者召唤 Reanimate FX ──────────────────────────────────────────
+
+const RoamingMinionScript := preload("res://scenes/weapons/reanimate/roaming_minion.gd")
+
+func test_minion_has_glow_trail() -> void:
+	var player: Player = auto_free(_make_player()) as Player
+	await get_tree().process_frame
+	var minion: RoamingMinion = auto_free(RoamingMinionScript.new()) as RoamingMinion
+	add_child(minion)
+	await get_tree().process_frame
+	var has_trail: bool = false
+	for c: Node in minion.get_children():
+		if c is CPUParticles2D:
+			has_trail = true
+	assert_bool(has_trail).is_true()
+	player.queue_free()
+	if is_instance_valid(minion): minion.queue_free()

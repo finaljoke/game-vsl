@@ -4,6 +4,7 @@ class_name ReanimateWeapon
 extends WeaponBase
 
 const MINION := preload("res://scenes/weapons/reanimate/roaming_minion.gd")
+const _RUNE_TEX := preload("res://assets/sprites/kenney/runes/runeBlue_tile_001.png")
 
 # 由 WeaponData.levels 反射注入(cooldown 即 summon_interval，走 WeaponBase 调度)
 var max_minions: int = 1
@@ -24,6 +25,20 @@ func attack() -> void:
 	m.split_chance = split_chance
 	get_ysort().add_child(m)
 	m.global_position = _player.global_position
+	Vfx.spawn_burst(m.global_position, &"magic_burst", get_ysort())
+	_spawn_rune_flash(m.global_position)
+	GameFeel.shake(&"light")
+
+func _spawn_rune_flash(pos: Vector2) -> void:
+	var s := Sprite2D.new()
+	s.texture = _RUNE_TEX
+	s.modulate = Color(0.5, 0.7, 1.0, 0.9)
+	s.scale = Vector2(0.5, 0.5)
+	get_ysort().add_child(s)
+	s.global_position = pos
+	var tw := s.create_tween()
+	tw.tween_property(s, "modulate:a", 0.0, 0.4)
+	tw.finished.connect(func() -> void: if is_instance_valid(s): s.queue_free())
 
 func _count_minions() -> int:
 	var n := 0
