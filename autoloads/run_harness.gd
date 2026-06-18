@@ -21,6 +21,32 @@ const DEFAULT_PROFILE: Array = [
 ]
 const PROFILES: Dictionary = {"default": DEFAULT_PROFILE}
 
+# 每把武器进化所需 perk(spec §6.4)。供单武器档堆到 evolve_ready。
+# 新武器(maul/frostbite/gravity_well/reanimate)的 id 以 W2/W3a 实际为准;不存在时该项仅未被用到,无害。
+const SOLO_PERKS := {
+	"knife": "perk_attack", "whip": "perk_attack", "boomerang": "perk_speed",
+	"explosion": "perk_damage", "aura": "perk_hp", "lightning": "perk_attack", "orb": "perk_hp",
+	"maul": "perk_hp", "frostbite": "perk_attack", "gravity_well": "perk_speed", "reanimate": "perk_hp",
+}
+
+# 单武器优先表:拿武器 → 升级 → (就绪即)进化 → 堆进化 perk → 生存兜底。
+# 不含通用 type:weapon,故 bot 不会拿别的武器,保证单武器隔离。
+static func solo_profile(weapon_id: String, evo_perk: String) -> Array:
+	return [
+		weapon_id,
+		weapon_id + "_2", weapon_id + "_3",
+		"evolve_" + weapon_id,
+		evo_perk,
+		"synergy_lifesteal", "perk_hp", "perk_heal",
+		"type:upgrade", "type:synergy", "type:perk",
+	]
+
+static func profile_for(name: String) -> Array:
+	if name.begins_with("solo_"):
+		var wid := name.substr(5)
+		return solo_profile(wid, String(SOLO_PERKS.get(wid, "perk_hp")))
+	return PROFILES.get(name, DEFAULT_PROFILE)
+
 # ── 运行时状态(Task 7 填充驱动逻辑;此处先声明,供其他文件引用) ────────────────
 var active: bool = false                 # 是否 bot 模式(无 --bot 时恒 false → 全链路惰性)
 var base_time_scale: float = 1.0         # 快进基线;game_feel hitstop 恢复到这里而非写死 1.0
@@ -96,7 +122,7 @@ func _ready() -> void:
 	if not active:
 		return   # 真人模式:全惰性
 	_bot_mode = cfg["bot"]
-	_profile = PROFILES.get(cfg["cards"], DEFAULT_PROFILE)
+	_profile = profile_for(cfg["cards"])
 	_out = cfg["out"]
 	_maxtime = cfg["maxtime"]
 	base_time_scale = cfg["fast"]
