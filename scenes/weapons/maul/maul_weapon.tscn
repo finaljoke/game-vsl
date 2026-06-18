@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/weapons/maul/maul_weapon.gd" id="1_maul"]
+
+[node name="MaulWeapon" type="Node"]
+script = ExtResource("1_maul")
