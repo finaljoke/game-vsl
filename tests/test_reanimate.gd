@@ -91,3 +91,27 @@ func test_minion_no_split_when_chance_zero() -> void:
 		if is_instance_valid(s):
 			count += 1
 	assert_int(count).is_equal(0)
+
+# ── ReanimateWeapon ──
+func _count_summons() -> int:
+	var n := 0
+	for s in get_tree().get_nodes_in_group("summons"):
+		if is_instance_valid(s):
+			n += 1
+	return n
+
+func test_reanimate_reflects_level1_fields() -> void:
+	CardPool.apply({"id": "reanimate"}, _player)
+	var rw := _player.get_weapon_node("reanimate")
+	assert_object(rw).is_not_null()
+	assert_int(rw.get("max_minions")).is_equal(1)
+	assert_float(rw.get("lifetime")).is_equal_approx(12.0, 0.001)
+
+func test_reanimate_spawns_up_to_max_minions() -> void:
+	_ysort_stub()
+	CardPool.apply({"id": "reanimate"}, _player)
+	var rw := _player.get_weapon_node("reanimate")
+	rw.attack()
+	rw.attack()   # Lv1 max=1 → 第二次不再生成
+	await get_tree().process_frame
+	assert_int(_count_summons()).is_equal(1)
