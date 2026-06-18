@@ -28,3 +28,46 @@ func get_preset(name: StringName) -> Dictionary:
 	if ANIM_PRESETS.has(name):
 		return ANIM_PRESETS[name]
 	return {}
+
+# ── 一次性粒子爆发工厂 ─────────────────────────────────────────────────────────
+
+static var _add_mat: CanvasItemMaterial = null
+
+static func additive_material() -> CanvasItemMaterial:
+	if _add_mat == null:
+		_add_mat = CanvasItemMaterial.new()
+		_add_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	return _add_mat
+
+static func _configure_burst(p: CPUParticles2D, cfg: Dictionary) -> void:
+	p.emitting = true
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = cfg["amount"]
+	p.lifetime = cfg["lifetime"]
+	p.direction = Vector2.ZERO
+	p.spread = 180.0
+	p.initial_velocity_min = cfg["vmin"]
+	p.initial_velocity_max = cfg["vmax"]
+	p.scale_amount_min = cfg["smin"]
+	p.scale_amount_max = cfg["smax"]
+	p.color = cfg["color"]
+	if cfg.get("additive", false):
+		p.material = additive_material()
+
+func spawn_burst(pos: Vector2, preset: StringName, parent: Node = null) -> CPUParticles2D:
+	var cfg: Dictionary = BURST_PRESETS.get(preset, {})
+	if cfg.is_empty():
+		return null
+	var host: Node = parent if parent != null else get_tree().current_scene
+	if host == null:
+		return null
+	var p := CPUParticles2D.new()
+	_configure_burst(p, cfg)
+	host.add_child(p)
+	p.global_position = pos
+	get_tree().create_timer(p.lifetime + 0.1).timeout.connect(
+		func() -> void:
+			if is_instance_valid(p): p.queue_free()
+	)
+	return p
