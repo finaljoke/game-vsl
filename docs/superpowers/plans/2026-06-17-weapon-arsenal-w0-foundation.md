@@ -902,7 +902,7 @@ Expected: 正常退出，DebugMetrics 打印聚合行；日志无 `Invalid call`
 **3. 类型/命名一致性**：`apply_status / move_speed_mult / is_stunned / has_status / apply_impulse / external_velocity / resolve_velocity / compose_velocity / damage_for / crit_multiplier / crit_chance / crit_mult / sum_contact_damage / BURN_INTERVAL` 在「Interfaces」与各 Task 间一致；状态 kind 统一 `&"burn"/&"slow"/&"freeze"/&"stun"`。✓
 
 **已知风险/注记**
-- **燃烧经 take_damage**：每 0.25s 触发一次 GameFeel 命中反馈（闪白/伤害数字/音效）。功能正确；视觉上可能偏吵，后续若需「持续灼烧用独立 DoT 视觉」再优化（spec §4.1 视觉列只是建议）。
+- ~~**燃烧经 take_damage**：每 0.25s 触发一次 GameFeel 命中反馈（闪白/伤害数字/音效）。功能正确；视觉上可能偏吵，后续若需「持续灼烧用独立 DoT 视觉」再优化（spec §4.1 视觉列只是建议）。~~ **已解决**：新增 `Enemy.DamageChannel { DIRECT, DOT }` 通道；`take_damage(amount, channel)` 对 DOT 抑制白闪/击退/音效，仅留 per-enemy 节流（~0.5s）的橙色跳字；伤害与遥测照常计入。燃烧 + 重力井周期 tick 均归 DOT。
 - **Enemy 集成测试依赖 LimboAI 在 headless 加载**（与既有 `test_enemy_ai.gd` 同前提）。核心数学已被纯函数测试（Task 1/3/5）独立保证；若集成测试因扩展未加载而 error，先排查 LimboAI 安装（见 CLAUDE.md），核心逻辑不受影响。
 - **bomber 引信硬直暂停 / 接触上限不计硬直来源**：均为合理增强，已在代码注释说明，非 spec 明文但与 stun 语义自洽。
 

@@ -1,7 +1,8 @@
 extends Node
 
 # ── Signals ───────────────────────────────────────────────────────────────
-signal enemy_hit(amount: float, position: Vector2, enemy: Node2D)
+# channel: Enemy.DamageChannel(DIRECT/DOT)，DOT 走克制反馈分支。声明为 int 让订阅方松耦合。
+signal enemy_hit(amount: float, position: Vector2, enemy: Node2D, channel: int)
 signal enemy_died(position: Vector2, enemy: Node2D)
 signal player_hit(amount: float)
 # 纯指标信号(DebugMetrics 订阅)：玩家实际回血增量，封顶后为 0。GameFeel 自身不处理。
@@ -142,13 +143,13 @@ func _spawn_particles(pos: Vector2) -> void:
 		func(): if is_instance_valid(p): p.queue_free()
 	)
 
-func _spawn_damage_number(amount: float, pos: Vector2) -> void:
+func _spawn_damage_number(amount: float, pos: Vector2, color: Color = Color.WHITE) -> void:
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
 	var label := Label.new()
 	label.text = str(int(amount))
-	label.add_theme_color_override("font_color", Color.WHITE)
+	label.add_theme_color_override("font_color", color)
 	label.add_theme_constant_override("outline_size", 2)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	scene.add_child(label)
@@ -161,7 +162,15 @@ func _spawn_damage_number(amount: float, pos: Vector2) -> void:
 	tween.finished.connect(func(): if is_instance_valid(label): label.queue_free())
 
 # ── Signal handlers ───────────────────────────────────────────────────────
-func _on_enemy_hit(amount: float, position: Vector2, enemy: Node2D) -> void:
+# DoT 逐跳反馈：抑制白闪/击退/音效，只留节流后的橙色跳字(每敌人最短间隔)。
+const DOT_NUMBER_MIN_INTERVAL: float = 0.5          # 每敌人跳字最短间隔(秒,墙钟)
+const DOT_NUMBER_COLOR: Color = Color(1.0, 0.55, 0.1)
+var _dot_number_next := {}   # instance_id(int) -> 下次允许跳字的墙钟时间(秒)
+
+func _on_enemy_hit(amount: float, position: Vector2, enemy: Node2D, channel: int) -> void:
+	if channel == Enemy.DamageChannel.DOT:
+		_on_dot_tick(amount, position, enemy)
+		return
 	# 用 >1.0 的 modulate 真正"过曝"贴图；纯 Color.WHITE 是 identity 看不出来。
 	_flash_node(enemy, Color(2.5, 2.5, 2.5), 0.15)
 	if enemy.has_method("_apply_knockback"):
@@ -170,7 +179,22 @@ func _on_enemy_hit(amount: float, position: Vector2, enemy: Node2D) -> void:
 	var p := SoundManager.play_sound(SFX_HIT)
 	if p: p.volume_db = SFX_HIT_DB
 
+# DoT 命中：无白闪/击退/音效。仅按 per-enemy 墙钟节流弹一个橙色跳字。
+# 节流用墙钟、只影响视觉跳字，不碰任何 gameplay 状态或遥测计数，故不破坏 RunHarness 确定性。
+func _on_dot_tick(amount: float, position: Vector2, enemy: Node2D) -> void:
+	if not is_instance_valid(enemy):
+		return
+	var id := enemy.get_instance_id()
+	var now := Time.get_ticks_msec() / 1000.0
+	if now < float(_dot_number_next.get(id, 0.0)):
+		return
+	_dot_number_next[id] = now + DOT_NUMBER_MIN_INTERVAL
+	_spawn_damage_number(amount, position, DOT_NUMBER_COLOR)
+
 func _on_enemy_died(position: Vector2, enemy: Node2D) -> void:
+	# 清理 DoT 跳字节流记录，防字典随击杀无限增长 / instance_id 复用误节流新敌人首跳。
+	if enemy != null and is_instance_valid(enemy):
+		_dot_number_next.erase(enemy.get_instance_id())
 	_spawn_particles(position)
 	_emitter_hit.emit()
 	# 顿帧只留给 Boss：割草游戏里杂兵击杀高频，全局 time_scale 会叠成永久慢放。

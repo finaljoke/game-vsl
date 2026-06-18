@@ -72,7 +72,8 @@ func reset_metrics() -> void:
 	_last_levelup_t = 0.0
 
 # ── 信号处理 ────────────────────────────────────────────────────────────────
-func _on_enemy_hit(amount: float, _position: Vector2, _enemy: Node2D) -> void:
+# channel 形参带默认值：DIRECT/DOT 都累计(DoT 伤害继续计入遥测)，且让既有 3 参直调测试不破。
+func _on_enemy_hit(amount: float, _position: Vector2 = Vector2.ZERO, _enemy: Node2D = null, _channel: int = 0) -> void:
 	_dmg_dealt_total += amount
 
 func _on_enemy_died(_position: Vector2, _enemy: Node2D) -> void:

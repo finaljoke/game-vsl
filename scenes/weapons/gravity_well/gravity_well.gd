@@ -58,4 +58,4 @@ func _apply_tick_damage() -> void:
 		if not is_instance_valid(e):
 			continue
 		if global_position.distance_to((e as Node2D).global_position) <= radius:
-			e.take_damage(tick_damage * TICK)
+			e.take_damage(tick_damage * TICK, Enemy.DamageChannel.DOT)
