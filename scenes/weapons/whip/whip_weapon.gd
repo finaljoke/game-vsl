@@ -32,6 +32,7 @@ func attack() -> void:
 		return
 	var dmg: float = damage_for(damage)
 	var origin: Vector2 = _player.global_position
+	var any_hit := false
 	for e in targets:
 		var pos: Vector2 = (e as Node2D).global_position
 		var hit: bool
@@ -43,11 +44,16 @@ func attack() -> void:
 				hit = in_cone(pos, origin, -_facing, arc_deg, swing_range)
 		if hit and is_instance_valid(e):
 			e.take_damage(dmg)
+			any_hit = true
+			if full_circle:
+				Vfx.spawn_burst(pos, &"blood_burst", get_ysort())
 			if bleed_dps > 0.0 and e.has_method("apply_status"):
 				e.apply_status(&"burn", bleed_dps, 2.0)
 			if lifesteal_on_hit > 0.0 and _player.has_method("heal"):
 				_player.heal(lifesteal_on_hit)
 	_spawn_swipe(origin)
+	if any_hit:
+		GameFeel.shake(&"light")
 
 # 扇形命中判定(纯函数，便于单测)：enemy 是否落在以 facing 为中心、
 # 半角 arc_deg/2、半径 range 的扇形内。原点重合算命中。
