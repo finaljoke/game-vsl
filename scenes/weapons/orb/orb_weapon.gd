@@ -8,6 +8,8 @@ var total_orbs: int = 0  # 由 WeaponData.levels 通过 apply_level() 注入
 var damage: float = 8.0
 var orbit_radius: float = 60.0      # 缚灵数据驱动(注入给每个 OrbShield)
 var hit_cooldown: float = 0.5
+var dash_enabled: bool = false
+var dash_interval: float = 3.0
 
 func _ready() -> void:
 	super._ready()
@@ -34,6 +36,8 @@ func _sync_shields() -> void:
 		existing[i].damage = damage
 		existing[i].orbit_radius = orbit_radius
 		existing[i].hit_cooldown = hit_cooldown
+		existing[i].dash_enabled = dash_enabled
+		existing[i].dash_interval = dash_interval
 
 func attack() -> void:
 	pass

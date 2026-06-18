@@ -115,3 +115,28 @@ func test_tempest_sky_strike_damages_enemies() -> void:
 	await get_tree().process_frame
 	w._sky_strike([e])   # 直接打这一目标头顶落雷
 	assert_float(e.hp).is_less(500.0)
+
+# ── 缚刃 Bound Blades ──
+const OrbShieldScript := preload("res://scenes/weapons/orb/orb_shield.gd")
+
+func test_bound_blades_orbs_have_dash_enabled() -> void:
+	_evolve("orb", "mega_orb")
+	var found := false
+	for c in _player.get_children():
+		if c is OrbShield:
+			found = true
+			assert_bool(c.dash_enabled).is_true()
+	assert_bool(found).is_true()
+
+func test_orb_dashes_toward_enemy_when_due() -> void:
+	var orb = auto_free(OrbShieldScript.new())
+	orb.total_orbs = 1
+	orb.dash_enabled = true
+	orb.dash_interval = 0.0    # 立即可冲
+	_player.add_child(orb)
+	await get_tree().process_frame
+	var e := _tough_enemy_at(_player.global_position + Vector2(200, 0))
+	var d0: float = (orb as Node2D).global_position.distance_to(e.global_position)
+	for i in range(10):
+		await get_tree().process_frame
+	assert_float((orb as Node2D).global_position.distance_to(e.global_position)).is_less(d0)
