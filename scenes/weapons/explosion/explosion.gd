@@ -28,6 +28,7 @@ func detonate() -> void:
 	var fx := Vfx.spawn_anim(global_position, anim, get_parent())
 	if fx != null:
 		fx.scale = Vector2.ONE * base_scale
+		fx.material = Vfx.make_shader_material(&"fire")
 	if is_nuke:
 		GameFeel.shake(&"heavy")
 		GameFeel.hitstop(0.06)

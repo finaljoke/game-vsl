@@ -47,3 +47,28 @@ func test_orb_shield_sprite_has_summon_shader() -> void:
 	assert_object(spr).is_not_null()
 	assert_bool((spr as Sprite2D).material is ShaderMaterial).is_true()
 	player.queue_free()
+
+const ExplosionScript := preload("res://scenes/weapons/explosion/explosion.gd")
+
+func test_explosion_anim_has_fire_shader() -> void:
+	var expl := ExplosionScript.new()
+	add_child(expl)
+	expl.damage = 1.0
+	expl.global_position = Vector2(400, 400)
+	await get_tree().process_frame
+	expl.detonate()
+	await get_tree().process_frame
+	var found := false
+	# explosion.detonate() 调 spawn_anim(global_position, anim, get_parent())
+	# get_parent() 是测试套件本身，所以扫 self 的子节点
+	for c in get_children():
+		if c is AnimatedSprite2D and (c as AnimatedSprite2D).material is ShaderMaterial:
+			found = true
+	# 也查 _ysort() (若有 ysort 组节点)
+	var ys: Node = get_tree().get_first_node_in_group("ysort")
+	if ys != null:
+		for c in ys.get_children():
+			if c is AnimatedSprite2D and (c as AnimatedSprite2D).material is ShaderMaterial:
+				found = true
+	assert_bool(found).is_true()
+	if is_instance_valid(expl): expl.queue_free()
