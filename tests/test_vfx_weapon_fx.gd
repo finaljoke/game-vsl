@@ -120,3 +120,20 @@ func test_lightning_attack_sparks_and_no_crash() -> void:
 	await get_tree().process_frame
 	assert_int(_ysort_child_count()).is_greater(before)  # 电弧+辉光+火花
 	if is_instance_valid(enemy): enemy.queue_free()
+
+
+const AuraScript := preload("res://scenes/weapons/aura/aura_weapon.gd")
+
+func test_aura_has_orbit_particles() -> void:
+	var player: Player = auto_free(_make_player()) as Player
+	var aura: AuraWeapon = auto_free(AuraScript.new()) as AuraWeapon
+	aura.data = null
+	player.add_child(aura)
+	await get_tree().process_frame
+	# 光环视觉挂在玩家下;应含一个持续粒子节点(火/霜)
+	var has_particles: bool = false
+	for c: Node in player.get_children():
+		if c is CPUParticles2D:
+			has_particles = true
+	assert_bool(has_particles).is_true()
+	player.queue_free()

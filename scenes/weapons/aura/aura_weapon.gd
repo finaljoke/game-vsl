@@ -34,6 +34,12 @@ func _setup_ring() -> void:
 	_ring.texture = RING_TEX
 	# 光环挂在玩家(Node2D)下，自动跟随；半透明不挡视线
 	(_player as Node2D).add_child(_ring)
+	# 环绕火/霜粒子:炼狱(lifesteal)橙红,基础冷青。半透不挡视线。
+	var col: Color = Color(1.0, 0.5, 0.15, 0.5) if lifesteal_on_hit > 0.0 else Color(0.6, 0.9, 1.0, 0.4)
+	var p: CPUParticles2D = Vfx.make_trail(col)
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = radius
+	(_player as Node2D).add_child(p)
 	_update_ring()
 
 func _update_ring() -> void:
