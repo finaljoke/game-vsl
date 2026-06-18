@@ -70,7 +70,7 @@
   - `static func profile_for(name: String) -> Array` — `"solo_<id>"` → `solo_profile`；其余回退 `PROFILES`/`DEFAULT_PROFILE`。
 - Consumes: 既有 `choose_card`（纯）。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/test_run_harness_profiles.gd`：
 
@@ -104,12 +104,12 @@ func test_profile_for_default_fallback() -> void:
 	assert_array(Harness.profile_for("default")).is_equal(Harness.DEFAULT_PROFILE)
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `… -a res://tests/test_run_harness_profiles.gd`
 Expected: FAIL — `solo_profile`/`profile_for`/`SOLO_PERKS` 未定义。
 
-- [ ] **Step 3: 改 `autoloads/run_harness.gd`**
+- [x] **Step 3: 改 `autoloads/run_harness.gd`**
 
 3a. 在 `PROFILES` 常量附近新增（武器→进化 perk 来自 spec §6.4）：
 
@@ -147,7 +147,7 @@ static func profile_for(name: String) -> Array:
 	_profile = profile_for(cfg["cards"])
 ```
 
-- [ ] **Step 4: 跑测试确认通过 → 提交**
+- [x] **Step 4: 跑测试确认通过 → 提交**
 
 Run: `… -a res://tests/test_run_harness_profiles.gd` → PASS。
 
@@ -177,7 +177,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
   - `summarize_profile(summaries: Array) -> Dictionary` → `{n, survived_med, kills_per_min_med, hp_pct_min_med, danger_med}`
   - `flag_off_band(by_profile: Dictionary, band: float = 0.35) -> Dictionary` → 每档 `{kills_per_min_med, cross_median, verdict∈{ok,OP,weak}}`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/test_run_analysis.gd`：
 
@@ -216,11 +216,11 @@ func test_flag_off_band_detects_op_and_weak() -> void:
 	assert_str(String(f["a"]["verdict"])).is_equal("ok")
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `… -a res://tests/test_run_analysis.gd` → FAIL（`tools/run_analysis.gd` 不存在）。
 
-- [ ] **Step 3: 写 `tools/run_analysis.gd`**
+- [x] **Step 3: 写 `tools/run_analysis.gd`**
 
 ```gdscript
 # tools/run_analysis.gd
@@ -280,7 +280,7 @@ static func flag_off_band(by_profile: Dictionary, band: float = 0.35) -> Diction
 	return flags
 ```
 
-- [ ] **Step 4: 跑测试确认通过 → 提交**
+- [x] **Step 4: 跑测试确认通过 → 提交**
 
 Run: `… -a res://tests/test_run_analysis.gd` → PASS。
 
@@ -305,7 +305,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 - 用法：`Godot --headless --path <proj> -s res://tools/analyze_runs.gd -- --dir=telemetry/ab --report=telemetry/ab/report.json`
 - 读 `<dir>/*.summary.json`，按文件名 `<profile>_s<seed>.summary.json` 的 `<profile>` 分组，`RunAnalysis.summarize_profile` + `flag_off_band`，打印 CSV 风格表，写 `report.json`。
 
-- [ ] **Step 1: 写 `tools/analyze_runs.gd`**
+- [x] **Step 1: 写 `tools/analyze_runs.gd`**
 
 ```gdscript
 # tools/analyze_runs.gd —— headless 运行: -s res://tools/analyze_runs.gd -- --dir=... --report=...
@@ -371,7 +371,7 @@ func _profile_of(fn: String) -> String:
 	return base.substr(0, idx) if idx > 0 else base
 ```
 
-- [ ] **Step 2: 烟测（造两个假 summary 跑工具）**
+- [x] **Step 2: 烟测（造两个假 summary 跑工具）**
 
 ```powershell
 $proj = "D:\Workspace\GAME\game_0_vsl"
@@ -382,7 +382,7 @@ New-Item -ItemType Directory -Force "$proj\telemetry\smoke" | Out-Null
 ```
 Expected: 打印两行表（solo_knife / solo_orb，各 n=1），生成 `telemetry/smoke/report.json`，其中 solo_knife `verdict` 相对中位数偏高、solo_orb 偏低（band 内则 ok——单样本只验工具能跑通）。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```powershell
 git add tools/analyze_runs.gd
@@ -403,7 +403,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 **Interfaces:**
 - 对「档 × 种子」逐一启动确定性 bot 局，全部 `--fixed-fps 60`，产物落 `telemetry/ab/<profile>_s<seed>.*`。
 
-- [ ] **Step 1: 写 `tools/run_ab_matrix.ps1`**
+- [x] **Step 1: 写 `tools/run_ab_matrix.ps1`**
 
 ```powershell
 # tools/run_ab_matrix.ps1 — 跑「单武器档 × 种子」确定性 A/B 矩阵。
@@ -428,14 +428,14 @@ Write-Host "[A/B] 完成。分析: -s res://tools/analyze_runs.gd -- --dir=$OutD
 
 > `--fixed-fps 60` 是确定性必需；`--fast 8` 仅加速 wall-clock（同 fixed-fps 下增大每秒模拟时间）。`--maxtime 600`=每局封顶 10 分钟游戏时间，避免无限局。武器 id 以 W2/W3a 实际为准，缺失的 `solo_*` 局会自然死亡/空跑，分析时剔除。
 
-- [ ] **Step 2: 烟测（缩小矩阵确认能跑出产物）**
+- [x] **Step 2: 烟测（缩小矩阵确认能跑出产物）**
 
 ```powershell
 pwsh -File "D:\Workspace\GAME\game_0_vsl\tools\run_ab_matrix.ps1" -Seeds 1 -Profiles solo_knife -MaxTime 60
 ```
 Expected: 生成 `telemetry/ab/solo_knife_s1.summary.json`（含 outcome/survived_s/kills 等）。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```powershell
 git add tools/run_ab_matrix.ps1
@@ -454,7 +454,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 
 > 重做引入大量新代码（状态 tick、击退衰减、召唤 AI、新粒子）。若任何一处用了帧时间 / `Math.random` 风味的非定序遍历，会重蹈 spawner RNG 节拍覆辙，使 A/B 不可信。**先验确定性再信数值。**
 
-- [ ] **Step 1: 同 (档, 种子) 跑两次**
+- [x] **Step 1: 同 (档, 种子) 跑两次**
 
 ```powershell
 $g = "C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe"; $p = "D:\Workspace\GAME\game_0_vsl"
@@ -462,7 +462,7 @@ $g = "C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe"; $p = "D:\Workspa
 & $g --headless --fixed-fps 60 --path $p -- --bot=kite --cards=solo_knife --seed=7 --fast=8 --maxtime=300 --out=telemetry/det/b
 ```
 
-- [ ] **Step 2: diff summary（必须完全一致）**
+- [x] **Step 2: diff summary（必须完全一致）**
 
 ```powershell
 $d = Compare-Object (Get-Content "$p\telemetry\det\a.summary.json") (Get-Content "$p\telemetry\det\b.summary.json")
@@ -470,7 +470,7 @@ if ($null -eq $d) { Write-Host "DETERMINISTIC ✓" } else { Write-Host "NON-DETE
 ```
 Expected: `DETERMINISTIC ✓`（`config` 不含 `out`，两文件应逐行相同）。
 
-- [ ] **Step 3（仅当非确定）：定位并修根因**
+- [x] **Step 3（仅当非确定）：定位并修根因**
 
 非确定 → 在新代码里找：`get_nodes_in_group` 结果直接参与浮点累加/选择而未先定序（参考 `RunHarness.compute_kite_dir` 的「先按位置排序」做法）、用 `Time.get_ticks_msec()` 驱动游戏逻辑（如 `orb_shield` 的轨道角——纯视觉可容忍，但若驱动命中判定则不可）、或 `randf()` 未走统一种子。修复后回 Step 1 复验。**确定性不绿，不进 Task 6。**
 
@@ -482,19 +482,19 @@ Expected: `DETERMINISTIC ✓`（`config` 不含 `out`，两文件应逐行相同
 
 **Files:** 无新增；产出 `telemetry/ab/report.json`（gitignore，不入库）。
 
-- [ ] **Step 1: 跑矩阵**（11 档 × ≥5 种子；多种子压平 RNG 方差）
+- [x] **Step 1: 跑矩阵**（11 档 × ≥5 种子；多种子压平 RNG 方差）
 
 ```powershell
 pwsh -File "D:\Workspace\GAME\game_0_vsl\tools\run_ab_matrix.ps1" -Seeds 1,2,3,4,5,6,7,8
 ```
 
-- [ ] **Step 2: 分析**
+- [x] **Step 2: 分析**
 
 ```powershell
 & "C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe" --headless --path "D:\Workspace\GAME\game_0_vsl" -s res://tools/analyze_runs.gd -- --dir=telemetry/ab --report=telemetry/ab/report.json
 ```
 
-- [ ] **Step 3: 记录基线对比表**
+- [x] **Step 3: 记录基线对比表**
 
 把打印表（每档 `survived_med / kills_per_min_med / hp_pct_min_med / danger_med / verdict`）抄进 Task 8 的报告草稿。对照**验收带宽**（下）标注每档：
 
@@ -504,7 +504,7 @@ pwsh -File "D:\Workspace\GAME\game_0_vsl\tools\run_ab_matrix.ps1" -Seeds 1,2,3,4
 - **威胁合理**：`hp_pct_min_med` 不应长期贴近 0（无惊险=太强；秒贴 0=太险）；`danger_med`（危险秒累计）做参考。
 - **进化提升**：进化 build（活到进化后段）`kills_per_min` 应**高于**同武器基础段一个有感差值，但不破 OP 上限——进化是质变增强，非象征。
 
-- [ ] **Step 4（无入库产物）**：本任务只产 gitignore 的 telemetry；分析结论进 Task 8 报告。
+- [x] **Step 4（无入库产物）**：本任务只产 gitignore 的 telemetry；分析结论进 Task 8 报告。
 
 ---
 
@@ -516,18 +516,18 @@ pwsh -File "D:\Workspace\GAME\game_0_vsl\tools\run_ab_matrix.ps1" -Seeds 1,2,3,4
 
 > 迭代式：每轮只调**少数** off-band 武器，复跑其档 + 复验确定性，避免一次改太多无法归因。
 
-- [ ] **Step 1: 选本轮要调的武器**
+- [x] **Step 1: 选本轮要调的武器**
 
 从 Task 6 表取 `verdict != ok` 的档。`OP` → 降该武器 `levels[].damage`（或升 `cooldown`）；`weak` → 反向。每轮调幅先 **±10~15%**，避免过冲。
 
-- [ ] **Step 2: 改 `.tres`**
+- [x] **Step 2: 改 `.tres`**
 
 例（飞刀判 OP，降 L3 伤害）——编辑 `data/weapons/knife.tres` 的 `levels` 第 3 项 `damage`：从草案值乘 ~0.88。**只改平衡数值**，不动 `id/cooldown 之外的契约`。
 
 > 若调的字段被测试断言（如 `knife_3` 的 cooldown=0.3、whip arc=100），同步更新该断言（本波合法）；纯 damage 字段一般无断言。改完先跑该武器的 W1/W2/W3 测试确认不回归：
 > `… -a res://tests/test_card_pool.gd`（及相关 weapon 测试）→ PASS。
 
-- [ ] **Step 3: 复验确定性 + 复跑该档**
+- [x] **Step 3: 复验确定性 + 复跑该档**
 
 ```powershell
 $g="C:\Dev\GAME\Godot\Godot_v4.6.3-stable_win64_console.exe"; $p="D:\Workspace\GAME\game_0_vsl"
@@ -537,7 +537,7 @@ pwsh -File "$p\tools\run_ab_matrix.ps1" -Profiles solo_knife -Seeds 1,2,3,4,5,6,
 ```
 确认该档 `verdict` 回到 `ok`，且未把别的档挤出带宽（若怀疑联动，重跑全矩阵）。
 
-- [ ] **Step 4: 提交本轮数值**
+- [x] **Step 4: 提交本轮数值**
 
 ```powershell
 git add data/weapons/knife.tres   # 本轮实际改的 .tres(+ 同步的测试,若有)
@@ -550,7 +550,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 '@
 ```
 
-- [ ] **Step 5: 循环**
+- [x] **Step 5: 循环**
 
 回 Task 6 全矩阵复跑 → 重算 → 仍有 off-band 则回本任务再调一轮。**收敛判据**：全 11 档 `verdict=ok` 且都满足可生存性/威胁带宽（或剩余偏差已属设计取舍，在报告里说明）。
 
@@ -561,16 +561,16 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 **Files:**
 - Create: `docs/superpowers/plans/2026-06-17-weapon-arsenal-w4-balance-report.md`
 
-- [ ] **Step 1: 写报告**
+- [x] **Step 1: 写报告**
 
 含：最终全矩阵对比表（每档 survived/kills_per_min/hp_min/danger/verdict）、各轮调参记录（武器 / 字段 / 旧→新值 / 依据）、收敛后仍存的有意取舍、确定性已绿的确认、复现命令（矩阵 + 分析）。
 
-- [ ] **Step 2: 跑全量测试确认数值改动无回归**
+- [x] **Step 2: 跑全量测试确认数值改动无回归**
 
 Run: `… -a res://tests`
 Expected: 全绿（调参同步更新了被断言的契约字段；纯 damage 改动无断言）。
 
-- [ ] **Step 3: 提交报告**
+- [x] **Step 3: 提交报告**
 
 ```powershell
 git add docs/superpowers/plans/2026-06-17-weapon-arsenal-w4-balance-report.md
