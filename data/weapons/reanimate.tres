@@ -12,4 +12,4 @@ icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 3
 levels = [{"cooldown": 3.0, "max_minions": 1, "damage": 14.0, "minion_hp": 30.0, "minion_speed": 120.0, "lifetime": 12.0}, {"cooldown": 3.0, "max_minions": 2, "damage": 14.0, "minion_hp": 30.0, "minion_speed": 120.0, "lifetime": 14.0}, {"cooldown": 3.0, "max_minions": 3, "damage": 16.0, "minion_hp": 35.0, "minion_speed": 130.0, "lifetime": 16.0}]
-evolution = {}
+evolution = {"requires_perk": "perk_hp", "requires_perk_stacks": 3, "evolved_id": "horde"}

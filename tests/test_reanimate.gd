@@ -115,3 +115,23 @@ func test_reanimate_spawns_up_to_max_minions() -> void:
 	rw.attack()   # Lv1 max=1 → 第二次不再生成
 	await get_tree().process_frame
 	assert_int(_count_summons()).is_equal(1)
+
+func test_evolve_reanimate_grants_horde() -> void:
+	CardPool.apply({"id": "reanimate"}, _player)
+	CardPool.apply({"id": "evolve_reanimate", "type": "evolution"}, _player)
+	assert_bool(_player.has_weapon("horde")).is_true()
+	assert_bool(_player.has_weapon("reanimate")).is_false()
+	var hw := _player.get_weapon_node("horde")
+	assert_int(hw.get("max_minions")).is_greater(3)        # 上限大增
+	assert_float(hw.get("split_chance")).is_greater(0.0)   # 死亡分裂开启
+
+func test_horde_minion_carries_split_chance() -> void:
+	_ysort_stub()
+	CardPool.apply({"id": "reanimate"}, _player)
+	CardPool.apply({"id": "evolve_reanimate", "type": "evolution"}, _player)
+	var hw := _player.get_weapon_node("horde")
+	hw.attack()
+	await get_tree().process_frame
+	for s in get_tree().get_nodes_in_group("summons"):
+		if is_instance_valid(s) and s is RoamingMinion:
+			assert_float(s.split_chance).is_greater(0.0)

@@ -77,9 +77,13 @@ func test_weapondb_has_new_evolved_weapons() -> void:
 	for id in ["thunderstorm", "bloody_whip", "cyclone", "inferno_aura"]:
 		assert_object(WeaponDB.get_data(id)).is_not_null()
 
-func test_all_evolvable_count_is_seven() -> void:
-	# 7 把可进化 base：knife/orb/explosion + lightning/whip/boomerang/aura
-	assert_int(WeaponDB.all_evolvable().size()).is_equal(7)
+func test_original_seven_weapons_are_evolvable() -> void:
+	# 原 7 把恒可进化；W3 起新增武器(reanimate 等)也会进入 all_evolvable，故只断言原 7 把在列。
+	var ids: Array = []
+	for w in WeaponDB.all_evolvable():
+		ids.append(w.id)
+	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang", "aura"]:
+		assert_bool(ids.has(id)).is_true()
 
 func test_new_weapons_registered_in_effect_registry() -> void:
 	for id in ["lightning", "whip", "boomerang", "aura"]:
