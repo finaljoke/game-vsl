@@ -88,3 +88,10 @@ func test_cyclone_projectile_orbits_not_homes() -> void:
 		await get_tree().physics_frame
 	# 环绕态不应归位到玩家(距离仍 > 折返阈值)
 	assert_float(p.global_position.distance_to(_player.global_position)).is_greater(20.0)
+
+# ── 核爆 Cataclysm ──
+func test_cataclysm_reflects_quale_fields() -> void:
+	var w := _evolve("explosion", "nuke")
+	assert_float(w.get("blast_radius")).is_greater(80.0)   # ×1.6
+	assert_float(w.get("burn_dps")).is_greater(0.0)        # 炼狱地火
+	assert_int(w.get("secondary_count")).is_greater(0)     # 二次引爆

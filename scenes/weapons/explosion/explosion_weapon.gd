@@ -13,10 +13,30 @@ var field_dur: float = 0.0
 # 进化视觉(反射注入)
 var blast_scale: float = 1.0
 var blast_tint: Color = Color.WHITE
+var secondary_count: int = 0     # >0：中心追加 N 次延迟引爆(核爆)
+var secondary_delay: float = 0.3
 
 func _ready() -> void:
 	super._ready()
 	# cooldown 由 WeaponData.levels 通过 apply_level() 注入
+
+func _spawn_explosion(center: Vector2) -> void:
+	var explosion := EXPLOSION_SCENE.instantiate()
+	explosion.damage = damage_for(damage)
+	explosion.blast_radius = blast_radius
+	explosion.base_scale = blast_scale   # 进化形态(核爆)更大
+	explosion.modulate = blast_tint      # 进化形态变色；_process 只动 alpha，RGB 保留
+	get_ysort().add_child(explosion)
+	explosion.global_position = center
+	explosion.detonate()
+	# 火球地火(spec §7.5)：仅基础注入 burn_dps/field_dur 时生成；nuke 注入炼狱地火
+	if burn_dps > 0.0 and field_dur > 0.0:
+		var field := BURN_FIELD.new()
+		field.radius = blast_radius
+		field.burn_dps = burn_dps
+		field.field_dur = field_dur
+		get_ysort().add_child(field)
+		field.global_position = center
 
 func attack() -> void:
 	var targets := enemies()
@@ -27,22 +47,10 @@ func attack() -> void:
 	for e in targets:
 		positions.append((e as Node2D).global_position)
 	var center := densest_center(positions, blast_radius)
-	var explosion := EXPLOSION_SCENE.instantiate()
-	explosion.damage = damage_for(damage)
-	explosion.blast_radius = blast_radius
-	explosion.base_scale = blast_scale   # 进化形态(核爆)更大
-	explosion.modulate = blast_tint      # 进化形态变色；_process 只动 alpha，RGB 保留
-	get_ysort().add_child(explosion)
-	explosion.global_position = center
-	explosion.detonate()
-	# 火球地火(spec §7.5)：仅基础注入 burn_dps/field_dur 时生成；nuke 不注入→跳过
-	if burn_dps > 0.0 and field_dur > 0.0:
-		var field := BURN_FIELD.new()
-		field.radius = blast_radius
-		field.burn_dps = burn_dps
-		field.field_dur = field_dur
-		get_ysort().add_child(field)
-		field.global_position = center
+	_spawn_explosion(center)
+	for i in range(secondary_count):
+		var c := center
+		get_tree().create_timer(secondary_delay * float(i + 1)).timeout.connect(func() -> void: _spawn_explosion(c))
 
 # 纯函数：返回半径内邻居最多的坐标，便于单测。
 # 候选用步长采样限到至多 candidate_cap 个，把最坏复杂度从 O(n²) 降到 O(cap·n)；
