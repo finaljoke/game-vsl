@@ -55,3 +55,21 @@ func test_flame_cloak_no_burn_when_dps_zero() -> void:
 	await get_tree().process_frame
 	aura.attack()
 	assert_bool(e.has_status(&"burn")).is_false()
+
+# ── 连锁闪电(lightning) 链尾附 stun ──
+func test_chain_lightning_stuns_tail_enemy() -> void:
+	CardPool.apply({"id": "lightning"}, _player)
+	var lw := _player.get_weapon_node("lightning")
+	var e := _spawn_enemy_near(50.0)   # 唯一敌 → 既是链首也是链尾
+	await get_tree().process_frame
+	lw.attack()
+	assert_bool(e.is_stunned()).is_true()
+
+func test_chain_lightning_no_stun_when_dur_zero() -> void:
+	CardPool.apply({"id": "lightning"}, _player)
+	var lw := _player.get_weapon_node("lightning")
+	lw.shock_dur = 0.0   # 进化 thunderstorm 不注入 → 不附 stun
+	var e := _spawn_enemy_near(50.0)
+	await get_tree().process_frame
+	lw.attack()
+	assert_bool(e.is_stunned()).is_false()

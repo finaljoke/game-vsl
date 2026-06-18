@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1_data")
 id = "lightning"
-display_name = "闪电链"
+display_name = "连锁闪电"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 3
-levels = [{"cooldown": 1.2, "chains": 3}, {"cooldown": 0.9, "chains": 4}, {"cooldown": 0.7, "chains": 5}]
+levels = [{"cooldown": 1.2, "chains": 3, "damage": 22.0, "shock_dur": 0.2}, {"cooldown": 0.9, "chains": 4, "damage": 22.0, "shock_dur": 0.25}, {"cooldown": 0.7, "chains": 5, "damage": 22.0, "shock_dur": 0.3}]
 evolution = {"requires_perk": "perk_attack", "requires_perk_stacks": 3, "evolved_id": "thunderstorm"}

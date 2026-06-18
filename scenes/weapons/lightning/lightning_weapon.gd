@@ -2,8 +2,7 @@
 class_name LightningWeapon
 extends WeaponBase
 
-const BASE_DAMAGE: float = 22.0
-const LINK_RANGE: float = 160.0   # 连锁跳跃的最大间距
+const DEFAULT_LINK_RANGE: float = 160.0   # 连锁跳跃最大间距(默认)
 
 const BOLT_TEX := preload("res://assets/sprites/kenney/fx/lightning_bolt.png")  # 分叉电弧
 const GLOW_TEX := preload("res://assets/sprites/kenney/fx/fx_glow.png")         # 命中辉光
@@ -11,7 +10,10 @@ const BOLT_FADE: float = 0.18     # 电弧淡出时长
 const BOLT_WIDTH_PX: float = 56.0 # 电弧贴图屏上宽度
 
 # 由 WeaponData.levels 反射注入
+var damage: float = 22.0
 var chains: int = 3               # 一次最多命中(含起跳)的目标数
+var shock_dur: float = 0.0                       # >0 时链尾附感电硬直(基础注入；进化不注入→0)
+var link_range: float = DEFAULT_LINK_RANGE       # 数据驱动连锁间距
 var bolt_tint: Color = Color(0.62, 0.86, 1.0)  # 进化(雷暴)可经 levels 注入改白紫
 
 func _ready() -> void:
@@ -24,16 +26,21 @@ func attack() -> void:
 	var positions: Array = []
 	for e in targets:
 		positions.append((e as Node2D).global_position)
-	var idx: Array = chain_targets(_player.global_position, positions, chains, LINK_RANGE)
+	var idx: Array = chain_targets(_player.global_position, positions, chains, link_range)
 	if idx.is_empty():
 		return
-	var dmg: float = damage_for(BASE_DAMAGE)
+	var dmg: float = damage_for(damage)
 	var path: Array = [_player.global_position]
 	for i in idx:
 		var enemy := targets[i]
 		if is_instance_valid(enemy):
 			path.append((enemy as Node2D).global_position)
 			enemy.take_damage(dmg)
+	# 链尾感电硬直(spec §7.7)：仅 shock_dur>0 时触发，对链上最后一个仍存活的敌人
+	if shock_dur > 0.0:
+		var tail := targets[idx[idx.size() - 1]]
+		if is_instance_valid(tail) and tail.has_method("apply_status"):
+			tail.apply_status(&"stun", 0.0, shock_dur)
 	_spawn_bolt(path)
 
 # 连锁选择(纯函数，便于单测)：从 origin 起，每次跳到最近、未命中、且在 link_range 内的目标，
