@@ -102,3 +102,16 @@ func test_inferno_reflects_burn_and_lifesteal() -> void:
 	assert_float(w.get("burn_dps")).is_greater(0.0)
 	assert_float(w.get("lifesteal_on_hit")).is_greater(0.0)
 	assert_float(w.get("radius")).is_equal_approx(170.0, 0.001)
+
+# ── 雷暴 Tempest ──
+func test_tempest_reflects_sky_strikes() -> void:
+	var w := _evolve("lightning", "thunderstorm")
+	assert_int(w.get("sky_strikes")).is_greater(0)
+	assert_int(w.get("chains")).is_equal(8)
+
+func test_tempest_sky_strike_damages_enemies() -> void:
+	var w := _evolve("lightning", "thunderstorm")
+	var e := _tough_enemy_at(Vector2(300, 300))
+	await get_tree().process_frame
+	w._sky_strike([e])   # 直接打这一目标头顶落雷
+	assert_float(e.hp).is_less(500.0)

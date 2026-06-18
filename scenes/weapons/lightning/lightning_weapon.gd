@@ -15,6 +15,9 @@ var chains: int = 3               # 一次最多命中(含起跳)的目标数
 var shock_dur: float = 0.0                       # >0 时链尾附感电硬直(基础注入；进化不注入→0)
 var link_range: float = DEFAULT_LINK_RANGE       # 数据驱动连锁间距
 var bolt_tint: Color = Color(0.62, 0.86, 1.0)  # 进化(雷暴)可经 levels 注入改白紫
+var sky_strikes: int = 0      # >0：每次攻击额外召唤 N 道随机天雷
+var sky_radius: float = 70.0
+var sky_damage: float = 0.0
 
 func _ready() -> void:
 	super._ready()
@@ -42,6 +45,23 @@ func attack() -> void:
 		if is_instance_valid(tail) and tail.has_method("apply_status"):
 			tail.apply_status(&"stun", 0.0, shock_dur)
 	_spawn_bolt(path)
+	if sky_strikes > 0 and sky_damage > 0.0:
+		_sky_strike(targets)
+
+# 在随机敌人头顶落 sky_strikes 道独立 AoE 落雷。
+func _sky_strike(targets: Array) -> void:
+	var dmg: float = damage_for(sky_damage)
+	var pool: Array = targets.duplicate()
+	var strikes: int = mini(sky_strikes, pool.size())
+	for _i in range(strikes):
+		if pool.is_empty():
+			break
+		var pick: int = randi() % pool.size()
+		var center: Vector2 = (pool[pick] as Node2D).global_position
+		pool.remove_at(pick)
+		for e in enemies():
+			if is_instance_valid(e) and center.distance_to((e as Node2D).global_position) <= sky_radius:
+				e.take_damage(dmg)
 
 # 连锁选择(纯函数，便于单测)：从 origin 起，每次跳到最近、未命中、且在 link_range 内的目标，
 # 最多 max_links 个。返回 positions 的索引列表(命中顺序)。
