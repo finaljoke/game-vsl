@@ -14,6 +14,7 @@ var proj_speed: float = 400.0     # 弹速(长弓更快；默认=原 SPEED)
 # 进化视觉(反射注入)：基础不指定 → 默认无变化
 var proj_scale: float = 1.0
 var proj_tint: Color = Color.WHITE
+var volley: int = 0   # >0：每次齐射 volley 发(箭雨)，替代默认单发
 
 func _ready() -> void:
 	super._ready()
@@ -30,7 +31,8 @@ func attack() -> void:
 	var applied_bonus := longbow_crit_bonus(dist, crit_range, full_hp, crit_bonus)
 	# E3 质变：global_pierce 加穿透；extra_projectiles 多发小角度扇形
 	var eff_pierce: int = pierce + mod_int("global_pierce")
-	var n: int = 1 + mod_int("extra_projectiles")
+	var base_count: int = volley if volley > 0 else 1
+	var n: int = base_count + mod_int("extra_projectiles")
 	var spread := deg_to_rad(12.0)
 	for i in range(n):
 		var dir := base_dir

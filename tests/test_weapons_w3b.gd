@@ -50,3 +50,20 @@ func test_whirlwind_hits_enemy_behind_player() -> void:
 	w.attack()
 	assert_float(e.hp).is_less(500.0)            # 全向命中
 	assert_bool(e.has_status(&"burn")).is_true() # 流血(复用 burn)
+
+# ── 箭雨 Arrow Storm ──
+func test_arrow_storm_reflects_volley() -> void:
+	var w := _evolve("knife", "thousand_edge")
+	assert_int(w.get("volley")).is_greater(1)
+	assert_float(w.get("crit_bonus")).is_equal_approx(1.0, 0.001)
+
+func test_arrow_storm_fires_volley_projectiles() -> void:
+	var ys: Node2D = auto_free(Node2D.new()); add_child(ys); ys.add_to_group("ysort")
+	CardPool.apply({"id": "knife"}, _player)
+	CardPool.apply({"id": "evolve_knife", "type": "evolution"}, _player)
+	var w := _player.get_weapon_node("thousand_edge")
+	_tough_enemy_at(_player.global_position + Vector2(100, 0))
+	await get_tree().process_frame
+	w.attack()
+	# 齐射 5 发 → ysort 下至少 5 个投射体
+	assert_int(ys.get_child_count()).is_greater_equal(5)

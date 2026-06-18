@@ -11,5 +11,5 @@ display_name = "千刃"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"cooldown": 0.15, "pierce": 8, "proj_scale": 1.7, "proj_tint": Color(1, 0.85, 0.2, 1)}]
+levels = [{"cooldown": 0.15, "pierce": 8, "proj_scale": 1.7, "proj_tint": Color(1, 0.85, 0.2, 1), "damage": 15.0, "volley": 5, "crit_bonus": 1.0, "crit_range": 99999.0, "proj_speed": 600.0}]
 evolution = {}
