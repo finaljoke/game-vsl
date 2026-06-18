@@ -110,3 +110,41 @@ func spawn_anim(pos: Vector2, name: StringName, parent: Node = null) -> Animated
 			if is_instance_valid(a): a.queue_free()
 	)
 	return a
+
+# ── 状态指示器工厂 ────────────────────────────────────────────────────────────────
+# 按状态 kind 造未入树的指示器节点;调用方负责挂为子节点并按状态生命周期增删。
+
+func make_status_indicator(kind: StringName) -> Node2D:
+	match kind:
+		&"burn":   return _status_particles(Color(1.0, 0.45, 0.1))
+		&"slow":   return _status_particles(Color(0.55, 0.85, 1.0))
+		&"freeze": return _status_overlay(PACK + "circle_03.png", Color(0.6, 0.9, 1.0, 0.55), Vector2.ZERO, 0.45)
+		&"stun":   return _status_overlay(PACK + "twirl_01.png", Color(1.0, 1.0, 0.5, 0.9), Vector2(0, -20), 0.35)
+		_:         return null
+
+# 头顶持续小粒子(燃烧=橙、减速=青)。
+func _status_particles(color: Color) -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.position = Vector2(0, -16)
+	p.emitting = true
+	p.one_shot = false
+	p.amount = 8
+	p.lifetime = 0.5
+	p.direction = Vector2.UP
+	p.spread = 25.0
+	p.gravity = Vector2(0, -30)
+	p.initial_velocity_min = 10.0
+	p.initial_velocity_max = 25.0
+	p.scale_amount_min = 2.0
+	p.scale_amount_max = 4.0
+	p.color = color
+	return p
+
+# 半透贴图 overlay(冻结=冰青 circle、硬直=星旋 twirl)。
+func _status_overlay(tex_path: String, color: Color, offset: Vector2, scale: float) -> Sprite2D:
+	var s := Sprite2D.new()
+	s.texture = load(tex_path) as Texture2D
+	s.modulate = color
+	s.position = offset
+	s.scale = Vector2(scale, scale)
+	return s
