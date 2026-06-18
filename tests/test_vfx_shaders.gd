@@ -38,3 +38,9 @@ func test_unique_material_is_distinct() -> void:
 
 func test_unknown_shader_returns_null() -> void:
 	assert_object(Vfx.make_shader_material(&"nope")).is_null()
+
+func test_freeze_indicator_uses_ice_shader() -> void:
+	var n := Vfx.make_status_indicator(&"freeze")
+	assert_bool(n is Sprite2D).is_true()
+	assert_bool((n as Sprite2D).material is ShaderMaterial).is_true()
+	n.free()

@@ -122,7 +122,10 @@ func make_status_indicator(kind: StringName) -> Node2D:
 	match kind:
 		&"burn":   return _status_particles(Color(1.0, 0.45, 0.1))
 		&"slow":   return _status_particles(Color(0.55, 0.85, 1.0))
-		&"freeze": return _status_overlay(PACK + "circle_03.png", Color(0.6, 0.9, 1.0, 0.55), Vector2.ZERO, 0.45)
+		&"freeze":
+			var s := _status_overlay(PACK + "circle_03.png", Color(0.6, 0.9, 1.0, 0.55), Vector2.ZERO, 0.45)
+			s.material = make_shader_material(&"ice")
+			return s
 		&"stun":   return _status_overlay(PACK + "twirl_01.png", Color(1.0, 1.0, 0.5, 0.9), Vector2(0, -20), 0.35)
 		_:         return null
 
