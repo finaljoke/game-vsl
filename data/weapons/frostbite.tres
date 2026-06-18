@@ -11,5 +11,5 @@ display_name = "霜噬"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 3
-levels = [{"cooldown": 1.4, "damage": 16.0, "area": 90.0, "slow_factor": 0.6, "slow_dur": 1.5, "freeze_dur": 0.6}, {"cooldown": 1.1, "damage": 18.0, "area": 100.0, "slow_factor": 0.5, "slow_dur": 1.8, "freeze_dur": 0.8}, {"cooldown": 0.9, "damage": 20.0, "area": 110.0, "slow_factor": 0.45, "slow_dur": 2.0, "freeze_dur": 1.0}]
+levels = [{"cooldown": 1.4, "damage": 13.0, "area": 90.0, "slow_factor": 0.6, "slow_dur": 1.5, "freeze_dur": 0.6}, {"cooldown": 1.1, "damage": 14.0, "area": 100.0, "slow_factor": 0.5, "slow_dur": 1.8, "freeze_dur": 0.8}, {"cooldown": 0.9, "damage": 16.0, "area": 110.0, "slow_factor": 0.45, "slow_dur": 2.0, "freeze_dur": 1.0}]
 evolution = {"requires_perk": "perk_attack", "requires_perk_stacks": 3, "evolved_id": "blizzard"}

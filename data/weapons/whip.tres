@@ -11,5 +11,5 @@ display_name = "斩"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 3
-levels = [{"cooldown": 0.7, "arc_deg": 100.0, "swing_range": 110.0, "damage": 22.0}, {"cooldown": 0.6, "arc_deg": 110.0, "swing_range": 120.0, "damage": 24.0}, {"cooldown": 0.5, "arc_deg": 120.0, "swing_range": 130.0, "damage": 26.0}]
+levels = [{"cooldown": 0.7, "arc_deg": 100.0, "swing_range": 110.0, "damage": 29.0}, {"cooldown": 0.6, "arc_deg": 110.0, "swing_range": 120.0, "damage": 31.0}, {"cooldown": 0.5, "arc_deg": 120.0, "swing_range": 130.0, "damage": 34.0}]
 evolution = {"requires_perk": "perk_attack", "requires_perk_stacks": 3, "evolved_id": "bloody_whip"}
