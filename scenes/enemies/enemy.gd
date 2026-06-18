@@ -24,6 +24,10 @@ var _player: Node2D = null
 var _pulse_tween: Tween = null  # boss 专属红脉冲；受击期间被 kill 让位给白闪
 var status: StatusComponent = StatusComponent.new()   # 燃烧/减速/冻结/硬直底座(4.1)
 var external_velocity: Vector2 = Vector2.ZERO   # 随物理帧衰减的外力速度(击退/拉拽)
+var _status_fx := {}  # StringName -> Node2D(当前挂着的状态指示器)
+
+# 参与可视化的状态种类(顺序固定,便于差分稳定)。
+const _STATUS_FX_KINDS: Array[StringName] = [&"burn", &"slow", &"freeze", &"stun"]
 
 @onready var _sprite: Sprite2D = $Sprite2D
 
@@ -47,8 +51,40 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if absf(velocity.x) > 1.0:
 		_sprite.flip_h = velocity.x < 0.0
+	_update_status_fx()
 
 # 移动逻辑已迁至行为树（agent 即本节点，由 BT 任务调用 move_and_slide）。
+
+# 纯函数:对比活跃状态与当前指示器,算出要增/要删的 kind。无副作用,可无场景单测。
+static func diff_status_fx(active: Array, current: Array) -> Dictionary:
+	var to_add: Array[StringName] = []
+	var to_remove: Array[StringName] = []
+	for k in active:
+		if not current.has(k):
+			to_add.append(k)
+	for k in current:
+		if not active.has(k):
+			to_remove.append(k)
+	return {"add": to_add, "remove": to_remove}
+
+# 每帧按状态系统当前状态,增删头顶/overlay 指示器。状态视觉与 GameFeel 受击闪白互不冲突
+# (指示器是独立子节点,不动 _sprite.modulate)。
+func _update_status_fx() -> void:
+	var active: Array[StringName] = []
+	for k in _STATUS_FX_KINDS:
+		if has_status(k):
+			active.append(k)
+	var diff := diff_status_fx(active, _status_fx.keys())
+	for k in diff["remove"]:
+		var node: Node = _status_fx[k]
+		if is_instance_valid(node):
+			node.queue_free()
+		_status_fx.erase(k)
+	for k in diff["add"]:
+		var node := Vfx.make_status_indicator(k)
+		if node != null:
+			add_child(node)
+			_status_fx[k] = node
 
 # 物理帧驱动状态底座：结算燃烧 DoT；衰减外力速度。
 func _physics_process(delta: float) -> void:
