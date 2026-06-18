@@ -4,6 +4,7 @@ class_name FrostbiteWeapon
 extends WeaponBase
 
 const ExplosionWeaponScript := preload("res://scenes/weapons/explosion/explosion_weapon.gd")  # 复用 densest_center
+const SNOW_FIELD := preload("res://scenes/weapons/frostbite/snow_field.gd")
 
 # 由 WeaponData.levels 反射注入
 var damage: float = 16.0
@@ -11,6 +12,7 @@ var area: float = 90.0
 var slow_factor: float = 0.6     # 速度乘子(越小越慢)
 var slow_dur: float = 1.5
 var freeze_dur: float = 0.6
+var field_dur: float = 0.0       # >0：进化(暴雪)生成持续雪域
 
 func attack() -> void:
 	var targets := enemies()
@@ -34,3 +36,11 @@ func attack() -> void:
 				e.apply_status(&"freeze", 0.0, freeze_dur)   # 二次命中 → 冻结
 			else:
 				e.apply_status(&"slow", slow_factor, slow_dur)
+	if field_dur > 0.0:
+		var field := SNOW_FIELD.new()
+		field.radius = area
+		field.slow_factor = slow_factor
+		field.freeze_dur = freeze_dur
+		field.field_dur = field_dur
+		get_ysort().add_child(field)
+		field.global_position = center

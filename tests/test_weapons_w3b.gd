@@ -156,3 +156,24 @@ func test_earthshatter_shockwave_hits_far_ring_and_slows() -> void:
 	w._apply_shockwave(Vector2.ZERO)
 	assert_float(e.hp).is_less(500.0)
 	assert_bool(e.has_status(&"slow")).is_true()
+
+# ── 暴雪 Blizzard ──
+const SnowFieldScript := preload("res://scenes/weapons/frostbite/snow_field.gd")
+
+func test_evolve_frostbite_grants_blizzard() -> void:
+	var w := _evolve("frostbite", "blizzard")
+	assert_bool(_player.has_weapon("blizzard")).is_true()
+	assert_float(w.get("field_dur")).is_greater(0.0)
+
+func test_snow_field_slows_enemy_in_radius() -> void:
+	var f = auto_free(SnowFieldScript.new())
+	f.radius = 110.0
+	f.slow_factor = 0.5
+	f.field_dur = 5.0
+	f.freeze_dur = 0.6
+	add_child(f)
+	f.global_position = Vector2.ZERO
+	var e := _tough_enemy_at(Vector2(40, 0))
+	for i in range(20):
+		await get_tree().physics_frame
+	assert_bool(e.has_status(&"slow") or e.has_status(&"freeze")).is_true()
