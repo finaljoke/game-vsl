@@ -23,3 +23,13 @@ func detonate() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if global_position.distance_to((enemy as Node2D).global_position) <= blast_radius:
 			enemy.take_damage(damage)
+	var is_nuke := base_scale > 1.0
+	var anim: StringName = &"explosion_ground" if is_nuke else &"explosion_regular"
+	var fx := Vfx.spawn_anim(global_position, anim, get_parent())
+	if fx != null:
+		fx.scale = Vector2.ONE * base_scale
+	if is_nuke:
+		GameFeel.shake(&"heavy")
+		GameFeel.hitstop(0.06)
+	else:
+		GameFeel.shake(&"medium")

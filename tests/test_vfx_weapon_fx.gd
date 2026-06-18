@@ -76,3 +76,27 @@ func test_boomerang_has_trail_child() -> void:
 			has_trail = true
 	assert_bool(has_trail).is_true()
 	player.queue_free(); proj.queue_free()
+
+
+const ExplosionScript := preload("res://scenes/weapons/explosion/explosion.gd")
+
+func test_explosion_spawns_anim_sprite() -> void:
+	# Explosion.detonate 附带序列帧爆炸 FX。
+	var enemy: Node2D = auto_free(_make_enemy_at(Vector2(500, 500))) as Node2D
+	var expl: Node2D = auto_free(ExplosionScript.new()) as Node2D
+	add_child(expl)
+	expl.set("damage", 1.0)
+	expl.global_position = Vector2(500, 500)
+	await get_tree().process_frame
+	expl.detonate()
+	await get_tree().process_frame
+	# detonate() 用 get_parent() 作为父节点，在测试中 get_parent() = 测试套件自身
+	assert_bool(_suite_has_animated_sprite()).is_true()
+	if is_instance_valid(enemy): enemy.queue_free()
+	if is_instance_valid(expl): expl.queue_free()
+
+func _suite_has_animated_sprite() -> bool:
+	for c: Node in get_children():
+		if c is AnimatedSprite2D:
+			return true
+	return false
