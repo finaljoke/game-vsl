@@ -85,11 +85,13 @@ static func _card_matches(card: Dictionary, matcher: String) -> bool:
 # ── 运行时状态(Task 7) ──────────────────────────────────────────────────────
 var _bot_mode: String = "kite"
 var _profile: Array = DEFAULT_PROFILE
+var _cards_name_val: String = ""         # cfg["cards"] 原始值;solo_ 授武器用
 var _out: String = "telemetry/run"
 var _maxtime: float = 0.0                # 0 = 不设上限(只靠自然终局)
 var _player: Player = null
 var _arena_center: Vector2 = Vector2(640, 360)  # 1280×720 中心;_ready 再从 arena 校正
 var _finished: bool = false
+var _solo_weapon_granted: bool = false
 
 # 命令行解析(纯函数,单测)。无 --bot → active=false。返回配置字典。
 static func parse_args(user_args: Array) -> Dictionary:
@@ -122,6 +124,7 @@ func _ready() -> void:
 	if not active:
 		return   # 真人模式:全惰性
 	_bot_mode = cfg["bot"]
+	_cards_name_val = cfg["cards"]
 	_profile = profile_for(cfg["cards"])
 	_out = cfg["out"]
 	_maxtime = cfg["maxtime"]
@@ -149,6 +152,9 @@ func _physics_process(_delta: float) -> void:
 	if _maxtime > 0.0 and DebugMetrics.get_elapsed() >= _maxtime:
 		_finish("timeout")
 		return
+	if not _solo_weapon_granted:
+		_solo_weapon_granted = true
+		_grant_solo_weapon(p)
 	p.bot_input = _compute_input(p)
 
 func _compute_input(p: Player) -> Vector2:
@@ -186,6 +192,16 @@ func _finish(outcome: String) -> void:
 	RunRecorder.finalize(outcome)
 	print("[RunHarness] 终局=%s,退出。" % outcome)
 	get_tree().quit()
+
+# 单武器档:开局直接授予该武器,使 bot 真正评估它(否则随机卡池常不提供该武器→饿死无解)。
+# 仅 bot solo 模式;按 id 授予(无 RNG,确定性);非 solo 档/无 --bot 时不触发。
+func _grant_solo_weapon(p: Player) -> void:
+	if not _cards_name_val.begins_with("solo_"):
+		return
+	var wid := _cards_name_val.substr(5)
+	if wid == "" or p == null:
+		return
+	CardPool.apply({"id": wid}, p)
 
 func _get_player() -> Player:
 	if _player == null or not is_instance_valid(_player):
