@@ -13,6 +13,10 @@ const BURST_PRESETS := {
 	&"frost_burst": {"color": Color(0.55, 0.85, 1.0), "amount": 10, "lifetime": 0.40, "vmin": 40.0, "vmax": 120.0, "smin": 3.0, "smax": 5.0, "additive": false},
 	&"hit_spark":   {"color": Color(1.0, 1.0, 0.85),  "amount": 6,  "lifetime": 0.25, "vmin": 60.0, "vmax": 180.0, "smin": 2.0, "smax": 4.0, "additive": true},
 	&"magic_burst": {"color": Color(0.7, 0.5, 1.0),   "amount": 12, "lifetime": 0.45, "vmin": 30.0, "vmax": 110.0, "smin": 3.0, "smax": 6.0, "additive": true},
+	&"blood_burst": {"color": Color(0.7, 0.05, 0.08), "amount": 8,  "lifetime": 0.35, "vmin": 30.0, "vmax": 90.0,  "smin": 2.0, "smax": 4.0, "additive": false},
+	&"crit_spark":  {"color": Color(1.0, 0.85, 0.3),  "amount": 14, "lifetime": 0.30, "vmin": 80.0, "vmax": 220.0, "smin": 2.0, "smax": 5.0, "additive": true},
+	&"ice_shard":   {"color": Color(0.7, 0.92, 1.0),  "amount": 10, "lifetime": 0.35, "vmin": 50.0, "vmax": 140.0, "smin": 2.0, "smax": 4.0, "additive": false},
+	&"shock_spark": {"color": Color(0.7, 0.9, 1.0),   "amount": 10, "lifetime": 0.25, "vmin": 70.0, "vmax": 200.0, "smin": 2.0, "smax": 4.0, "additive": true},
 }
 
 # 序列帧预设:目录 + 帧名前缀 + 帧数(00..count-1) + 帧率。
@@ -121,6 +125,25 @@ func make_status_indicator(kind: StringName) -> Node2D:
 		&"freeze": return _status_overlay(PACK + "circle_03.png", Color(0.6, 0.9, 1.0, 0.55), Vector2.ZERO, 0.45)
 		&"stun":   return _status_overlay(PACK + "twirl_01.png", Color(1.0, 1.0, 0.5, 0.9), Vector2(0, -20), 0.35)
 		_:         return null
+
+# 投射物拖尾:挂为投射物子节点的持续粒子,随运动留尾。additive 走加色发光。
+func make_trail(color: Color, additive: bool = false) -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.emitting = true
+	p.one_shot = false
+	p.amount = 16
+	p.lifetime = 0.3
+	p.explosiveness = 0.0
+	p.direction = Vector2.ZERO
+	p.spread = 180.0
+	p.initial_velocity_min = 0.0
+	p.initial_velocity_max = 10.0
+	p.scale_amount_min = 2.0
+	p.scale_amount_max = 4.0
+	p.color = color
+	if additive:
+		p.material = additive_material()
+	return p
 
 # 头顶持续小粒子(燃烧=橙、减速=青)。
 func _status_particles(color: Color) -> CPUParticles2D:
