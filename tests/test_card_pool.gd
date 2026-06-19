@@ -446,3 +446,34 @@ func test_ready_evolutions_sorted_by_weapon_id() -> void:
 	assert_int(ready.size()).is_equal(2)
 	assert_str(ready[0]["id"]).is_equal("evolve_explosion")
 	assert_str(ready[1]["id"]).is_equal("evolve_orb")
+
+# ── Phase0 单元1：就绪进化确定性投放 ───────────────────────────────────────
+func test_pick_offers_ready_evolution() -> void:
+	_stub_owns("orb", 3)
+	_player.perk_stacks["perk_hp"] = 3
+	var cards := CardPool.pick(_player, 3)
+	var found := false
+	for c in cards:
+		if c["id"] == "evolve_orb":
+			found = true
+	assert_bool(found).is_true()
+
+func test_pick_no_evolution_when_none_ready() -> void:
+	var cards := CardPool.pick(_player, 3)
+	for c in cards:
+		assert_str(c.get("type", "")).is_not_equal("evolution")
+
+func test_pick_offers_exactly_one_evolution_when_multiple_ready() -> void:
+	_stub_owns("explosion", 3)
+	_player.perk_stacks["perk_damage"] = 3
+	_stub_owns("orb", 3)
+	_player.perk_stacks["perk_hp"] = 3
+	var cards := CardPool.pick(_player, 3)
+	var evo_count := 0
+	var evo_id := ""
+	for c in cards:
+		if c.get("type", "") == "evolution":
+			evo_count += 1
+			evo_id = c["id"]
+	assert_int(evo_count).is_equal(1)
+	assert_str(evo_id).is_equal("evolve_explosion")  # 字典序第一

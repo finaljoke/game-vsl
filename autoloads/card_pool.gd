@@ -157,24 +157,32 @@ func ready_evolutions(player: Player) -> Array[Dictionary]:
 	return out
 
 func pick(player: Player, count: int = 3) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	# Phase0 单元1：就绪进化「确定性投放」——已解锁内容不靠抽奖(P2/C4)。
+	# 取就绪集字典序第一个占 1 槽；其余就绪进化本轮不进随机池(每轮只投放 1 个，保留决策密度 P5)。
+	var ready := ready_evolutions(player)
+	var ready_ids: Dictionary = {}
+	for ev in ready:
+		ready_ids[ev["id"]] = true
+	if not ready.is_empty():
+		result.append(ready[0])
+	# 构建随机池：排除所有就绪进化 id(已确定性处理)
 	var available: Array[Dictionary] = []
 	var slots_full: bool = player.owned_weapons.size() >= player.MAX_WEAPON_SLOTS
 	for card in _runtime_cards:
-		# 本局被 ban 的卡永不出现
+		if ready_ids.has(card["id"]):
+			continue
 		if _banished.has(card["id"]):
 			continue
 		if not _check_condition(card["condition"], player):
 			continue
-		# 武器槽满：新武器卡不再出现(升级/进化不占新槽，照常)
 		if slots_full and card.get("type", "") == "weapon":
 			continue
-		# perk 封顶：达到 max_stacks 后从池中剔除
 		if card.has("max_stacks"):
 			if player.perk_stacks.get(card["id"], 0) >= card["max_stacks"]:
 				continue
 		available.append(card)
-	# 按稀有度权重做无放回抽样：稀有卡更少见，且同一次不重复
-	var result: Array[Dictionary] = []
+	# 加权无放回抽样填满剩余槽位
 	while result.size() < count and not available.is_empty():
 		var total := 0
 		for c in available:
