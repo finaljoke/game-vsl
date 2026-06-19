@@ -11,5 +11,5 @@ display_name = "巨型护盾球"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"total_orbs": 8, "damage": 8.0, "dash_enabled": true, "dash_interval": 3.0}]
+levels = [{"total_orbs": 8, "damage": 14.0, "orbit_radius": 68.0, "hit_cooldown": 0.3, "dash_enabled": true, "dash_interval": 3.0}]
 evolution = {}

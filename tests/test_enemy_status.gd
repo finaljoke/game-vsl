@@ -100,3 +100,30 @@ func test_unimpeded_enemy_chases_player() -> void:
 		await get_tree().process_frame
 	# 朝玩家(+x)产生自身运动 → 证明 atom 确实路由 resolve_velocity 且在追击
 	assert_float(e.velocity.x).is_greater(0.0)
+
+# ── 冲锋者(charger) _tick 接线集成验证(A1)：证明 _tick 真的经 _resolve 路由控制，──────
+# 而非仅纯函数 charge_velocity 正确。修复前 bt_charger 直接写 agent.velocity，冻结也照常推进。
+# 玩家放远处(dist 400 > charge_range 220)使冲锋者停在 APPROACH 阶段。
+
+func test_frozen_charger_does_not_advance() -> void:
+	_make_player(400.0)
+	await get_tree().process_frame
+	var e := _make_enemy("charger")
+	e.global_position = Vector2.ZERO
+	await get_tree().process_frame   # 让 BT 初始化
+	e.apply_status(&"freeze", 999.0, 999.0)   # 长时长，测试期间不过期
+	for i in range(20):
+		await get_tree().process_frame
+	# 冻结 → APPROACH 经 _resolve → compose_velocity 得零自身运动(仅外力=0) → velocity 恒为零。
+	# 若 _tick 退回直接写 agent.velocity 的漏接，本断言会失败。
+	assert_vector(e.velocity).is_equal(Vector2.ZERO)
+
+func test_unimpeded_charger_advances() -> void:
+	_make_player(400.0)
+	await get_tree().process_frame
+	var e := _make_enemy("charger")
+	e.global_position = Vector2.ZERO
+	for i in range(5):
+		await get_tree().process_frame
+	# 无状态：APPROACH 朝玩家(+x)产生自身运动 → 证明 _tick 确实路由 _resolve 且在推进
+	assert_float(e.velocity.x).is_greater(0.0)

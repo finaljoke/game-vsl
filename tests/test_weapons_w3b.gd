@@ -116,6 +116,15 @@ func test_tempest_sky_strike_damages_enemies() -> void:
 	w._sky_strike([e])   # 直接打这一目标头顶落雷
 	assert_float(e.hp).is_less(500.0)
 
+# A4 同类回归守卫：雷暴(thunderstorm)链尾感电硬直不得弱于满级闪电(lightning Lv3)。
+# 防"缺字段回退"——thunderstorm 若漏 shock_dur 会回退脚本默认 0.0(lightning_weapon.gd 用 shock_dur>0 门控)，
+# 静默丢掉满级闪电本有的链尾硬直。参照值从 WeaponDB 动态取，基础再平衡仍成立。
+func test_tempest_shock_dur_not_weaker_than_maxed_lightning() -> void:
+	var lightning_data := WeaponDB.get_data("lightning")
+	var lightning_max: Dictionary = lightning_data.levels[lightning_data.levels.size() - 1]
+	var w := _evolve("lightning", "thunderstorm")
+	assert_float(w.get("shock_dur")).is_greater_equal(float(lightning_max["shock_dur"]))
+
 # ── 缚刃 Bound Blades ──
 const OrbShieldScript := preload("res://scenes/weapons/orb/orb_shield.gd")
 
@@ -140,6 +149,25 @@ func test_orb_dashes_toward_enemy_when_due() -> void:
 	for i in range(10):
 		await get_tree().process_frame
 	assert_float((orb as Node2D).global_position.distance_to(e.global_position)).is_less(d0)
+
+# A4 回归守卫：进化形态(mega_orb)逐球不得弱于满级缚灵(orb Lv3)。
+# 防"练满再进化反而变弱"——damage 8<14 / hit_cooldown 缺字段回退 0.5>0.30 / orbit_radius 缺字段回退 60<68。
+# 参照值从 WeaponDB 动态取(orb 满级)，基础再平衡时守卫仍成立。
+func test_mega_orb_per_orb_not_weaker_than_maxed_orb() -> void:
+	var orb_data := WeaponDB.get_data("orb")
+	var orb_max: Dictionary = orb_data.levels[orb_data.levels.size() - 1]
+	_evolve("orb", "mega_orb")
+	var shield: OrbShield = null
+	for c in _player.get_children():
+		if c is OrbShield:
+			shield = c
+			break
+	assert_object(shield).is_not_null()
+	assert_float(shield.damage).is_greater_equal(float(orb_max["damage"]))
+	assert_float(shield.hit_cooldown).is_less_equal(float(orb_max["hit_cooldown"]))
+	assert_float(shield.orbit_radius).is_greater_equal(float(orb_max["orbit_radius"]))
+	# 数量增多是进化的真正质变
+	assert_int(shield.total_orbs).is_greater(int(orb_max["total_orbs"]))
 
 # ── 震地 Earthshatter ──
 func test_evolve_maul_grants_earthshatter() -> void:

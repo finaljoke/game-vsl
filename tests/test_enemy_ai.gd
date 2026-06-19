@@ -5,6 +5,7 @@ extends GdUnitTestSuite
 
 const EnemyBT := preload("res://scenes/enemies/ai/enemy_bt.gd")
 const KiteTask := preload("res://scenes/enemies/ai/atoms/bt_kite_target.gd")
+const ChargerTask := preload("res://scenes/enemies/ai/atoms/bt_charger.gd")
 const HpBelow := preload("res://scenes/enemies/ai/atoms/bt_hp_below.gd")
 const ProjectileScene := preload("res://scenes/enemies/enemy_projectile.tscn")
 
@@ -121,3 +122,37 @@ func test_projectile_scene_has_script_attached() -> void:
 	assert_object(p.get_script()).is_not_null()
 	assert_bool("direction" in p).is_true()
 	assert_bool("damage" in p).is_true()
+
+# ── 冲锋者控制接通(A1)：charge_velocity 纯函数把状态期望速度合成为最终速度。──────
+# 修复前 bt_charger 直接写 agent.velocity，绕过 resolve_velocity → 减速/冻结/硬直/击退/拉拽全 no-op。
+# 设计：APPROACH/TELEGRAPH/RECOVER 完全受控；DASH 是已承诺扑击，免疫硬直归零但仍受减速/外力。
+
+func test_charger_stun_zeroes_approach() -> void:
+	var v := ChargerTask.charge_velocity(ChargerTask.APPROACH, Vector2(80, 0), 1.0, true, Vector2.ZERO)
+	assert_vector(v).is_equal(Vector2.ZERO)
+
+func test_charger_slow_scales_approach() -> void:
+	var v := ChargerTask.charge_velocity(ChargerTask.APPROACH, Vector2(80, 0), 0.5, false, Vector2.ZERO)
+	assert_vector(v).is_equal(Vector2(40, 0))
+
+func test_charger_dash_immune_to_stun() -> void:
+	# 突进免疫硬直归零(已承诺扑击)
+	var v := ChargerTask.charge_velocity(ChargerTask.DASH, Vector2(256, 0), 1.0, true, Vector2.ZERO)
+	assert_vector(v).is_equal(Vector2(256, 0))
+
+func test_charger_dash_still_slowed() -> void:
+	# 突进仍受减速缩放(减速 0.5 → 半速)；冻结 mult==0 时扑击仅余外力位移(无外力则恰为零)
+	var v := ChargerTask.charge_velocity(ChargerTask.DASH, Vector2(256, 0), 0.5, true, Vector2.ZERO)
+	assert_vector(v).is_equal(Vector2(128, 0))
+
+func test_charger_dash_takes_external_force() -> void:
+	# 突进仍受外力(重力井/击退)推动偏移
+	var v := ChargerTask.charge_velocity(ChargerTask.DASH, Vector2(256, 0), 1.0, true, Vector2(0, 100))
+	assert_vector(v).is_equal(Vector2(256, 100))
+
+func test_charger_timer_pauses_under_stun() -> void:
+	# 前摇/恢复倒计时：硬直时冻结(让控制能打断蓄力)，未硬直正常递减。
+	# 注：DASH 阶段刻意不用 tick_timer(突进是已承诺扑击，其倒计时不被硬直暂停)——
+	# 该"DASH 不暂停"由 _tick 直接 `_t -= delta` 保证，配合 test_charger_dash_immune_to_stun 锁定其语义。
+	assert_float(ChargerTask.tick_timer(0.5, 0.1, true)).is_equal_approx(0.5, 0.001)
+	assert_float(ChargerTask.tick_timer(0.5, 0.1, false)).is_equal_approx(0.4, 0.001)
