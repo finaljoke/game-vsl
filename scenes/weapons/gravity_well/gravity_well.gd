@@ -34,6 +34,8 @@ func _physics_process(delta: float) -> void:
 		var to_center: Vector2 = global_position - (e as Node2D).global_position
 		if to_center.length() <= radius and e.has_method("apply_impulse"):
 			e.apply_impulse(to_center.normalized(), pull_strength * delta)
+			# 引力增幅(C2)：井内每帧刷新 amp,使受到的全通道伤害 ×(1+amp)。奇点复用同脚本自动继承。
+			e.apply_status(&"amp", Enemy.GRAVITY_AMP, Enemy.AMP_DUR)
 	_tick_accum += delta
 	while _tick_accum >= TICK:
 		_tick_accum -= TICK

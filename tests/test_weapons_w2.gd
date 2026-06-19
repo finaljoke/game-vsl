@@ -120,3 +120,30 @@ func test_gravity_well_reflects_level1_fields() -> void:
 	assert_object(node).is_not_null()
 	assert_float(node.get("radius")).is_equal_approx(140.0, 0.001)
 	assert_float(node.get("pull_strength")).is_equal_approx(120.0, 0.001)
+
+func test_gravity_well_stamps_amp_on_enemy_in_radius() -> void:
+	var well: GravityWell = auto_free(GravityWellScript.new()) as GravityWell
+	well.radius = 140.0
+	well.pull_strength = 120.0
+	well.field_dur = 5.0
+	well.tick_damage = 0.0
+	add_child(well)
+	well.global_position = Vector2.ZERO
+	var e := _tough_enemy_at(Vector2(50, 0))   # 半径内
+	await get_tree().process_frame
+	well._physics_process(0.1)
+	assert_bool(e.has_status(&"amp")).is_true()
+	assert_float(e.status.magnitude(&"amp")).is_equal_approx(Enemy.GRAVITY_AMP, 0.001)
+
+func test_gravity_well_does_not_stamp_amp_outside_radius() -> void:
+	var well: GravityWell = auto_free(GravityWellScript.new()) as GravityWell
+	well.radius = 140.0
+	well.pull_strength = 120.0
+	well.field_dur = 5.0
+	well.tick_damage = 0.0
+	add_child(well)
+	well.global_position = Vector2.ZERO
+	var e := _tough_enemy_at(Vector2(300, 0))   # 半径外
+	await get_tree().process_frame
+	well._physics_process(0.1)
+	assert_bool(e.has_status(&"amp")).is_false()
