@@ -16,3 +16,8 @@ telemetry/
 
 # BGM：署名要求 + 体积大，本地放置(见 CLAUDE.md)
 assets/audio/music/
+
+# Godot 编辑器易变状态/UI 缓存：每次开编辑器都重生成，不入库（曾混入 977+ 文件噪音）。
+# clone 即跑所需的 .godot/imported、shader_cache、global_script_class_cache.cfg 仍保留追踪。
+.godot/editor/
+.godot/uid_cache.bin
