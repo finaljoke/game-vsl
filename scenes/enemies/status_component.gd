@@ -60,3 +60,7 @@ func is_stunned() -> bool:
 # 查询某状态是否生效(霜噬"已减速则升级冻结"等机制循环需要)。
 func has(kind: StringName) -> bool:
 	return _durations.has(kind)
+
+# 查询某状态的 magnitude(燃烧 dps / 引力增幅 amp 等数值项)；缺省返回 0.0。
+func magnitude(kind: StringName) -> float:
+	return _magnitudes.get(kind, 0.0)

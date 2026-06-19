@@ -87,3 +87,38 @@ func test_freeze_overrides_slow_for_speed() -> void:
 	s.apply(&"slow", 0.5, 1.0)
 	s.apply(&"freeze", 0.0, 1.0)
 	assert_float(s.move_speed_mult()).is_equal(0.0)
+
+func test_magnitude_returns_stored_value() -> void:
+	var s = _sc()
+	s.apply(&"burn", 8.0, 1.0)
+	assert_float(s.magnitude(&"burn")).is_equal_approx(8.0, 0.001)
+
+func test_magnitude_missing_returns_zero() -> void:
+	assert_float(_sc().magnitude(&"amp")).is_equal(0.0)
+
+func test_amp_rides_generic_apply_and_query() -> void:
+	var s = _sc()
+	s.apply(&"amp", 0.25, 0.25)
+	assert_bool(s.has(&"amp")).is_true()
+	assert_float(s.magnitude(&"amp")).is_equal_approx(0.25, 0.001)
+
+func test_amp_takes_larger_as_stronger() -> void:
+	var s = _sc()
+	s.apply(&"amp", 0.25, 1.0)
+	s.apply(&"amp", 0.10, 1.0)   # 更小 → 不取代
+	assert_float(s.magnitude(&"amp")).is_equal_approx(0.25, 0.001)
+	s.apply(&"amp", 0.40, 1.0)   # 更大 → 取代
+	assert_float(s.magnitude(&"amp")).is_equal_approx(0.40, 0.001)
+
+func test_amp_does_not_affect_speed_or_stun() -> void:
+	var s = _sc()
+	s.apply(&"amp", 0.25, 1.0)
+	assert_float(s.move_speed_mult()).is_equal(1.0)
+	assert_bool(s.is_stunned()).is_false()
+
+func test_amp_expires_after_duration() -> void:
+	var s = _sc()
+	s.apply(&"amp", 0.25, 0.25)
+	s.tick(0.3)
+	assert_bool(s.has(&"amp")).is_false()
+	assert_float(s.magnitude(&"amp")).is_equal(0.0)
