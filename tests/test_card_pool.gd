@@ -41,12 +41,13 @@ func test_pick_excludes_upgrade_when_weapon_at_level2() -> void:
 		assert_str(card["id"]).is_not_equal("knife_2")
 
 func test_pick_returns_all_available_when_pool_smaller_than_count() -> void:
-	# 占满 6 个武器槽且全满级 → 武器卡(槽满)/升级卡(满级)/进化卡(未达阈值)全剔除。
-	# 剩：6 张属性牌 + 4 张质变卡(磁化/嗜血恒可选；贯穿/多重因持有 knife/boomerang 解锁) = 10
+	# 占满 6 武器槽全满级 → 武器(槽满)/升级(满级)/进化(未达阈)全剔除。
+	# 满血 → perk_heal(hp_below 门控)也剔除。剩：5 属性牌 + 4 质变卡 = 9
 	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang"]:
 		_stub_owns(id, 3)
+	_player.hp = _player.max_hp  # 确定满血 → perk_heal 不进池
 	var cards := CardPool.pick(_player, 99)
-	assert_int(cards.size()).is_equal(10)
+	assert_int(cards.size()).is_equal(9)
 
 func test_pick_includes_lv3_upgrade_when_weapon_at_level2() -> void:
 	_stub_owns("knife", 2)
@@ -65,7 +66,8 @@ func test_pick_excludes_lv3_upgrade_when_weapon_at_level3() -> void:
 
 func test_pick_always_includes_perks() -> void:
 	var cards := CardPool.pick(_player, 99)
-	var perk_ids := ["perk_speed", "perk_hp", "perk_attack", "perk_xp", "perk_damage", "perk_heal"]
+	# 新(perk_heal 改为受伤条件卡，不再恒在池中):
+	var perk_ids := ["perk_speed", "perk_hp", "perk_attack", "perk_xp", "perk_damage"]
 	for perk_id in perk_ids:
 		var found := false
 		for card in cards:
@@ -101,11 +103,7 @@ func test_pick_still_has_cards_when_all_capped() -> void:
 	_player.perk_stacks["perk_damage"] = 8
 	var cards := CardPool.pick(_player, 99)
 	assert_int(cards.size()).is_greater_equal(1)
-	var has_heal := false
-	for c in cards:
-		if c["id"] == "perk_heal":
-			has_heal = true
-	assert_bool(has_heal).is_true()
+	# (原 has_heal 断言已删：perk_heal 满血不再进池)
 
 # ── apply() 属性效果 ──────────────────────────────────────────────────────
 
@@ -486,3 +484,19 @@ func test_evolution_desc_states_requirement() -> void:
 			desc = String(card["desc"])
 	assert_str(desc).contains("生命上限")  # perk_hp 中文名
 	assert_str(desc).contains("3")          # 阈值
+
+# ── Phase0 单元2：perk_heal 去陷阱 ─────────────────────────────────────────
+func test_perk_heal_excluded_at_full_hp() -> void:
+	_player.hp = _player.max_hp
+	var cards := CardPool.pick(_player, 99)
+	for c in cards:
+		assert_str(c["id"]).is_not_equal("perk_heal")
+
+func test_perk_heal_offered_when_wounded() -> void:
+	_player.hp = _player.max_hp * 0.5
+	var cards := CardPool.pick(_player, 99)
+	var found := false
+	for c in cards:
+		if c["id"] == "perk_heal":
+			found = true
+	assert_bool(found).is_true()

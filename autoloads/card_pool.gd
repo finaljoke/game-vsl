@@ -56,8 +56,8 @@ const CARDS: Array[Dictionary] = [
 	{ "id": "perk_attack", "name": "攻速提升",  "desc": "攻击速度永久 +15%",     "type": "perk",    "condition": "", "max_stacks": 8 },
 	{ "id": "perk_xp",     "name": "XP 加成",   "desc": "XP 获取量永久 +25%",    "type": "perk",    "condition": "", "max_stacks": 6 },
 	{ "id": "perk_damage", "name": "攻击强化",  "desc": "武器伤害永久 +15%",     "type": "perk",    "condition": "", "max_stacks": 8 },
-	# 无上限兜底卡：保证卡池不为空，防止空池导致暂停无法 resume
-	{ "id": "perk_heal",   "name": "紧急治疗",  "desc": "立刻回复 30 HP",        "type": "perk",    "condition": "" },
+	# perk_heal 改受伤条件卡(hp_below:0.9)：满血时不进池，消灭"满血回血"废牌陷阱
+	{ "id": "perk_heal",   "name": "紧急治疗",  "desc": "立刻回复 30 HP",        "type": "perk",    "condition": "hp_below:0.9" },
 ]
 
 # 稀有度抽取权重：值越大越常见。强卡(进化/质变)更稀有。
@@ -310,6 +310,9 @@ func _check_condition(condition: String, player: Player) -> bool:
 		return player.get_weapon_level(parts[1]) == int(parts[2])
 	if condition.begins_with("evolve_ready:"):
 		return _is_evolve_ready(player, condition.substr(13))
+	if condition.begins_with("hp_below:"):
+		var frac := float(condition.substr(9))
+		return player.hp < player.max_hp * frac
 	# 质变卡门控(E3)：has:<id> 持有该武器；has_any:<id,id,...> 持有任一
 	if condition.begins_with("has_any:"):
 		for w in condition.substr(8).split(","):
