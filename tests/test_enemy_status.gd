@@ -127,3 +127,48 @@ func test_unimpeded_charger_advances() -> void:
 		await get_tree().process_frame
 	# 无状态：APPROACH 朝玩家(+x)产生自身运动 → 证明 _tick 确实路由 _resolve 且在推进
 	assert_float(e.velocity.x).is_greater(0.0)
+
+func test_take_damage_shatters_frozen_enemy_on_direct() -> void:
+	var e := _make_enemy()
+	e.MAX_HP = 100.0
+	e.hp = 100.0
+	e.apply_status(&"freeze", 0.0, 1.0)
+	e.take_damage(10.0, Enemy.DamageChannel.DIRECT)
+	# 10 × 1.5 = 15 → hp 85
+	assert_float(e.hp).is_equal_approx(85.0, 0.001)
+
+func test_take_damage_dot_does_not_shatter_frozen() -> void:
+	var e := _make_enemy()
+	e.MAX_HP = 100.0
+	e.hp = 100.0
+	e.apply_status(&"freeze", 0.0, 1.0)
+	e.take_damage(10.0, Enemy.DamageChannel.DOT)
+	# 碎裂不沾 DoT → 10 × 1.0 = 10 → hp 90
+	assert_float(e.hp).is_equal_approx(90.0, 0.001)
+
+func test_take_damage_executes_full_hp_stun() -> void:
+	var e := _make_enemy()
+	e.MAX_HP = 100.0
+	e.hp = 100.0
+	e.apply_status(&"stun", 0.0, 1.0)
+	e.take_damage(10.0, Enemy.DamageChannel.DIRECT)
+	# 满血处决 ×1.2 → 12 → hp 88
+	assert_float(e.hp).is_equal_approx(88.0, 0.001)
+
+func test_take_damage_execute_scales_with_missing_hp() -> void:
+	# 同样 10 直击,残血硬直怪掉血显著多于满血硬直怪。
+	var full := _make_enemy()
+	full.MAX_HP = 100.0
+	full.hp = 100.0
+	full.apply_status(&"stun", 0.0, 1.0)
+	full.take_damage(10.0, Enemy.DamageChannel.DIRECT)
+	var full_loss := 100.0 - full.hp
+
+	var low := _make_enemy()
+	low.MAX_HP = 100.0
+	low.hp = 20.0   # hp_frac 0.2 → ×(1+0.2+0.8*0.8)=×1.84
+	low.apply_status(&"stun", 0.0, 1.0)
+	var before := low.hp
+	low.take_damage(10.0, Enemy.DamageChannel.DIRECT)
+	var low_loss := before - low.hp
+	assert_float(low_loss).is_greater(full_loss)

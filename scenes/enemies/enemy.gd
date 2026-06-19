@@ -153,14 +153,26 @@ func resolve_velocity(desired: Vector2) -> Vector2:
 	return compose_velocity(desired, move_speed_mult(), is_stunned(), external_velocity)
 
 func take_damage(amount: float, channel: DamageChannel = DamageChannel.DIRECT) -> void:
-	hp -= amount
+	# 扣血前快照协同输入(乘区用)。
+	var frozen := has_status(&"freeze")
+	var stun := has_status(&"stun")
+	var hp_frac := (hp / MAX_HP) if MAX_HP > 0.0 else 0.0
+	var amp := status.magnitude(&"amp")
+	var final := amount * synergy_multiplier(channel, frozen, stun, hp_frac, amp)
+	hp -= final
+	# DIRECT 打击型协同反馈(复用预设,纯 cosmetic,确定性安全)。
+	if channel == DamageChannel.DIRECT:
+		if frozen:
+			Vfx.spawn_burst(global_position, &"ice_shard")
+		if stun:
+			Vfx.spawn_burst(global_position, &"crit_spark")
 	# Boss 受击：先 kill 脉冲并复位 _sprite.modulate，否则白闪 (enemy.modulate) 被脉冲色乘穿。
 	# 仅 DIRECT 复位脉冲——DOT 每秒 4 跳，不能把 boss 红脉冲冲掉。
 	if channel == DamageChannel.DIRECT and _pulse_tween != null:
 		_pulse_tween.kill()
 		_pulse_tween = null
 		_sprite.modulate = Color.WHITE
-	GameFeel.enemy_hit.emit(amount, global_position, self, channel)
+	GameFeel.enemy_hit.emit(final, global_position, self, channel)
 	if hp <= 0.0:
 		if split_count > 0:
 			_spawn_split()
