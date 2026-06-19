@@ -477,3 +477,12 @@ func test_pick_offers_exactly_one_evolution_when_multiple_ready() -> void:
 			evo_id = c["id"]
 	assert_int(evo_count).is_equal(1)
 	assert_str(evo_id).is_equal("evolve_explosion")  # 字典序第一
+
+# ── Phase0 单元1：进化卡门控透明化 ─────────────────────────────────────────
+func test_evolution_desc_states_requirement() -> void:
+	var desc := ""
+	for card in CardPool._runtime_cards:
+		if card["id"] == "evolve_orb":
+			desc = String(card["desc"])
+	assert_str(desc).contains("生命上限")  # perk_hp 中文名
+	assert_str(desc).contains("3")          # 阈值

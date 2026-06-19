@@ -132,15 +132,26 @@ func _register_evolution_cards() -> void:
 		var data: WeaponData = d
 		var weapon_id: String = data.id
 		var evo_id: String = "evolve_" + weapon_id
+		var perk_id := String(data.evolution.get("requires_perk", ""))
+		var threshold := int(data.evolution.get("requires_perk_stacks", _perk_max_stacks(perk_id)))
+		# 透明化门控：写明"需 X 满级 + Y perk ×N"，而非泛泛的"解锁终极形态"(P2/C4)。
+		var desc := "需 %s 满级 + %s ×%d" % [data.display_name, _perk_display_name(perk_id), threshold]
 		var card: Dictionary = {
 			"id": evo_id,
 			"name": "%s 进化" % data.display_name,
-			"desc": "解锁 %s 的终极形态" % data.display_name,
+			"desc": desc,
 			"type": "evolution",
 			"condition": "evolve_ready:" + weapon_id,
 		}
 		_runtime_cards.append(card)
 		effect_registry[evo_id] = _evolve_weapon.bind(weapon_id)
+
+# perk id → 中文显示名(取自 CARDS 定义，DRY)。
+func _perk_display_name(perk_id: String) -> String:
+	for c in CARDS:
+		if c["id"] == perk_id:
+			return String(c["name"])
+	return perk_id
 
 # 返回当前所有「就绪」进化卡(武器满级+perk达阈且未被 banish)，按源武器 id 字典序。
 # 确定性排序：便于契约测试与 bot 复现(C5)。
