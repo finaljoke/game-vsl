@@ -21,3 +21,20 @@ func test_skip_reward_grants_one_token() -> void:
 	var before: int = _player.reroll_tokens
 	ui.skip_reward(_player)
 	assert_int(_player.reroll_tokens).is_equal(before + 1)
+
+func test_consume_reroll_uses_free_first() -> void:
+	var ui := _make_ui()
+	ui._player = _player
+	ui._free_rerolls_left = 1
+	_player.reroll_tokens = 0
+	assert_bool(ui.consume_reroll()).is_true()    # 用免费
+	assert_int(_player.reroll_tokens).is_equal(0)  # 未扣券
+	assert_bool(ui.consume_reroll()).is_false()    # 免费用尽且无券
+
+func test_consume_reroll_spends_token_after_free() -> void:
+	var ui := _make_ui()
+	ui._player = _player
+	ui._free_rerolls_left = 0
+	_player.reroll_tokens = 2
+	assert_bool(ui.consume_reroll()).is_true()
+	assert_int(_player.reroll_tokens).is_equal(1)  # 扣 1 券

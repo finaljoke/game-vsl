@@ -27,6 +27,8 @@ const RARITY_COLORS := {
 	"legendary": Color(1.0, 0.65, 0.15),
 }
 const RARITY_BORDER := {"common": 1, "uncommon": 2, "rare": 3, "legendary": 4}
+# 每轮免费重抽次数(社区共识:免费首抽是控池地基)
+const FREE_REROLLS_PER_DRAFT := 1
 
 var _player: Player = null
 var _current_cards: Array = []
@@ -34,6 +36,7 @@ var _footer: HBoxContainer = null
 var _reroll_btn: Button = null
 var _token_label: Label = null
 var _skip_btn: Button = null
+var _free_rerolls_left: int = 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -78,19 +81,34 @@ func _on_level_up() -> void:
 	_player = get_tree().get_first_node_in_group("player") as Player
 	_current_cards = CardPool.pick(_player)
 	_build_cards(_current_cards)
+	_free_rerolls_left = FREE_REROLLS_PER_DRAFT
 	_update_footer()
 
 func _update_footer() -> void:
 	if _player == null:
 		return
 	var tokens: int = _player.reroll_tokens
-	_token_label.text = "重抽券 ×%d" % tokens
-	_reroll_btn.disabled = tokens <= 0
+	if _free_rerolls_left > 0:
+		_token_label.text = "重抽券 ×%d (免费 ×%d)" % [tokens, _free_rerolls_left]
+	else:
+		_token_label.text = "重抽券 ×%d" % tokens
+	_reroll_btn.disabled = _free_rerolls_left <= 0 and tokens <= 0
+
+# 重抽计费：每轮 1 次免费(社区共识:免费首抽是控池地基)，用尽后耗券。返回是否允许本次重抽。
+func consume_reroll() -> bool:
+	if _free_rerolls_left > 0:
+		_free_rerolls_left -= 1
+		return true
+	if _player != null and _player.reroll_tokens > 0:
+		_player.reroll_tokens -= 1
+		return true
+	return false
 
 func _on_reroll() -> void:
-	if _player == null or _player.reroll_tokens <= 0:
+	if _player == null:
 		return
-	_player.reroll_tokens -= 1
+	if not consume_reroll():
+		return
 	_current_cards = CardPool.pick(_player)
 	_build_cards(_current_cards)
 	_update_footer()
