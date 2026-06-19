@@ -500,3 +500,20 @@ func test_perk_heal_offered_when_wounded() -> void:
 		if c["id"] == "perk_heal":
 			found = true
 	assert_bool(found).is_true()
+
+# ── Phase0 单元2：空池兜底 ─────────────────────────────────────────────────
+func test_fallback_card_grants_reroll_token() -> void:
+	var before := _player.reroll_tokens
+	CardPool.apply(CardPool._fallback_card(), _player)
+	assert_int(_player.reroll_tokens).is_equal(before + 1)
+
+func test_pick_never_empty_via_fallback() -> void:
+	CardPool.reset_run()
+	# 把所有运行时卡 banish 掉 → 随机池与就绪进化全清空 → 触发兜底
+	for card in CardPool._runtime_cards:
+		CardPool.banish(String(card["id"]))
+	_player.hp = _player.max_hp
+	var cards := CardPool.pick(_player, 3)
+	assert_int(cards.size()).is_equal(1)
+	assert_str(cards[0]["id"]).is_equal("fallback_token")
+	CardPool.reset_run()  # 清理：别污染其它用例

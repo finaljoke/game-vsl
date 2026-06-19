@@ -63,6 +63,10 @@ const CARDS: Array[Dictionary] = [
 # 稀有度抽取权重：值越大越常见。强卡(进化/质变)更稀有。
 const RARITY_WEIGHTS := {"common": 100, "uncommon": 50, "rare": 20, "legendary": 6}
 
+# 空池兜底卡：仅当其余池为空时由 pick() 注入，保证永不返回空(防暂停无法 resume，C3)。
+# 用「+1 重抽券」——永不浪费(可存)，故不构成废牌/稀释(P5)。
+const FALLBACK_CARD := { "id": "fallback_token", "name": "重抽券", "desc": "+1 重抽券", "type": "perk" }
+
 # 静态 CARDS + 运行时注入的进化卡。pick() 只读它。
 var _runtime_cards: Array[Dictionary] = []
 # id → Callable(player)。每个 Callable 已绑定该卡所需参数。
@@ -117,6 +121,7 @@ func _register_perk_effects() -> void:
 	effect_registry["perk_damage"] = _apply_perk_mult.bind("damage_mult", 1.15)
 	effect_registry["perk_hp"]     = _apply_perk_hp
 	effect_registry["perk_heal"]   = _apply_perk_heal
+	effect_registry["fallback_token"] = _apply_fallback_token
 
 # 质变卡(E3)：改玩家 modifier，由武器/拾取在运行时读取
 func _register_synergy_effects() -> void:
@@ -208,6 +213,9 @@ func pick(player: Player, count: int = 3) -> Array[Dictionary]:
 				break
 		result.append(available[chosen])
 		available.remove_at(chosen)
+	# 空池兜底：极端态下随机池与就绪进化均空 → 注入兜底券，防软锁(C3)。
+	if result.is_empty():
+		result.append(_fallback_card())
 	return result
 
 # 卡片图标：从卡关联的武器 WeaponData.icon 取（数据驱动；perk 卡无图标返回 null）。
@@ -263,6 +271,13 @@ func _apply_perk_hp(player: Player) -> void:
 
 func _apply_perk_heal(player: Player) -> void:
 	player.hp = minf(player.hp + 30.0, player.max_hp)
+
+# 空池兜底券：仅当 pick() 其余池全空时注入并应用，+1 重抽券永不浪费(防软锁，C3)。
+func _fallback_card() -> Dictionary:
+	return FALLBACK_CARD.duplicate(true)
+
+func _apply_fallback_token(player: Player) -> void:
+	player.reroll_tokens += 1
 
 # 质变效果(E3)
 func _apply_synergy_pierce(player: Player) -> void:
