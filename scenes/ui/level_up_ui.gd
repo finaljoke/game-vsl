@@ -33,6 +33,7 @@ var _current_cards: Array = []
 var _footer: HBoxContainer = null
 var _reroll_btn: Button = null
 var _token_label: Label = null
+var _skip_btn: Button = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -57,6 +58,11 @@ func _build_footer() -> void:
 	_token_label = Label.new()
 	_token_label.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
 	_footer.add_child(_token_label)
+
+	_skip_btn = Button.new()
+	_skip_btn.text = "跳过 (+1 券)"
+	_skip_btn.pressed.connect(_on_skip)
+	_footer.add_child(_skip_btn)
 
 	var hint := Label.new()
 	hint.text = "(右键卡牌 = 永久 Ban，各消耗 1 券)"
@@ -88,6 +94,18 @@ func _on_reroll() -> void:
 	_current_cards = CardPool.pick(_player)
 	_build_cards(_current_cards)
 	_update_footer()
+
+# Skip：放弃整轮三选一，换小额回报(+1 重抽券，永不浪费)。
+# 回报 < 一张普通卡期望，故是"这轮没好牌"的逃生口，而非常态最优(spec 单元3)。
+func skip_reward(player: Player) -> void:
+	player.reroll_tokens += 1
+
+func _on_skip() -> void:
+	if _player == null:
+		return
+	skip_reward(_player)
+	visible = false
+	_gm.resume_game()
 
 func _on_card_banished(card: Dictionary) -> void:
 	if _player == null or _player.reroll_tokens <= 0:
