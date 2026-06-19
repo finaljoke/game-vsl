@@ -5,12 +5,13 @@ extends Node2D
 const SPEED: float = 320.0
 const HIT_RADIUS: float = 26.0
 const RETURN_THRESHOLD: float = 16.0
-const SPRITE_TEX := preload("res://assets/sprites/kenney/items/gem.png")
+const SPRITE_TEX := preload("res://assets/sprites/kenney/weapons/axe.png")  # 双刃飞斧(Tiny Dungeon)
 
 var damage: float = 20.0
 var direction: Vector2 = Vector2.RIGHT
 var pierce: int = 3              # 每个航程(去/回)最多命中的敌人数
 var max_range: float = 240.0
+var tint: Color = Color(1, 1, 1, 1)   # 进化(旋风)染色;基础=白
 
 var orbit_return: bool = false      # 进化(旋风)：折返改环绕玩家旋转
 const ORBIT_DURATION: float = 1.5
@@ -29,10 +30,11 @@ func _ready() -> void:
 	_player = get_tree().get_first_node_in_group("player")
 	_sprite = Sprite2D.new()
 	_sprite.texture = SPRITE_TEX
-	_sprite.scale = Vector2(0.8, 0.8)
+	_sprite.scale = Vector2(1.5, 1.5)
+	_sprite.modulate = tint
 	add_child(_sprite)
-	# 旋斧残影拖尾(冷钢青白)
-	add_child(Vfx.make_trail(Color(0.8, 0.9, 1.0, 0.7)))
+	# 旋斧残影拖尾(冷钢青白,带运动残影贴图)
+	add_child(Vfx.make_textured_trail("trace_03.png", Color(0.85, 0.9, 1.0, 0.6)))
 
 func _physics_process(delta: float) -> void:
 	if _sprite != null:

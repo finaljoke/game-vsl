@@ -10,6 +10,7 @@ var pierce: int = 3
 var throw_range: float = 240.0
 var count: int = 1                # 进化形态(旋风)同时抛多发
 var orbit_return: bool = false
+var proj_tint: Color = Color(1, 1, 1, 1)   # 进化(旋风)染色;基础=白
 
 var _facing: Vector2 = Vector2.RIGHT
 
@@ -44,5 +45,6 @@ func attack() -> void:
 		proj.pierce = eff_pierce
 		proj.max_range = throw_range
 		proj.orbit_return = orbit_return
+		proj.tint = proj_tint
 		get_ysort().add_child(proj)
 		proj.global_position = _player.global_position

@@ -13,6 +13,7 @@ var speed: float = 120.0
 var lifetime: float = 12.0
 var max_hp: float = 30.0       # 预留(当前敌人 AI 不索敌 summons → 随从靠 lifetime 退场)
 var split_chance: float = 0.0  # 群尸：死亡分裂概率(基础=0=不裂)
+var spawn_scale: float = 1.7   # 怨灵显示缩放;裂出的小尸逐级缩小
 var _age: float = 0.0
 var _hit_cd: float = 0.0
 
@@ -25,10 +26,10 @@ func _ready() -> void:
 	circ.radius = CONTACT_RADIUS
 	cs.shape = circ
 	add_child(cs)
-	var spr := Sprite2D.new()    # 占位视觉(VFX 通道换骷髅拼装)
-	spr.texture = preload("res://assets/sprites/kenney/items/dagger.png")
-	spr.scale = Vector2(0.4, 0.4)
-	spr.modulate = Color(0.6, 0.9, 0.7)   # 幽绿，区分友军
+	var spr := Sprite2D.new()    # 召唤怨灵(Tiny Dungeon 幽灵，尸绿染色区分友军)
+	spr.texture = preload("res://assets/sprites/kenney/characters/enemy_ghost.png")
+	spr.scale = Vector2(spawn_scale, spawn_scale)
+	spr.modulate = Color(0.5, 1.0, 0.6)   # 尸绿，区分敌方青幽灵
 	add_child(spr)
 	spr.material = Vfx.make_shader_material(&"summon")
 	add_child(Vfx.make_trail(Color(0.5, 0.6, 1.0, 0.8), true))
@@ -68,6 +69,7 @@ func _die() -> void:
 		child.lifetime = SPLIT_LIFETIME
 		child.max_hp = max_hp
 		child.split_chance = 0.0
+		child.spawn_scale = spawn_scale * 0.7
 		var parent := get_parent()
 		if parent != null:
 			parent.add_child(child)

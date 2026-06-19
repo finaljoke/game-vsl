@@ -8,15 +8,17 @@ const PACK := "res://assets/sprites/kenney/particles/pack/"
 const EXPL := "res://assets/sprites/kenney/explosions/"
 
 # 一次性粒子爆发预设(CPUParticles2D 配方)。additive=true 走加色发光材质。
+# tex = particles/pack 下的粒子贴图(均 512px),smin/smax 为目标像素直径(在 _configure_burst
+# 按纹理宽度归一化);无 tex 时 smin/smax 退化为原始 scale_amount(旧行为)。
 const BURST_PRESETS := {
-	&"fire_burst":  {"color": Color(1.0, 0.6, 0.1),   "amount": 10, "lifetime": 0.40, "vmin": 50.0, "vmax": 150.0, "smin": 3.0, "smax": 6.0, "additive": false},
-	&"frost_burst": {"color": Color(0.55, 0.85, 1.0), "amount": 10, "lifetime": 0.40, "vmin": 40.0, "vmax": 120.0, "smin": 3.0, "smax": 5.0, "additive": false},
-	&"hit_spark":   {"color": Color(1.0, 1.0, 0.85),  "amount": 6,  "lifetime": 0.25, "vmin": 60.0, "vmax": 180.0, "smin": 2.0, "smax": 4.0, "additive": true},
-	&"magic_burst": {"color": Color(0.7, 0.5, 1.0),   "amount": 12, "lifetime": 0.45, "vmin": 30.0, "vmax": 110.0, "smin": 3.0, "smax": 6.0, "additive": true},
-	&"blood_burst": {"color": Color(0.7, 0.05, 0.08), "amount": 8,  "lifetime": 0.35, "vmin": 30.0, "vmax": 90.0,  "smin": 2.0, "smax": 4.0, "additive": false},
-	&"crit_spark":  {"color": Color(1.0, 0.85, 0.3),  "amount": 14, "lifetime": 0.30, "vmin": 80.0, "vmax": 220.0, "smin": 2.0, "smax": 5.0, "additive": true},
-	&"ice_shard":   {"color": Color(0.7, 0.92, 1.0),  "amount": 10, "lifetime": 0.35, "vmin": 50.0, "vmax": 140.0, "smin": 2.0, "smax": 4.0, "additive": false},
-	&"shock_spark": {"color": Color(0.7, 0.9, 1.0),   "amount": 10, "lifetime": 0.25, "vmin": 70.0, "vmax": 200.0, "smin": 2.0, "smax": 4.0, "additive": true},
+	&"fire_burst":  {"color": Color(1.0, 0.6, 0.1),   "amount": 10, "lifetime": 0.40, "vmin": 50.0, "vmax": 150.0, "smin": 28.0, "smax": 52.0, "additive": false, "tex": "flame_03.png"},
+	&"frost_burst": {"color": Color(0.55, 0.85, 1.0), "amount": 10, "lifetime": 0.40, "vmin": 40.0, "vmax": 120.0, "smin": 22.0, "smax": 42.0, "additive": false, "tex": "star_05.png"},
+	&"hit_spark":   {"color": Color(1.0, 1.0, 0.85),  "amount": 6,  "lifetime": 0.25, "vmin": 60.0, "vmax": 180.0, "smin": 14.0, "smax": 30.0, "additive": true,  "tex": "spark_04.png"},
+	&"magic_burst": {"color": Color(0.7, 0.5, 1.0),   "amount": 12, "lifetime": 0.45, "vmin": 30.0, "vmax": 110.0, "smin": 26.0, "smax": 50.0, "additive": true,  "tex": "magic_03.png"},
+	&"blood_burst": {"color": Color(0.7, 0.05, 0.08), "amount": 8,  "lifetime": 0.35, "vmin": 30.0, "vmax": 90.0,  "smin": 18.0, "smax": 34.0, "additive": false, "tex": "circle_05.png"},
+	&"crit_spark":  {"color": Color(1.0, 0.85, 0.3),  "amount": 14, "lifetime": 0.30, "vmin": 80.0, "vmax": 220.0, "smin": 18.0, "smax": 40.0, "additive": true,  "tex": "spark_06.png"},
+	&"ice_shard":   {"color": Color(0.7, 0.92, 1.0),  "amount": 10, "lifetime": 0.35, "vmin": 50.0, "vmax": 140.0, "smin": 18.0, "smax": 34.0, "additive": false, "tex": "star_04.png"},
+	&"shock_spark": {"color": Color(0.7, 0.9, 1.0),   "amount": 10, "lifetime": 0.25, "vmin": 70.0, "vmax": 200.0, "smin": 14.0, "smax": 30.0, "additive": true,  "tex": "spark_01.png"},
 }
 
 # 序列帧预设:目录 + 帧名前缀 + 帧数(00..count-1) + 帧率。
@@ -24,6 +26,10 @@ const ANIM_PRESETS := {
 	&"explosion_regular": {"dir": "res://assets/sprites/kenney/explosions/", "base": "regularExplosion", "count": 9, "fps": 24.0},
 	&"explosion_sonic":   {"dir": "res://assets/sprites/kenney/explosions/", "base": "sonicExplosion",   "count": 9, "fps": 24.0},
 	&"explosion_ground":  {"dir": "res://assets/sprites/kenney/explosions/", "base": "groundExplosion",  "count": 9, "fps": 24.0},
+	# 烟雾/闪光序列(来自 assets/sprites/kenney/smoke/,已在库)。调用方按需设 fx.scale。
+	&"smoke_puff":        {"dir": "res://assets/sprites/kenney/smoke/", "base": "whitePuff", "count": 25, "fps": 30.0},
+	&"muzzle_flash":      {"dir": "res://assets/sprites/kenney/smoke/", "base": "flash",     "count": 9,  "fps": 36.0},
+	&"gas_cloud":         {"dir": "res://assets/sprites/kenney/smoke/", "base": "gas",       "count": 9,  "fps": 18.0},
 }
 
 func get_preset(name: StringName) -> Dictionary:
@@ -53,8 +59,18 @@ static func _configure_burst(p: CPUParticles2D, cfg: Dictionary) -> void:
 	p.spread = 180.0
 	p.initial_velocity_min = cfg["vmin"]
 	p.initial_velocity_max = cfg["vmax"]
-	p.scale_amount_min = cfg["smin"]
-	p.scale_amount_max = cfg["smax"]
+	# 粒子纹理:smin/smax 视为目标像素直径,按纹理宽度归一化(pack 贴图均 512px);
+	# 无 tex 时 tw=1.0 → smin/smax 退化为原始 scale_amount(旧方块行为)。
+	var tw: float = 1.0
+	var tp: String = cfg.get("tex", "")
+	if tp != "":
+		var tex := load(PACK + tp) as Texture2D
+		if tex != null:
+			p.texture = tex
+			p.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+			tw = float(tex.get_width())
+	p.scale_amount_min = float(cfg["smin"]) / tw
+	p.scale_amount_max = float(cfg["smax"]) / tw
 	p.color = cfg["color"]
 	if cfg.get("additive", false):
 		p.material = additive_material()
@@ -146,6 +162,19 @@ func make_trail(color: Color, additive: bool = false) -> CPUParticles2D:
 	p.color = color
 	if additive:
 		p.material = additive_material()
+	return p
+
+# 带纹理的拖尾:复用 make_trail 的运动配方,再叠一张 pack/ 软粒子贴图作发光残影。
+# tex_name = particles/pack 下文件名;px = 目标像素直径(按纹理宽度归一化)。
+func make_textured_trail(tex_name: String, color: Color, additive: bool = false, px: float = 20.0) -> CPUParticles2D:
+	var p := make_trail(color, additive)
+	var tex := load(PACK + tex_name) as Texture2D
+	if tex != null:
+		p.texture = tex
+		p.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		var s: float = px / float(tex.get_width())
+		p.scale_amount_min = s * 0.6
+		p.scale_amount_max = s
 	return p
 
 # 头顶持续小粒子(燃烧=橙、减速=青)。

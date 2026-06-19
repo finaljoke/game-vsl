@@ -15,6 +15,7 @@ var shockwave_damage: float = 0.0
 var shockwave_slow: float = 0.0       # 地裂减速乘子(0=不减速)
 var shockwave_slow_dur: float = 0.0
 const SHOCKWAVE_DELAY: float = 0.25
+const HAMMER_TEX := preload("res://assets/sprites/kenney/weapons/hammer.png")  # 砸地锤头(Tiny Dungeon)
 
 func attack() -> void:
 	var origin: Vector2 = _player.global_position
@@ -41,8 +42,30 @@ func attack() -> void:
 	var fx := Vfx.spawn_anim(origin, &"explosion_ground", get_ysort())
 	if fx != null:
 		fx.scale = Vector2(0.7, 0.7)
+	_spawn_slam_visual(origin)
 	GameFeel.shake(&"heavy")
 	GameFeel.hitstop(0.06)
+
+# 砸地视觉：锤头在落点放大冲击后缩小淡出 + 土黄烟尘(给"碎"武器辨识度)。
+func _spawn_slam_visual(origin: Vector2) -> void:
+	var ys := get_ysort()
+	if ys == null:
+		return
+	var h := Sprite2D.new()
+	h.texture = HAMMER_TEX
+	h.global_position = origin + Vector2(0, -10)
+	h.scale = Vector2(4.2, 4.2)
+	h.rotation = -0.35
+	ys.add_child(h)
+	var tw := h.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(h, "scale", Vector2(3.0, 3.0), 0.12)
+	tw.tween_property(h, "modulate:a", 0.0, 0.18)
+	tw.finished.connect(func() -> void: if is_instance_valid(h): h.queue_free())
+	var dust := Vfx.spawn_anim(origin, &"smoke_puff", ys)
+	if dust != null:
+		dust.scale = Vector2(0.5, 0.5)
+		dust.modulate = Color(0.82, 0.72, 0.55, 0.9)   # 土黄烟尘
 
 # 冲击波：命中初始 radius 之外、shockwave_radius 之内的一圈敌人 + 地裂减速。
 func _apply_shockwave(origin: Vector2) -> void:
