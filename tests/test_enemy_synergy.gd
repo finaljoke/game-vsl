@@ -43,3 +43,8 @@ func test_frozen_only_excludes_execute() -> void:
 func test_stun_only_excludes_shatter() -> void:
 	# 仅硬直(非冻结)满血,只 ×1.2,不含碎裂项
 	assert_float(Enemy.synergy_multiplier(Enemy.DamageChannel.DIRECT, false, true, 1.0, 0.0)).is_equal_approx(1.2, 0.0001)
+
+func test_frozen_and_stun_stack_multiplicatively() -> void:
+	# 冻结+硬直同时(满血)：碎裂 ×1.5 与处决 ×1.2 经两个独立 if 乘算 → 1.8。
+	# 锁定乘算契约：防未来把两个 if 改成 if/elif 静默改变行为。
+	assert_float(Enemy.synergy_multiplier(Enemy.DamageChannel.DIRECT, true, true, 1.0, 0.0)).is_equal_approx(1.8, 0.0001)
