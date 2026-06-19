@@ -142,6 +142,20 @@ func _register_evolution_cards() -> void:
 		_runtime_cards.append(card)
 		effect_registry[evo_id] = _evolve_weapon.bind(weapon_id)
 
+# 返回当前所有「就绪」进化卡(武器满级+perk达阈且未被 banish)，按源武器 id 字典序。
+# 确定性排序：便于契约测试与 bot 复现(C5)。
+func ready_evolutions(player: Player) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for card in _runtime_cards:
+		if card.get("type", "") != "evolution":
+			continue
+		if _banished.has(card["id"]):
+			continue
+		if _check_condition(card["condition"], player):
+			out.append(card)
+	out.sort_custom(func(a, b): return _weapon_id_of(a) < _weapon_id_of(b))
+	return out
+
 func pick(player: Player, count: int = 3) -> Array[Dictionary]:
 	var available: Array[Dictionary] = []
 	var slots_full: bool = player.owned_weapons.size() >= player.MAX_WEAPON_SLOTS

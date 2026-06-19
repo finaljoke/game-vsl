@@ -424,3 +424,25 @@ func test_synergy_pierce_gated_by_weapon_ownership() -> void:
 		if c["id"] == "synergy_pierce":
 			found = true
 	assert_bool(found).is_true()
+
+# ── Phase0 单元1：进化就绪扫描 ─────────────────────────────────────────────
+func test_ready_evolutions_empty_when_none_ready() -> void:
+	assert_int(CardPool.ready_evolutions(_player).size()).is_equal(0)
+
+func test_ready_evolutions_returns_single_ready() -> void:
+	_stub_owns("orb", 3)
+	_player.perk_stacks["perk_hp"] = 3
+	var ready := CardPool.ready_evolutions(_player)
+	assert_int(ready.size()).is_equal(1)
+	assert_str(ready[0]["id"]).is_equal("evolve_orb")
+
+func test_ready_evolutions_sorted_by_weapon_id() -> void:
+	# explosion(perk_damage) 与 orb(perk_hp) 同时就绪 → 字典序 explosion < orb
+	_stub_owns("explosion", 3)
+	_player.perk_stacks["perk_damage"] = 3
+	_stub_owns("orb", 3)
+	_player.perk_stacks["perk_hp"] = 3
+	var ready := CardPool.ready_evolutions(_player)
+	assert_int(ready.size()).is_equal(2)
+	assert_str(ready[0]["id"]).is_equal("evolve_explosion")
+	assert_str(ready[1]["id"]).is_equal("evolve_orb")
