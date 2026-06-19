@@ -156,6 +156,7 @@ func take_damage(amount: float, channel: DamageChannel = DamageChannel.DIRECT) -
 	# 扣血前快照协同输入(乘区用)。
 	var frozen := has_status(&"freeze")
 	var stun := has_status(&"stun")
+	var had_burn := has_status(&"burn")
 	var hp_frac := (hp / MAX_HP) if MAX_HP > 0.0 else 0.0
 	var amp := status.magnitude(&"amp")
 	var final := amount * synergy_multiplier(channel, frozen, stun, hp_frac, amp)
@@ -174,6 +175,12 @@ func take_damage(amount: float, channel: DamageChannel = DamageChannel.DIRECT) -
 		_sprite.modulate = Color.WHITE
 	GameFeel.enemy_hit.emit(final, global_position, self, channel)
 	if hp <= 0.0:
+		# 燃尽(C2)：死时带 burn → 半径内一次性 DOT 火伤。经模块级重入守卫保证单波(见设计 §6)。
+		if had_burn and not Enemy._conflagrating:
+			Enemy._conflagrating = true
+			Vfx.spawn_burst(global_position, &"fire_burst")
+			_trigger_conflagration()
+			Enemy._conflagrating = false
 		if split_count > 0:
 			_spawn_split()
 		GameFeel.enemy_died.emit(global_position, self)
@@ -184,6 +191,16 @@ func take_damage(amount: float, channel: DamageChannel = DamageChannel.DIRECT) -
 	if channel == DamageChannel.DIRECT and behavior == "boss":
 		var t := get_tree().create_timer(0.2, false, true, true)
 		t.timeout.connect(_restart_pulse_if_alive)
+
+# 燃尽(C2)：带 burn 死亡时,对半径内存活邻怪各打一次性 DOT 火伤。不施 burn(不蔓延);
+# 走 DOT 通道(抑制白闪/击退/音效,避免一次群伤炸出 N 份完整命中反馈)。
+# 单波由调用处的 _conflagrating 守卫保证(邻怪被本波炸死的死亡分支会跳过再触发)。
+func _trigger_conflagration() -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if e == self or not is_instance_valid(e):
+			continue
+		if global_position.distance_to((e as Node2D).global_position) <= CONFLAG_RADIUS:
+			e.take_damage(CONFLAG_DAMAGE, DamageChannel.DOT)
 
 # Splitter 死亡分裂：在自身位置附近生成 split_count 只小型 chase 怪。
 # offspring 从自身(已时缩)属性派生 → 自动随游戏时间成长；split_count=0 防无限递归。

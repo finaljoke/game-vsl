@@ -172,3 +172,51 @@ func test_take_damage_execute_scales_with_missing_hp() -> void:
 	low.take_damage(10.0, Enemy.DamageChannel.DIRECT)
 	var low_loss := before - low.hp
 	assert_float(low_loss).is_greater(full_loss)
+
+func test_burning_enemy_death_conflagrates_neighbor() -> void:
+	var dying := _make_enemy()
+	dying.MAX_HP = 100.0
+	dying.hp = 100.0
+	dying.global_position = Vector2.ZERO
+	dying.apply_status(&"burn", 1.0, 5.0)   # 死时带 burn
+	var neighbor := _make_enemy()
+	neighbor.MAX_HP = 100.0
+	neighbor.hp = 100.0
+	neighbor.global_position = Vector2(30, 0)   # < CONFLAG_RADIUS(60)
+	await get_tree().process_frame
+	dying.take_damage(999.0, Enemy.DamageChannel.DIRECT)   # 致死
+	# 邻怪吃一次燃尽 DOT 10 → hp 90
+	assert_float(neighbor.hp).is_equal_approx(90.0, 0.001)
+
+func test_non_burning_enemy_death_does_not_conflagrate() -> void:
+	var dying := _make_enemy()
+	dying.MAX_HP = 100.0
+	dying.hp = 100.0
+	dying.global_position = Vector2.ZERO
+	# 不带 burn
+	var neighbor := _make_enemy()
+	neighbor.MAX_HP = 100.0
+	neighbor.hp = 100.0
+	neighbor.global_position = Vector2(30, 0)
+	await get_tree().process_frame
+	dying.take_damage(999.0, Enemy.DamageChannel.DIRECT)
+	assert_float(neighbor.hp).is_equal_approx(100.0, 0.001)
+
+func test_conflagration_is_single_wave() -> void:
+	# A、B 相邻且都带 burn。杀 A 触发一次燃尽,该 AoE 把脆皮 B 也炸死;
+	# B 死亡分支因重入守卫不再触发第二波。用更远的 C 验证只被炸一次(90 而非 80)。
+	var a := _make_enemy()
+	a.MAX_HP = 100.0; a.hp = 100.0
+	a.global_position = Vector2.ZERO
+	a.apply_status(&"burn", 1.0, 5.0)
+	var b := _make_enemy()
+	b.MAX_HP = 5.0; b.hp = 5.0           # 脆,被 10 燃尽一击毙
+	b.global_position = Vector2(20, 0)    # 距 A 20 < 60
+	b.apply_status(&"burn", 1.0, 5.0)     # B 也带 burn
+	var c := _make_enemy()
+	c.MAX_HP = 100.0; c.hp = 100.0
+	c.global_position = Vector2(50, 0)    # 距 A 50<60(吃 A 波); 距 B 30<60(若 B 二次触发会被再炸)
+	await get_tree().process_frame
+	a.take_damage(999.0, Enemy.DamageChannel.DIRECT)
+	# 单波：C 仅被 A 的燃尽炸一次 → 90。若 B 二次触发会变 80。
+	assert_float(c.hp).is_equal_approx(90.0, 0.001)
