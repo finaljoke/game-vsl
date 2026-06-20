@@ -114,4 +114,22 @@ P2b §4 地板档证明 thousand_edge(knife)/mega_orb(orb) 纯 solo + perk_hp×5
 
 ## 4. 退出判据核对 + P3b 输入清单
 
-> Task 11 填。**P3b 候选（本轮不调数值，仅记录）**：explosion(nuke)/lightning(thunderstorm)/maul(earthshatter) 经 backlog 主轴判据为最强场地清空者 + 安全非劣（§1d）——nuke 属宪法坍缩三类，优先复核。
+### 4a. 退出判据（对照 spec §4）
+
+| # | 判据 | 结果 |
+|---|---|---|
+| 1 | 新指标族实装 + TDD 全绿，swarm-chipping 反转用例锁定；kpm 降级 context | ✅ Tasks 1-3，`test_clear_eff_inverts_swarm_chipping` 锁定；**注:验证闸把主轴从 clear_eff(M2) 改为 backlog(M1)——见 §1a,clear_eff 仍含 kpm 时长污染**（spec 预案 §6 触发） |
+| 2 | 验证闸通过：cyclone 中带 / aura+horde 非 OP / 8 未动在带内 | ✅ §1：aura/horde 两假阳消、cyclone 锚定；explosion/lightning/maul 翻 OP 为真信号非闸失败（§1d，t_evo 排除混淆） |
+| 3 | P2b 悬置 verdict 终判 | ✅ §2：cyclone/aura/horde 三处 + flag_multi_axis 废为终判依据 |
+| 4 | thousand_edge/mega_orb A/B reached + 边际 + 终判 | ✅ §3：**reached 8/8**（无需披露子集）；thousand_edge +16 OP 嫌疑、mega_orb +3 疑偏弱 |
+| 5 | 全量绿 + C6 用例数 + C5 确定性 | ✅ **543/543 绿 0 error**（527+16）；C5：离线重算逐字节一致 + mix_knife seed7 两跑逐值一致（victory/Lv33/kills1757/581s） |
+| 6 | 后衡报告 + P3b 清单 | ✅ 本文 + §4b |
+
+### 4b. P3b 输入清单（本轮不调数值，仅记录；守 spec §5「OP→P3b」）
+
+1. **explosion(nuke)/lightning(thunderstorm)/maul(earthshatter)**：backlog 主轴判据下最强场地清空者 + 安全非劣（§1d，backlog 5/8/12、hp 0.93/0.99/0.89）。kpm 完全掩盖。**nuke 属宪法坍缩三类·全屏覆盖密度，优先复核**。复衡方向=削清场/安全（不破 P4 质变身份）。
+2. **thousand_edge(knife)**：混编 A/B 强清场 + 安全（边际 +16 = nuke 64%，hp 0.88），「绕冷却 OP」部分支持（§3b②）。复衡方向=削清场上限。
+3. **mega_orb(orb)**：混编 A/B 清场可忽略（边际 +3）+ 最不安全（hp 0.18），疑**偏弱**（§3b③）。方向=**加强/重做**（守 P4），呼应历史「数值倒退」审计。
+4. **base 武器早期可达性**：knife/orb/whip 单独活不过 Act1 是反复地板（P2b §4 + 本轮 solo reached 0）。属卡池/早期生存设计（内容广度阶段），非进化平衡。
+5. **inferno_aura 手感**（承 P2b §7#3）：radius 收窄致贴脸 swarm-chip，非平衡，P3b/手感子项看是否回调 radius。
+6. **判据残留局限**：① backlog 受窗口起始时刻（t_evo）轻度混淆（本轮 t_evo 多数 127–141 同档，影响有界；boomerang t_evo 177 偏晚）；② 无单一轴是完整支配度量——clearing(backlog) / safety(hp_min) / reached / death 多轴并用；③ dodge bot 安全轴对强进化仍部分饱和（缺口 B 未根除）。三者列入判据持续改进。
