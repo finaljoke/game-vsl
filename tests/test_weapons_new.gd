@@ -131,7 +131,9 @@ func test_evolve_aura_grants_inferno() -> void:
 	CardPool.apply({"id": "aura_3"}, _player)
 	CardPool.apply({"id": "evolve_aura", "type": "evolution"}, _player)
 	assert_bool(_player.has_weapon("inferno_aura")).is_true()
-	assert_float(_player.get_weapon_node("inferno_aura").get("radius")).is_equal_approx(170.0, 0.001)
+	# 参照值从 WeaponDB 动态取,随复衡仍成立(不硬编码,防 P2b 砍数值后误红)
+	var expected_r: float = float(WeaponDB.get_data("inferno_aura").levels[0]["radius"])
+	assert_float(_player.get_weapon_node("inferno_aura").get("radius")).is_equal_approx(expected_r, 0.001)
 
 # ── 进化辨识度：4 把新进化武器有(各自不同的)图标，且 thunderstorm 在世特效染白紫 ──
 

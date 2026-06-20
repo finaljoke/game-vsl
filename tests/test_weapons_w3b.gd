@@ -101,7 +101,9 @@ func test_inferno_reflects_burn_and_lifesteal() -> void:
 	var w := _evolve("aura", "inferno_aura")
 	assert_float(w.get("burn_dps")).is_greater(0.0)
 	assert_float(w.get("lifesteal_on_hit")).is_greater(0.0)
-	assert_float(w.get("radius")).is_equal_approx(170.0, 0.001)
+	# 参照值从 WeaponDB 动态取,随复衡仍成立(不硬编码)
+	var expected_r: float = float(WeaponDB.get_data("inferno_aura").levels[0]["radius"])
+	assert_float(w.get("radius")).is_equal_approx(expected_r, 0.001)
 
 # ── 雷暴 Tempest ──
 func test_tempest_reflects_sky_strikes() -> void:
