@@ -9,6 +9,9 @@ var direction: Vector2 = Vector2.RIGHT  # 由 bt_kite_target / bt_fire_projectil
 var damage: float = 6.0                 # ⚙️可调
 var _age: float = 0.0
 
+func _ready() -> void:
+	add_to_group("enemy_projectiles")
+
 func _physics_process(delta: float) -> void:
 	global_position += direction * SPEED * delta
 	_age += delta
