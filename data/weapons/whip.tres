@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_data")
 id = "whip"
+tags = Array[StringName]([&"physical", &"fire"])
 display_name = "斩"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")

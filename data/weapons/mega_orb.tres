@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_data")
 id = "mega_orb"
+tags = Array[StringName]([&"physical"])
 display_name = "巨型护盾球"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")

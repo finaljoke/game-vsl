@@ -14,3 +14,6 @@ extends Resource
 # 进化配置；空字典表示不可进化。
 # 形如：{"requires_perk": "perk_attack", "evolved_id": "thousand_edge"}
 @export var evolution: Dictionary = {}
+# 元素/机制标签(P1 构筑身份)：fire/ice/lightning/physical/gravity/summon。
+# 协同卡门控(has_tag:) + 暴击轴(physical 自动可暴) + 卡面可读性。多标签=武器可属多路线。
+@export var tags: Array[StringName] = []

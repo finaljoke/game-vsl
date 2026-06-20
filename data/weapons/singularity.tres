@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_data")
 id = "singularity"
+tags = Array[StringName]([&"gravity", &"ice"])
 display_name = "奇点"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")

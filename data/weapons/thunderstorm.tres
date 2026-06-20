@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_data")
 id = "thunderstorm"
+tags = Array[StringName]([&"lightning"])
 display_name = "雷暴"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")

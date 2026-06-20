@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_data")
 id = "boomerang"
+tags = Array[StringName]([&"physical"])
 display_name = "回旋斧"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
