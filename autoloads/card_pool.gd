@@ -61,6 +61,10 @@ const CARDS: Array[Dictionary] = [
 	# P1 暴击轴(物理流派)：门控 has_tag:physical,无物理武器不进池(防废牌 P5)
 	{ "id": "perk_crit",    "name": "锐利",  "desc": "暴击率 +8%(封顶60%)", "type": "perk",    "condition": "has_tag:physical", "max_stacks": 7 },
 	{ "id": "synergy_crit", "name": "致命",  "desc": "暴击伤害 +0.4",       "type": "synergy", "condition": "has_tag:physical", "max_stacks": 3 },
+	# P1 元素/控制协同卡：门控 has_tag:<元素>,无对应流派武器不进池(防废牌 P5)
+	{ "id": "synergy_fire",  "name": "火势", "desc": "燃烧 DPS +30%",                "type": "synergy", "condition": "has_tag:fire",     "max_stacks": 3 },
+	{ "id": "synergy_frost", "name": "冰封", "desc": "冻结时长 +0.5s,减速目标易伤 +10%", "type": "synergy", "condition": "has_tag:ice",      "max_stacks": 3 },
+	{ "id": "synergy_shock", "name": "感电", "desc": "感电/硬直时长 +0.15s",          "type": "synergy", "condition": "has_tag:lightning", "max_stacks": 3 },
 ]
 
 # 稀有度抽取权重：值越大越常见。强卡(进化/质变)更稀有。
@@ -134,6 +138,9 @@ func _register_synergy_effects() -> void:
 	effect_registry["synergy_magnet"]    = _apply_synergy_magnet
 	effect_registry["synergy_lifesteal"] = _apply_synergy_lifesteal
 	effect_registry["synergy_crit"]      = _apply_synergy_crit
+	effect_registry["synergy_fire"]      = _apply_synergy_fire
+	effect_registry["synergy_frost"]     = _apply_synergy_frost
+	effect_registry["synergy_shock"]     = _apply_synergy_shock
 
 # 从 WeaponDB 扫描带 evolution.evolved_id 的武器，自动注入进化卡。
 # 进化 evolved 形态 .tres 可缺失（占位通路）；_evolve_weapon 会回退用 source 数据。
@@ -307,6 +314,22 @@ func _apply_perk_crit(player: Player) -> void:
 
 func _apply_synergy_crit(player: Player) -> void:
 	player.crit_mult += CRIT_MULT_STEP
+
+# P1 元素/控制协同卡
+const FIRE_BURN_STEP: float = 0.30
+const FROST_FREEZE_STEP: float = 0.5
+const FROST_VULN_STEP: float = 0.10
+const SHOCK_DUR_STEP: float = 0.15
+
+func _apply_synergy_fire(player: Player) -> void:
+	player.burn_mult += FIRE_BURN_STEP
+
+func _apply_synergy_frost(player: Player) -> void:
+	player.freeze_dur_bonus += FROST_FREEZE_STEP
+	player.slow_vuln_bonus += FROST_VULN_STEP
+
+func _apply_synergy_shock(player: Player) -> void:
+	player.shock_dur_bonus += SHOCK_DUR_STEP
 
 func _evolve_weapon(player: Player, source_id: String) -> void:
 	var source_data := WeaponDB.get_data(source_id)

@@ -42,12 +42,13 @@ func test_pick_excludes_upgrade_when_weapon_at_level2() -> void:
 
 func test_pick_returns_all_available_when_pool_smaller_than_count() -> void:
 	# 占满 6 武器槽全满级 → 武器/升级/进化全剔除。满血 → perk_heal 剔除。
-	# 剩：5 属性 + 4 现有质变 + perk_crit + synergy_crit(物理武器在) = 11
+	# 剩：5 属性 + 4 现有质变 + perk_crit + synergy_crit + synergy_fire + synergy_shock = 13
+	# (synergy_frost 因无冰系武器不入池)
 	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang"]:
 		_stub_owns(id, 3)
 	_player.hp = _player.max_hp
 	var cards := CardPool.pick(_player, 99)
-	assert_int(cards.size()).is_equal(11)
+	assert_int(cards.size()).is_equal(13)
 
 func test_pick_includes_lv3_upgrade_when_weapon_at_level2() -> void:
 	_stub_owns("knife", 2)
@@ -551,5 +552,30 @@ func test_crit_cards_gated_by_physical_weapon() -> void:
 	var found := false
 	for c in CardPool.pick(_player, 99):
 		if c["id"] == "perk_crit":
+			found = true
+	assert_bool(found).is_true()
+
+# ── P1 单元4：元素/控制协同卡 ──────────────────────────────────────────────
+func test_synergy_fire_increases_burn_mult() -> void:
+	var before := _player.burn_mult
+	CardPool.apply({"id": "synergy_fire", "type": "synergy"}, _player)
+	assert_float(_player.burn_mult).is_equal_approx(before + 0.30, 0.001)
+
+func test_synergy_frost_extends_freeze_and_vuln() -> void:
+	CardPool.apply({"id": "synergy_frost", "type": "synergy"}, _player)
+	assert_float(_player.freeze_dur_bonus).is_equal_approx(0.5, 0.001)
+	assert_float(_player.slow_vuln_bonus).is_equal_approx(0.10, 0.001)
+
+func test_synergy_shock_extends_shock() -> void:
+	CardPool.apply({"id": "synergy_shock", "type": "synergy"}, _player)
+	assert_float(_player.shock_dur_bonus).is_equal_approx(0.15, 0.001)
+
+func test_synergy_fire_gated_by_fire_weapon() -> void:
+	for c in CardPool.pick(_player, 99):
+		assert_str(c["id"]).is_not_equal("synergy_fire")
+	_stub_owns("explosion", 1)
+	var found := false
+	for c in CardPool.pick(_player, 99):
+		if c["id"] == "synergy_fire":
 			found = true
 	assert_bool(found).is_true()
