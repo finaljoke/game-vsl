@@ -41,13 +41,13 @@ func test_pick_excludes_upgrade_when_weapon_at_level2() -> void:
 		assert_str(card["id"]).is_not_equal("knife_2")
 
 func test_pick_returns_all_available_when_pool_smaller_than_count() -> void:
-	# 占满 6 武器槽全满级 → 武器(槽满)/升级(满级)/进化(未达阈)全剔除。
-	# 满血 → perk_heal(hp_below 门控)也剔除。剩：5 属性牌 + 4 质变卡 = 9
+	# 占满 6 武器槽全满级 → 武器/升级/进化全剔除。满血 → perk_heal 剔除。
+	# 剩：5 属性 + 4 现有质变 + perk_crit + synergy_crit(物理武器在) = 11
 	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang"]:
 		_stub_owns(id, 3)
-	_player.hp = _player.max_hp  # 确定满血 → perk_heal 不进池
+	_player.hp = _player.max_hp
 	var cards := CardPool.pick(_player, 99)
-	assert_int(cards.size()).is_equal(9)
+	assert_int(cards.size()).is_equal(11)
 
 func test_pick_includes_lv3_upgrade_when_weapon_at_level2() -> void:
 	_stub_owns("knife", 2)
@@ -529,3 +529,27 @@ func test_has_tag_true_when_owns_fire_weapon() -> void:
 func test_has_tag_physical_true_for_knife() -> void:
 	_stub_owns("knife", 1)
 	assert_bool(CardPool._check_condition("has_tag:physical", _player)).is_true()
+
+# ── P1 单元3：暴击卡 ───────────────────────────────────────────────────────
+func test_perk_crit_increases_crit_chance() -> void:
+	CardPool.apply({"id": "perk_crit", "type": "perk"}, _player)
+	assert_float(_player.crit_chance).is_equal_approx(0.08, 0.001)
+
+func test_perk_crit_caps_at_60_percent() -> void:
+	for i in range(20):
+		CardPool.apply({"id": "perk_crit", "type": "perk"}, _player)
+	assert_float(_player.crit_chance).is_equal_approx(0.60, 0.001)
+
+func test_synergy_crit_increases_crit_mult() -> void:
+	CardPool.apply({"id": "synergy_crit", "type": "synergy"}, _player)
+	assert_float(_player.crit_mult).is_equal_approx(2.4, 0.001)
+
+func test_crit_cards_gated_by_physical_weapon() -> void:
+	for c in CardPool.pick(_player, 99):
+		assert_str(c["id"]).is_not_equal("perk_crit")
+	_stub_owns("knife", 1)
+	var found := false
+	for c in CardPool.pick(_player, 99):
+		if c["id"] == "perk_crit":
+			found = true
+	assert_bool(found).is_true()

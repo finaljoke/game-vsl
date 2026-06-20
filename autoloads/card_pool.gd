@@ -58,6 +58,9 @@ const CARDS: Array[Dictionary] = [
 	{ "id": "perk_damage", "name": "攻击强化",  "desc": "武器伤害永久 +15%",     "type": "perk",    "condition": "", "max_stacks": 8 },
 	# perk_heal 改受伤条件卡(hp_below:0.9)：满血时不进池，消灭"满血回血"废牌陷阱
 	{ "id": "perk_heal",   "name": "紧急治疗",  "desc": "立刻回复 30 HP",        "type": "perk",    "condition": "hp_below:0.9" },
+	# P1 暴击轴(物理流派)：门控 has_tag:physical,无物理武器不进池(防废牌 P5)
+	{ "id": "perk_crit",    "name": "锐利",  "desc": "暴击率 +8%(封顶60%)", "type": "perk",    "condition": "has_tag:physical", "max_stacks": 7 },
+	{ "id": "synergy_crit", "name": "致命",  "desc": "暴击伤害 +0.4",       "type": "synergy", "condition": "has_tag:physical", "max_stacks": 3 },
 ]
 
 # 稀有度抽取权重：值越大越常见。强卡(进化/质变)更稀有。
@@ -122,6 +125,7 @@ func _register_perk_effects() -> void:
 	effect_registry["perk_hp"]     = _apply_perk_hp
 	effect_registry["perk_heal"]   = _apply_perk_heal
 	effect_registry["fallback_token"] = _apply_fallback_token
+	effect_registry["perk_crit"]   = _apply_perk_crit
 
 # 质变卡(E3)：改玩家 modifier，由武器/拾取在运行时读取
 func _register_synergy_effects() -> void:
@@ -129,6 +133,7 @@ func _register_synergy_effects() -> void:
 	effect_registry["synergy_multishot"] = _apply_synergy_multishot
 	effect_registry["synergy_magnet"]    = _apply_synergy_magnet
 	effect_registry["synergy_lifesteal"] = _apply_synergy_lifesteal
+	effect_registry["synergy_crit"]      = _apply_synergy_crit
 
 # 从 WeaponDB 扫描带 evolution.evolved_id 的武器，自动注入进化卡。
 # 进化 evolved 形态 .tres 可缺失（占位通路）；_evolve_weapon 会回退用 source 数据。
@@ -291,6 +296,17 @@ func _apply_synergy_magnet(player: Player) -> void:
 
 func _apply_synergy_lifesteal(player: Player) -> void:
 	player.lifesteal += 0.5
+
+# P1 暴击卡(物理流派)
+const CRIT_CHANCE_STEP: float = 0.08
+const CRIT_CHANCE_CAP: float = 0.60
+const CRIT_MULT_STEP: float = 0.40
+
+func _apply_perk_crit(player: Player) -> void:
+	player.crit_chance = minf(player.crit_chance + CRIT_CHANCE_STEP, CRIT_CHANCE_CAP)
+
+func _apply_synergy_crit(player: Player) -> void:
+	player.crit_mult += CRIT_MULT_STEP
 
 func _evolve_weapon(player: Player, source_id: String) -> void:
 	var source_data := WeaponDB.get_data(source_id)
