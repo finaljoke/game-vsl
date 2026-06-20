@@ -12,7 +12,7 @@
 **目标**：把 P3 §4b 确认的 5 个进化复衡到健康带，全程守 C4 质变守恒、零破坏既有绿测。
 
 - **A. 削三个 nuke 类**（nuke / thunderstorm / earthshatter）：backlog 主轴判据下最强场地清空者 + 安全非劣（P3 §1d，backlog 5/8/12、hp 0.93/0.99/0.89，kpm 完全掩盖）。削**清场覆盖**为主、安全微收为辅，目标 `verdict_new` 从 **OP→ok**（不掉底）。
-- **B. 削 thousand_edge**（绕冷却缩放）：混编 A/B 边际 +16（=控制组 nuke 64%）+ 安全 hp 0.88，「绕冷却 OP」部分支持（P3 §3b②）。削**绕冷却缩放上限**（恒暴击 cheese 为首要），目标边际降向控制组。
+- **B. 削 thousand_edge**（绕冷却缩放）：混编 A/B 边际 +16（=控制组 nuke 64%）+ 安全 hp 0.88，「绕冷却 OP」部分支持（P3 §3b②）。削**绕冷却缩放上限**（满血恒暴击 cheese 为首要——降 crit_bonus 而非 crit_range，§4 详解），目标边际降向控制组。
 - **C. 质变重做 mega_orb**（宽轨 + 扑击 AoE）：混编 A/B 边际仅 +3（清场可忽略）+ 三者最不安全（hp 0.18），疑偏弱（P3 §3b③），且宪法 P4 点名其为「进化只是更高数字」反例。**质变重做**而非堆数值，目标边际升、hp_min 升、守 P4。
 
 **非目标**（YAGNI / 留后续阶段）：
@@ -93,20 +93,24 @@
 
 ## 4. 工作流 B —— thousand_edge 削绕冷却上限（混编 A/B 验证）
 
-**诊断**（P3 §3b②）：纯 solo 不可达（base knife 太脆），混编 A/B 边际 +16（=控制组 nuke 64%）+ hp 0.88。OP 签名 = `crit_range99999`+`crit_bonus1.0`（**全图恒定 ×2 暴击**）× `volley5` × `cooldown0.15` × `pierce8`——命中坍缩③「绕过冷却的被动缩放」（暴击维度恒触发 = 绕过任何门控）。杠杆：**拆恒暴击 cheese（首要）+ 降齐射弹数 + 降射速**。
+**诊断**（P3 §3b②）：纯 solo 不可达（base knife 太脆），混编 A/B 边际 +16（=控制组 nuke 64%）+ hp 0.88。
+
+**暴击机制（先厘清，否则削错方向）**：[knife_weapon.gd](../../../scenes/weapons/knife/knife_weapon.gd) `longbow_crit_bonus(dist, crit_range, full_hp, crit_bonus)` = `dist > crit_range OR full_hp → 给 crit_bonus`。thousand_edge `crit_range99999`（极大）使 `dist>crit_range` **永不触发** → 暴击**纯由满血门控**；`crit_bonus1.0` 使 `guaranteed_crit=(crit_chance+1.0)>=1.0` **恒真** → **每个满血敌必定暴击**（swarm 中新刷敌皆满血 → 几乎首次命中皆暴）。OP 签名命中坍缩③「绕过冷却的被动缩放」（暴击维度对满血敌恒触发 = 绕过任何门控）。
+
+⚠ **不可降 crit_range**：降它（如 320）会让 `dist>320` 的**远敌也暴击 = buff**（反向）。正确削法 = **降 crit_bonus**（恒暴击→概率暴击）+ 降齐射弹数 + 降射速。
 
 **首轮数值**（`data/weapons/thousand_edge.tres` `levels[0]`）：
 
 | 字段 | 现值 | 首轮新值 | 理由 |
 |---|---|---|---|
-| `crit_range` | 99999.0 | **320.0** | **核心**：拆「全图恒暴击」，暴击回归范围门控（仍 > base 240，近身仍强暴击区） |
+| `crit_bonus` | 1.0 | **0.6** | **核心**：crit_bonus≥1.0 致满血敌**必暴**(guaranteed_crit)；降 0.6 → guaranteed_crit 转假、满血暴击概率化为 60%（仍 > base 0.35） |
 | `volley` | 5 | **3** | 齐射弹数 ×0.6（仍多发身份 ≥2） |
 | `cooldown` | 0.15 | **0.22** | 射速 ×0.68（仍 ≪ base 0.5） |
+| `crit_range` | 99999.0 | 99999.0（**不动**） | 降它=远敌也暴=反向 buff；保极大值=暴击纯由满血门控 |
 | `pierce` | 8 | 8（不动） | 首轮保留；不够再补刀（留二轮位） |
-| `crit_bonus` | 1.0 | 1.0（不动） | 范围内暴击仍 ×2，门控已收紧 |
 | `damage` | 15.0 | 15.0（不动） | 守身份 |
 
-**质变守恒**（vs knife L3：cd0.5/crit_bonus0.35/crit_range240/dmg18/pierce4）：volley3≥2（多发身份，base 无 volley=单发）✓、pierce8>4 ✓、cd0.22<0.5 ✓、crit_range320>240 ✓、crit_bonus1.0>0.35 ✓ → 仍清晰升级（多发 + 高穿透 + 快 + 强暴击区）。注：damage15<base18 是 thousand_edge 现有设计（靠 volley/穿透/暴击换 DPS），守恒锁多发/穿透/射速轴，不锁单发 damage。
+**质变守恒**（vs knife L3：cd0.5/crit_bonus0.35/crit_range240/dmg18/pierce4）：volley3≥2（多发身份，base 无 volley=单发）✓、pierce8>4 ✓、cd0.22<0.5 ✓、crit_bonus0.6>0.35 ✓ → 仍清晰升级（多发 + 高穿透 + 快 + 满血暴击区）。注：damage15<base18 是 thousand_edge 现有设计（靠 volley/穿透/暴击换 DPS），守恒锁多发/穿透/射速/暴击轴，不锁单发 damage。
 
 ## 5. 工作流 C —— mega_orb 质变重做（脚本 + 数值，混编 A/B 验证）
 
@@ -148,7 +152,7 @@
 1. **nuke**：`blast_radius ≥ explosion.L3.blast_radius`（100）、`burn_dps ≥ L3`（10）、`field_dur ≥ L3`（3.0）、`cooldown ≤ L3`（1.3）。
 2. **thunderstorm**：`chains ≥ lightning.L3.chains`（5）、`cooldown ≤ L3`（0.7）、`sky_strikes ≥ 1`（天雷身份，base 无）。
 3. **earthshatter**：`shockwave_radius > 0`（冲击波身份，base maul 无）、`damage ≥ maul.L3.damage`（72）、`radius ≥ L3`（170）。
-4. **thousand_edge**：`volley ≥ 2`（多发身份，base knife 无 volley）、`pierce ≥ knife.L3.pierce`（4）、`cooldown ≤ L3`（0.5）。
+4. **thousand_edge**：`volley ≥ 2`（多发身份，base knife 无 volley）、`pierce ≥ knife.L3.pierce`（4）、`cooldown ≤ L3`（0.5）、`crit_bonus ≥ knife.L3.crit_bonus`（0.35，防过砍暴击轴退化）。
 5. **mega_orb**：`total_orbs > orb.L3.total_orbs`（4）、`orbit_radius ≥ L3`（68）、`damage ≥ L3`（14）、`dash_aoe_radius > 0`（扑击 AoE 质变身份，base 无）。
 
 加 mega_orb dash AoE **行为**单测（§5a，区别于上述纯数据守恒断言）。所有新测试排套件末尾，GREEN 态核对发现用例数（C6 截断陷阱）。
