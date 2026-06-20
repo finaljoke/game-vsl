@@ -213,26 +213,29 @@ static func flag_multi_axis(by_evo: Dictionary, band: float = 0.35) -> Dictionar
 		}
 	return flags
 
-# 支配判据(P3):以 clear_eff(密度/时长鲁棒)为主轴替 kpm。
-# OP = clear_eff 高 且 安全非劣(hp_min 非 low);weak = reached<0.5 或(death>0.5 且 surv low)或 ≥2 可信轴低。
-# backlog 反向作辅证(低积压=清场强),不单独定 OP。kpm 不入判据(降级为分析器 context 列)。
+# 支配判据(P3,验证闸反馈后定稿):清场强度以 backlog(全场存活敌均值,反向:低=强清场)为主轴。
+# 为何用 backlog 而非 clear_eff(=kpm/backlog)定 OP:clear_eff 分子的 kpm 仍含「生存时长×密度」污染
+# ——召唤流(horde)活进后期高密窗口→kpm 假高→clear_eff 假高(实测 p2b_main reanimate 误判 OP)。
+# backlog 是瞬时量,无累积速率/生存污染,且密度污染天然反向(swarm 堆积→backlog 高→清场弱)。
+# 故 clear_eff 仅作 context 列;backlog 反向定清场轴。详见 docs/reviews/2026-06-20-dominance-criteria-report.md §1。
+# OP = 清场强(backlog 低于带)且 安全非劣(hp 非 low);weak = reached<0.5 或(death>0.5 且 surv low)或 ≥2 可信轴低。
 static func flag_dominance(by_evo: Dictionary, band: float = 0.35) -> Dictionary:
-	var clear_med := _axis_median(by_evo, "clear_eff_med")
+	var backlog_med := _axis_median(by_evo, "backlog_mean_med")
 	var surv_med := _axis_median(by_evo, "survived_post_med")
 	var hp_med := _axis_median(by_evo, "hp_min_post_med")
-	var backlog_med := _axis_median(by_evo, "backlog_mean_med")
+	var clear_med := _axis_median(by_evo, "clear_eff_med")
 	var flags := {}
 	for k in by_evo:
 		var r = by_evo[k]
-		var clear := float(r["clear_eff_med"])
+		var backlog := float(r["backlog_mean_med"])
 		var surv := float(r["survived_post_med"])
 		var hp := float(r["hp_min_post_med"])
-		var backlog := float(r["backlog_mean_med"])
-		var clear_v := _band_verdict(clear, clear_med, band)
+		var clear := float(r["clear_eff_med"])
+		# 清场强度 = backlog 反向:低于带=强(clear_axis="high"),高于带=弱(="low")。
+		var backlog_raw := _band_verdict(backlog, backlog_med, band)
+		var clear_v := ("high" if backlog_raw == "low" else ("low" if backlog_raw == "high" else "ok"))
 		var surv_v := _band_verdict(surv, surv_med, band)
 		var hp_v := _band_verdict(hp, hp_med, band)
-		var backlog_raw := _band_verdict(backlog, backlog_med, band)   # 反向:低积压=强
-		var backlog_v := ("high" if backlog_raw == "low" else ("low" if backlog_raw == "high" else "ok"))
 		var reached := float(r.get("reached_ratio", 1.0))
 		var death := float(r.get("death_ratio", 0.0))
 		var low_axes := (1 if clear_v == "low" else 0) + (1 if surv_v == "low" else 0) + (1 if hp_v == "low" else 0)
@@ -245,10 +248,10 @@ static func flag_dominance(by_evo: Dictionary, band: float = 0.35) -> Dictionary
 			verdict = "OP"
 		flags[k] = {
 			"verdict": verdict,
-			"clear_axis": clear_v, "clear_dev": _effect(clear, clear_med),
+			"clear_axis": clear_v, "backlog_dev": _effect(backlog, backlog_med),
 			"surv_axis": surv_v, "surv_dev": _effect(surv, surv_med),
 			"hp_axis": hp_v, "hp_dev": _effect(hp, hp_med),
-			"backlog_axis": backlog_v, "backlog_dev": _effect(backlog, backlog_med),
+			"clear_eff_ctx": clear, "clear_eff_dev": _effect(clear, clear_med),
 			"reached_ratio": reached, "death_ratio": death,
 		}
 	return flags

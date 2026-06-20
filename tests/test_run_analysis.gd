@@ -205,13 +205,13 @@ func test_flag_dominance_weak_on_low_reached() -> void:
 	var f := RA.flag_dominance(by, 0.35)
 	assert_str(String(f["evolve_weak"]["verdict"])).is_equal("weak")     # reached<0.5
 
-func test_flag_dominance_backlog_axis_inverted() -> void:
-	# backlog 低于带 → 清场强 → backlog_axis="high";高于带 → "low"
+func test_flag_dominance_clear_axis_from_backlog_inverted() -> void:
+	# 清场轴 = backlog 反向:backlog 低于带 → clear_axis="high"(强);高于带 → "low"(弱)
 	var by := {
 		"evolve_lo": {"clear_eff_med": 10.0, "backlog_mean_med": 10.0,  "survived_post_med": 400.0, "hp_min_post_med": 0.8, "reached_ratio": 1.0, "death_ratio": 0.0},
 		"evolve_md": {"clear_eff_med": 10.0, "backlog_mean_med": 100.0, "survived_post_med": 400.0, "hp_min_post_med": 0.8, "reached_ratio": 1.0, "death_ratio": 0.0},
 		"evolve_hi": {"clear_eff_med": 10.0, "backlog_mean_med": 200.0, "survived_post_med": 400.0, "hp_min_post_med": 0.8, "reached_ratio": 1.0, "death_ratio": 0.0},
 	}
 	var f := RA.flag_dominance(by, 0.35)
-	assert_str(String(f["evolve_lo"]["backlog_axis"])).is_equal("high")  # 积压小=清场强
-	assert_str(String(f["evolve_hi"]["backlog_axis"])).is_equal("low")   # 积压大=清场弱
+	assert_str(String(f["evolve_lo"]["clear_axis"])).is_equal("high")  # 积压小=清场强
+	assert_str(String(f["evolve_hi"]["clear_axis"])).is_equal("low")   # 积压大=清场弱
