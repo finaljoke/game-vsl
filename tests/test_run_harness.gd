@@ -226,6 +226,7 @@ func test_grant_mix_isolates_keeps_chassis_and_target() -> void:
 	assert_bool(p.owned_weapons.has("aura")).is_false()       # 外来武器剥离
 	assert_bool(p.has_weapon("knife")).is_true()              # 目标授予
 	assert_bool(p.has_weapon("frostbite")).is_true()          # 底盘授予
+	assert_bool(CardPool.is_banished("evolve_frostbite")).is_true()  # 底盘进化被 banish(防挡目标进化槽)
 	assert_float(p.max_hp).is_equal_approx(hp0 + 100.0, 0.001)  # 底盘 perk_hp ×5 = +100 max HP
 	RunHarness._cards_name_val = prev_cards
 	CardPool.reset_run()

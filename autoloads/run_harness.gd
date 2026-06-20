@@ -320,6 +320,12 @@ func _grant_mix(p: Player, mspec: Dictionary) -> void:
 		if not p.has_weapon(wid):
 			CardPool.apply({"id": wid}, p)
 	CardPool.banish_weapons_except(loadout)
+	# 底盘永不进化:banish 其进化卡。确定性进化投放取就绪集 weapon-id 字典序第一个(card_pool.pick
+	# L200/207),底盘若也就绪且字典序在目标前(实测 frostbite<knife)会永久占槽挡死目标进化——bot 的
+	# mix_profile 只认 evolve_<target>,不会消费底盘进化 → 目标永不被投放。banish 底盘进化卡即解(被
+	# ready_evolutions 的 _banished 守卫 L196 滤除)。仅 banish 进化,底盘武器本体仍可满级供控制/续航。
+	for w in MIX_CHASSIS:
+		CardPool.banish("evolve_" + w)
 	for _i in range(MIX_CHASSIS_PERK_HP_STACKS):
 		CardPool.apply({"id": "perk_hp"}, p)
 
