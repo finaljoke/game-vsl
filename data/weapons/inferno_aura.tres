@@ -13,9 +13,9 @@ icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
 levels = [{
-"burn_dps": 10.0,
-"cooldown": 0.4,
+"burn_dps": 7.0,
+"cooldown": 0.5,
 "damage": 12.0,
-"lifesteal_on_hit": 0.3,
-"radius": 170.0
+"lifesteal_on_hit": 0.25,
+"radius": 145.0
 }]
