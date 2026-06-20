@@ -63,11 +63,16 @@ func mod_int(field: String) -> int:
 		return int(_player.get(field))
 	return 0
 
-# 伤害 = 基础 × 玩家全局伤害加成；可选暴击(弓等)：按 (crit_chance+crit_bonus) 概率 ×crit_mult。
-# 改平衡只动一处口径。向后兼容：默认 can_crit=false 时等价旧 damage_for(base)。
+# 纯函数(便于单测)：是否可暴击 —— 显式 can_crit 或武器带 physical 标签(暴击=物理流派轴)。
+static func crit_enabled(can_crit: bool, tags: Array) -> bool:
+	return can_crit or tags.has(&"physical")
+
+# 伤害 = 基础 × 玩家全局伤害加成；物理武器(或显式 can_crit)按 (crit_chance+crit_bonus) 概率 ×crit_mult。
+# 改平衡只动一处口径。向后兼容：crit_chance=0 时 ×crit_multiplier 退化为 ×1.0,等价旧值。
 func damage_for(base: float, can_crit: bool = false, crit_bonus: float = 0.0) -> float:
 	var dmg := base * (_player as Player).damage_mult
-	if can_crit:
+	var tags: Array = data.tags if data != null else []
+	if crit_enabled(can_crit, tags):
 		var p := _player as Player
 		dmg *= crit_multiplier(randf(), p.crit_chance, crit_bonus, p.crit_mult)
 	return dmg
