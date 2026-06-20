@@ -32,6 +32,8 @@ const SOLO_PERKS := {
 	"maul": "perk_hp", "frostbite": "perk_attack", "gravity_well": "perk_speed", "reanimate": "perk_hp",
 }
 
+const FLOOR_PERK_HP_STACKS: int = 5   # solofloor_ 档开局授予的 perk_hp 层数(+100 max HP 生存垫,纯防御不加击杀)
+
 # 单武器优先表:拿武器 → 升级 → (就绪即)进化 → 堆进化 perk → 生存兜底。
 # 不含通用 type:weapon,故 bot 不会拿别的武器,保证单武器隔离。
 static func solo_profile(weapon_id: String, evo_perk: String) -> Array:
@@ -44,9 +46,19 @@ static func solo_profile(weapon_id: String, evo_perk: String) -> Array:
 		"type:upgrade", "type:synergy", "type:perk",
 	]
 
+# 单武器档名 → 规格。solofloor_ 先于 solo_ 匹配(更长前缀)。
+# {"is_solo": bool, "is_floor": bool, "weapon_id": String}。非单武器档 → is_solo=false。
+static func solo_spec(cards_name: String) -> Dictionary:
+	if cards_name.begins_with("solofloor_"):
+		return {"is_solo": true, "is_floor": true, "weapon_id": cards_name.substr(10)}
+	if cards_name.begins_with("solo_"):
+		return {"is_solo": true, "is_floor": false, "weapon_id": cards_name.substr(5)}
+	return {"is_solo": false, "is_floor": false, "weapon_id": ""}
+
 static func profile_for(name: String) -> Array:
-	if name.begins_with("solo_"):
-		var wid := name.substr(5)
+	var spec := solo_spec(name)
+	if spec["is_solo"]:
+		var wid: String = spec["weapon_id"]
 		return solo_profile(wid, String(SOLO_PERKS.get(wid, "perk_hp")))
 	return PROFILES.get(name, DEFAULT_PROFILE)
 
@@ -244,9 +256,10 @@ func _finish(outcome: String) -> void:
 # 单武器档:开局直接授予该武器,使 bot 真正评估它(否则随机卡池常不提供该武器→饿死无解)。
 # 仅 bot solo 模式;按 id 授予(无 RNG,确定性);非 solo 档/无 --bot 时不触发。
 func _grant_solo_weapon(p: Player) -> void:
-	if not _cards_name_val.begins_with("solo_"):
+	var spec := solo_spec(_cards_name_val)
+	if not spec["is_solo"]:
 		return
-	var wid := _cards_name_val.substr(5)
+	var wid: String = spec["weapon_id"]
 	if wid == "" or p == null:
 		return
 	# solo 隔离:移除所有非目标已持有武器(含 main.gd 默认授予的起手 knife),否则起手 knife 污染
@@ -260,6 +273,10 @@ func _grant_solo_weapon(p: Player) -> void:
 	if not p.has_weapon(wid):
 		CardPool.apply({"id": wid}, p)   # 目标未持有才授予(solo_knife 时 knife 已在,避免重复 grant 泄漏旧节点)
 	CardPool.banish_other_weapons(wid)   # 外来武器卡永不再被提供(防 choose_card offered[0] 兜底污染)
+	# 地板档:额外授纯防御垫(perk_hp 只加 HP 不加击杀 → kpm 仍单武器归属),让弱 solo 武器活到进化。
+	if spec["is_floor"]:
+		for _i in range(FLOOR_PERK_HP_STACKS):
+			CardPool.apply({"id": "perk_hp"}, p)
 
 func _get_player() -> Player:
 	if _player == null or not is_instance_valid(_player):

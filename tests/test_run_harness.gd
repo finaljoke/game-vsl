@@ -172,3 +172,42 @@ func test_blend_dodge_dominates_opposing_kite() -> void:
 
 func test_blend_zero_when_both_zero() -> void:
 	assert_vector(Harness.blend_move(Vector2.ZERO, Vector2.ZERO, 1.0, 1.5)).is_equal(Vector2.ZERO)
+
+# ── solo_spec 解析(solo_ / solofloor_) ──────────────────────────────────────
+func test_solo_spec_plain_solo() -> void:
+	var s := Harness.solo_spec("solo_knife")
+	assert_bool(s["is_solo"]).is_true()
+	assert_bool(s["is_floor"]).is_false()
+	assert_str(String(s["weapon_id"])).is_equal("knife")
+
+func test_solo_spec_floor() -> void:
+	var s := Harness.solo_spec("solofloor_orb")
+	assert_bool(s["is_solo"]).is_true()
+	assert_bool(s["is_floor"]).is_true()
+	assert_str(String(s["weapon_id"])).is_equal("orb")
+
+func test_solo_spec_non_solo() -> void:
+	var s := Harness.solo_spec("default")
+	assert_bool(s["is_solo"]).is_false()
+	assert_str(String(s["weapon_id"])).is_equal("")
+
+func test_profile_for_solofloor_matches_solo_cards() -> void:
+	# 地板档卡优先序与同武器 solo 档一致(地板差别在 grant,不在选卡)
+	assert_array(Harness.profile_for("solofloor_orb")).is_equal(Harness.profile_for("solo_orb"))
+
+# ── solofloor_ 档:隔离非目标武器 + 授 perk_hp 生存垫(集成,排末位) ──────────────
+func test_grant_solofloor_isolates_and_grants_hp() -> void:
+	var scene := load("res://scenes/player/player.tscn") as PackedScene
+	var p: Player = auto_free(scene.instantiate() as Player)
+	add_child(p)
+	await get_tree().process_frame
+	var hp0 := p.max_hp
+	p.owned_weapons["knife"] = {"node": null, "level": 1}   # 注入外来武器,验证被剥离
+	var prev_cards := RunHarness._cards_name_val
+	RunHarness._cards_name_val = "solofloor_orb"
+	RunHarness._grant_solo_weapon(p)
+	assert_bool(p.owned_weapons.has("knife")).is_false()      # 外来武器剥离
+	assert_bool(p.has_weapon("orb")).is_true()                # 目标授予
+	assert_float(p.max_hp).is_equal_approx(hp0 + 100.0, 0.001)  # perk_hp ×5 = +100 max HP
+	RunHarness._cards_name_val = prev_cards
+	CardPool.reset_run()   # 还原 banish 全局态,防泄漏后续用例
