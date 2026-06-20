@@ -152,3 +152,13 @@ func test_dodge_order_independent() -> void:
 	var r1 := Harness.compute_dodge_dir(p, [a, b], 200.0)
 	var r2 := Harness.compute_dodge_dir(p, [b, a], 200.0)
 	assert_vector(r1).is_equal(r2)
+
+func test_kite_order_independent() -> void:
+	# 排序后:同一组敌人乱序输入两次结果逐位一致(C5 单元锁;后期大输入下顺序真会变)
+	var p := Vector2(640, 360)
+	var e1 := Vector2(600, 340)
+	var e2 := Vector2(680, 380)
+	var e3 := Vector2(620, 400)
+	var r1 := Harness.compute_kite_dir(p, [e1, e2, e3], Vector2(640, 360), 220.0)
+	var r2 := Harness.compute_kite_dir(p, [e3, e1, e2], Vector2(640, 360), 220.0)
+	assert_vector(r1).is_equal(r2)

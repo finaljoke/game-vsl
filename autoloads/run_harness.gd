@@ -58,8 +58,10 @@ var base_time_scale: float = 1.0         # 快进基线;game_feel hitstop 恢复
 
 # kite 移动方向:Σ(远离半径内敌人,越近越强) + (拉回竞技场中心,避墙)。归一化;无净向量返回 ZERO。
 static func compute_kite_dir(player_pos: Vector2, enemy_positions: Array, arena_center: Vector2, perception_radius: float) -> Vector2:
+	var sorted_enemies := enemy_positions.duplicate()
+	sorted_enemies.sort_custom(func(a, b): return a.x < b.x if a.x != b.x else a.y < b.y)
 	var repulse := Vector2.ZERO
-	for ep in enemy_positions:
+	for ep in sorted_enemies:
 		var to_player: Vector2 = player_pos - ep
 		var d := to_player.length()
 		if d > perception_radius or d <= 0.001:
