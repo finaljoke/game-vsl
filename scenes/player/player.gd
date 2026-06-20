@@ -37,6 +37,9 @@ var extra_projectiles: int = 0    # 飞刀类额外弹数
 var pickup_range_mult: float = 1.0  # XP 拾取磁化半径倍率
 var lifesteal: float = 0.0        # 每次击杀回血量
 var slow_vuln_bonus: float = 0.0  # 减速目标易伤加成(冰封/控制卡叠加;基线 0.30 在 Enemy 侧)
+var burn_mult: float = 1.0         # 火势卡：燃烧 dps 倍率
+var freeze_dur_bonus: float = 0.0  # 冰封卡：冻结时长加成(秒)
+var shock_dur_bonus: float = 0.0   # 感电卡：感电/硬直时长加成(秒)
 
 # Bot 注入钩子:默认 INF=真人(走键盘);RunHarness 每物理帧覆写为移动向量。详见 autoloads/run_harness.gd。
 var bot_input: Vector2 = Vector2.INF

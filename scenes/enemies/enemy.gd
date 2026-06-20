@@ -114,8 +114,29 @@ func _physics_process(delta: float) -> void:
 
 # ── 状态底座对外接口 ───────────────────────────────────────────────────────
 # 武器命中调 apply_status；BT move atom / 玩家接触结算读 move_speed_mult / is_stunned。
+# 在此单点应用玩家元素增益(burn_mult/freeze_dur/shock_dur) → 零武器脚本改动。
 func apply_status(kind: StringName, magnitude: float, duration: float) -> void:
-	status.apply(kind, magnitude, duration)
+	var bm := 1.0
+	var fb := 0.0
+	var sb := 0.0
+	if _player != null and is_instance_valid(_player):
+		if "burn_mult" in _player: bm = _player.burn_mult
+		if "freeze_dur_bonus" in _player: fb = _player.freeze_dur_bonus
+		if "shock_dur_bonus" in _player: sb = _player.shock_dur_bonus
+	var adj := modified_status_input(kind, magnitude, duration, bm, fb, sb)
+	status.apply(kind, adj["magnitude"], adj["duration"])
+
+# 纯函数(便于单测)：按 kind 应用玩家元素增益。burn→放大 dps；freeze/stun→延长时长；其余不变。
+static func modified_status_input(kind: StringName, magnitude: float, duration: float, burn_mult: float, freeze_dur_bonus: float, shock_dur_bonus: float) -> Dictionary:
+	var mag := magnitude
+	var dur := duration
+	if kind == &"burn":
+		mag *= burn_mult
+	elif kind == &"freeze":
+		dur += freeze_dur_bonus
+	elif kind == &"stun":
+		dur += shock_dur_bonus
+	return {"magnitude": mag, "duration": dur}
 
 func move_speed_mult() -> float:
 	return status.move_speed_mult()

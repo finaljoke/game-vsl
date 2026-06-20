@@ -80,3 +80,22 @@ func test_effective_slow_vuln_baseline_when_slowed() -> void:
 func test_effective_slow_vuln_caps_at_half() -> void:
 	# 基线 0.30 + 卡 0.50 → 封顶 0.50
 	assert_float(Enemy.effective_slow_vuln(true, 0.5)).is_equal_approx(0.50, 0.0001)
+
+# ── P1 单元4：元素增益消费点(状态输入修正) ─────────────────────────────────
+func test_burn_mult_scales_burn_magnitude() -> void:
+	var r := Enemy.modified_status_input(&"burn", 10.0, 1.0, 1.3, 0.0, 0.0)
+	assert_float(r["magnitude"]).is_equal_approx(13.0, 0.0001)
+	assert_float(r["duration"]).is_equal_approx(1.0, 0.0001)
+
+func test_freeze_dur_bonus_extends_freeze() -> void:
+	var r := Enemy.modified_status_input(&"freeze", 0.0, 0.6, 1.0, 0.5, 0.0)
+	assert_float(r["duration"]).is_equal_approx(1.1, 0.0001)
+
+func test_shock_dur_bonus_extends_stun() -> void:
+	var r := Enemy.modified_status_input(&"stun", 0.0, 0.4, 1.0, 0.0, 0.15)
+	assert_float(r["duration"]).is_equal_approx(0.55, 0.0001)
+
+func test_slow_status_unaffected_by_element_mods() -> void:
+	var r := Enemy.modified_status_input(&"slow", 0.6, 1.5, 1.3, 0.5, 0.15)
+	assert_float(r["magnitude"]).is_equal_approx(0.6, 0.0001)
+	assert_float(r["duration"]).is_equal_approx(1.5, 0.0001)
