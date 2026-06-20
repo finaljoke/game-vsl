@@ -53,3 +53,154 @@ static func flag_off_band(by_profile: Dictionary, band: float = 0.35) -> Diction
 				verdict = "weak"
 		flags[k] = {"kills_per_min_med": v, "cross_median": m, "verdict": verdict}
 	return flags
+
+# ── P2a 进化窗口分析(纯函数) ─────────────────────────────────────────────────
+
+# 解析 tick CSV 文本为行字典数组。首行=表头,其余=数据行(值保留字符串,调用方按需转型)。
+static func tick_rows_from_csv(text: String) -> Array:
+	var lines := text.split("\n", false)
+	if lines.size() < 2:
+		return []
+	var header := lines[0].split(",")
+	var rows: Array = []
+	for i in range(1, lines.size()):
+		var parts := lines[i].split(",")
+		if parts.size() != header.size():
+			continue
+		var row := {}
+		for j in range(header.size()):
+			row[header[j]] = parts[j]
+		rows.append(row)
+	return rows
+
+# 解析 events JSONL 文本为字典数组(逐行 JSON.parse,跳过非字典行)。
+static func events_from_jsonl(text: String) -> Array:
+	var out: Array = []
+	for line in text.split("\n", false):
+		var v = JSON.parse_string(line)
+		if typeof(v) == TYPE_DICTIONARY:
+			out.append(v)
+	return out
+
+# 进化解锁时刻:首个 type=="level_up" 且 picked=="evolve_"+weapon_id 的 t。无 → -1.0。
+static func evolution_unlock_time(events: Array, weapon_id: String) -> float:
+	var target := "evolve_" + weapon_id
+	for e in events:
+		if String(e.get("type", "")) == "level_up" and String(e.get("picked", "")) == target:
+			return float(e.get("t", -1.0))
+	return -1.0
+
+# 进化后窗口:t >= t_evo 的 tick 行。t_evo<0(未达进化)→ 空数组。
+static func window_rows(tick_rows: Array, t_evo: float) -> Array:
+	if t_evo < 0.0:
+		return []
+	var out: Array = []
+	for row in tick_rows:
+		if float(row.get("t", 0.0)) >= t_evo:
+			out.append(row)
+	return out
+
+# 后期窗口三轴度量。win_rows 空(未达进化)→ reached_evolution=false。
+# kpm_post = 窗口内 kills_total 增量 / 窗口时长 × 60;hp_min_post = 窗口内 hp_pct 最小;
+# danger_mean_post = 窗口内 danger_ps 均值;survived_post = t_end - t_evo。
+static func window_metrics(win_rows: Array, t_evo: float, t_end: float, outcome: String) -> Dictionary:
+	if win_rows.is_empty():
+		return {"reached_evolution": false, "kpm_post": 0.0, "hp_min_post": 0.0,
+				"danger_mean_post": 0.0, "survived_post": 0.0, "outcome": outcome}
+	var k0 := float(win_rows[0].get("kills_total", 0))
+	var k1 := float(win_rows[win_rows.size() - 1].get("kills_total", 0))
+	var win_dur := maxf(t_end - t_evo, 0.001)
+	var hp_min := 1.0
+	var danger_sum := 0.0
+	for row in win_rows:
+		hp_min = minf(hp_min, float(row.get("hp_pct", 1.0)))
+		danger_sum += float(row.get("danger_ps", 0.0))
+	return {
+		"reached_evolution": true,
+		"kpm_post": (k1 - k0) / win_dur * 60.0,
+		"hp_min_post": hp_min,
+		"danger_mean_post": danger_sum / win_rows.size(),
+		"survived_post": win_dur,
+		"outcome": outcome,
+	}
+
+# 聚合一个进化的多 run 窗口度量:三数值轴取中位(仅对已达进化的 run),reached/death 取比例。
+static func summarize_evolution(metrics_list: Array) -> Dictionary:
+	var n := metrics_list.size()
+	var kpm: Array = []
+	var hpmin: Array = []
+	var surv: Array = []
+	var reached_count := 0
+	var death_count := 0
+	for m in metrics_list:
+		if bool(m.get("reached_evolution", false)):
+			reached_count += 1
+			kpm.append(float(m.get("kpm_post", 0.0)))
+			hpmin.append(float(m.get("hp_min_post", 0.0)))
+			surv.append(float(m.get("survived_post", 0.0)))
+		if String(m.get("outcome", "")) == "death":
+			death_count += 1
+	return {
+		"n": n,
+		"reached_ratio": float(reached_count) / float(maxi(n, 1)),
+		"death_ratio": float(death_count) / float(maxi(n, 1)),
+		"kpm_post_med": median(kpm),
+		"hp_min_post_med": median(hpmin),
+		"survived_post_med": median(surv),
+	}
+
+# 多轴判据:对 kpm/survived/hp_min 三数值轴各算跨进化中位 ±band。
+# OP = kpm 高 且 生存非劣;weak = ≥2 轴低 或 多数未达进化 或(多数死亡且生存低)。
+# 安全轴(hp_min)因 dodge bot 防御饱和,不作 OP 必要条件(spec 缺口 B)。
+static func flag_multi_axis(by_evo: Dictionary, band: float = 0.35) -> Dictionary:
+	var kpm_med := _axis_median(by_evo, "kpm_post_med")
+	var surv_med := _axis_median(by_evo, "survived_post_med")
+	var hp_med := _axis_median(by_evo, "hp_min_post_med")
+	var flags := {}
+	for k in by_evo:
+		var r = by_evo[k]
+		var kpm := float(r["kpm_post_med"])
+		var surv := float(r["survived_post_med"])
+		var hp := float(r["hp_min_post_med"])
+		var kpm_v := _band_verdict(kpm, kpm_med, band)
+		var surv_v := _band_verdict(surv, surv_med, band)
+		var hp_v := _band_verdict(hp, hp_med, band)
+		var reached := float(r.get("reached_ratio", 1.0))
+		var death := float(r.get("death_ratio", 0.0))
+		var low_axes := (1 if kpm_v == "low" else 0) + (1 if surv_v == "low" else 0) + (1 if hp_v == "low" else 0)
+		var verdict := "ok"
+		if reached < 0.5 or (death > 0.5 and surv_v == "low"):
+			verdict = "weak"
+		elif low_axes >= 2:
+			verdict = "weak"
+		elif kpm_v == "high" and surv_v != "low":
+			verdict = "OP"
+		flags[k] = {
+			"verdict": verdict,
+			"kpm_axis": kpm_v, "kpm_eff": _effect(kpm, kpm_med),
+			"surv_axis": surv_v, "surv_eff": _effect(surv, surv_med),
+			"hp_axis": hp_v, "hp_eff": _effect(hp, hp_med),
+			"reached_ratio": reached, "death_ratio": death,
+		}
+	return flags
+
+static func _axis_median(by_evo: Dictionary, key: String) -> float:
+	var vals: Array = []
+	for k in by_evo:
+		vals.append(float(by_evo[k][key]))
+	return median(vals)
+
+static func _band_verdict(v: float, m: float, band: float) -> String:
+	if m <= 0.0:
+		return "ok"
+	if v > m * (1.0 + band):
+		return "high"
+	if v < m * (1.0 - band):
+		return "low"
+	return "ok"
+
+# 效应量:相对跨进化中位的偏离(v/m - 1)。
+static func _effect(v: float, m: float) -> float:
+	if m <= 0.0:
+		return 0.0
+	return v / m - 1.0
