@@ -13,6 +13,7 @@ var minion_hp: float = 30.0
 var minion_speed: float = 120.0
 var lifetime: float = 12.0
 var split_chance: float = 0.0   # 群尸进化注入；基础=0
+var heal_on_hit: float = 0.0    # 群尸 §3c 防御杠杆:随从命中给本体回血;基础=0
 
 func attack() -> void:
 	if _count_minions() >= max_minions:
@@ -23,6 +24,7 @@ func attack() -> void:
 	m.lifetime = lifetime
 	m.max_hp = minion_hp
 	m.split_chance = split_chance
+	m.heal_on_hit = heal_on_hit
 	get_ysort().add_child(m)
 	m.global_position = _player.global_position
 	Vfx.spawn_burst(m.global_position, &"magic_burst", get_ysort())

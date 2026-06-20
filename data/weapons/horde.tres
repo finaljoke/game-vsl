@@ -15,6 +15,7 @@ max_level = 1
 levels = [{
 "cooldown": 2.5,
 "damage": 22.0,
+"heal_on_hit": 2.0,
 "lifetime": 22.0,
 "max_minions": 9,
 "minion_hp": 35.0,

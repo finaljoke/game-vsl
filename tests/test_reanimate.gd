@@ -135,3 +135,46 @@ func test_horde_minion_carries_split_chance() -> void:
 	for s in get_tree().get_nodes_in_group("summons"):
 		if is_instance_valid(s) and s is RoamingMinion:
 			assert_float(s.split_chance).is_greater(0.0)
+
+# ── 群尸 §3c 防御杠杆:随从命中给本体回血(纯 DPS 救不了无防护本体) ──────────────
+func test_minion_heals_player_on_hit_when_enabled() -> void:
+	_player.global_position = Vector2(3000, 3000)   # 远离敌人,排除本体被接触伤害污染
+	_player.hp = _player.max_hp - 20.0   # 留回血空间(heal 封顶 max_hp)
+	var hp0 := _player.hp
+	var m: RoamingMinion = auto_free(RoamingMinionScript.new()) as RoamingMinion
+	m.damage = 12.0
+	m.speed = 0.0          # 不移动,纯测接触
+	m.lifetime = 99.0
+	m.heal_on_hit = 5.0
+	add_child(m)
+	m.global_position = Vector2.ZERO
+	_tough_enemy_at(Vector2(8, 0))   # 接触半径内
+	for i in range(3):
+		await get_tree().physics_frame
+	assert_float(_player.hp).is_greater(hp0)   # 命中敌人时给玩家回血(经 player 组查找,与距离无关)
+
+func test_base_minion_does_not_heal_by_default() -> void:
+	_player.global_position = Vector2(3000, 3000)   # 远离敌人
+	_player.hp = _player.max_hp - 20.0
+	var hp0 := _player.hp
+	var m: RoamingMinion = auto_free(RoamingMinionScript.new()) as RoamingMinion
+	m.damage = 12.0
+	m.speed = 0.0
+	m.lifetime = 99.0   # heal_on_hit 默认 0
+	add_child(m)
+	m.global_position = Vector2.ZERO
+	_tough_enemy_at(Vector2(8, 0))
+	for i in range(3):
+		await get_tree().physics_frame
+	assert_float(_player.hp).is_equal_approx(hp0, 0.001)   # 基础随从不回血
+
+func test_horde_minion_carries_heal_on_hit() -> void:
+	_ysort_stub()
+	CardPool.apply({"id": "reanimate"}, _player)
+	CardPool.apply({"id": "evolve_reanimate", "type": "evolution"}, _player)
+	var hw := _player.get_weapon_node("horde")
+	hw.attack()
+	await get_tree().process_frame
+	for s in get_tree().get_nodes_in_group("summons"):
+		if is_instance_valid(s) and s is RoamingMinion:
+			assert_float(s.heal_on_hit).is_greater(0.0)

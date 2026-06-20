@@ -33,3 +33,7 @@ func test_horde_damage_ge_base_l3() -> void:
 
 func test_horde_lifetime_ge_base_l3() -> void:
 	assert_float(float(_evo("horde")["lifetime"])).is_greater_equal(float(_l3("reanimate")["lifetime"]))
+
+# §3c 防御杠杆:群尸须带本体回血(基础 reanimate 无此键 → 进化独有的生存机制)
+func test_horde_has_heal_on_hit() -> void:
+	assert_float(float(_evo("horde").get("heal_on_hit", 0.0))).is_greater(0.0)

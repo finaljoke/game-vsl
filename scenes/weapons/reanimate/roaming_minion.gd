@@ -13,6 +13,7 @@ var speed: float = 120.0
 var lifetime: float = 12.0
 var max_hp: float = 30.0       # 预留(当前敌人 AI 不索敌 summons → 随从靠 lifetime 退场)
 var split_chance: float = 0.0  # 群尸：死亡分裂概率(基础=0=不裂)
+var heal_on_hit: float = 0.0   # 群尸 §3c 防御杠杆:随从每命中给本体回血(基础=0=不回);DPS 救不了无防护本体
 var spawn_scale: float = 1.7   # 怨灵显示缩放;裂出的小尸逐级缩小
 var _age: float = 0.0
 var _hit_cd: float = 0.0
@@ -45,6 +46,10 @@ func _physics_process(delta: float) -> void:
 		if _hit_cd <= 0.0 and global_position.distance_to(target.global_position) <= CONTACT_RADIUS + 8.0:
 			target.take_damage(damage)
 			_hit_cd = HIT_COOLDOWN
+			if heal_on_hit > 0.0:
+				var pl := get_tree().get_first_node_in_group("player")
+				if pl != null and pl.has_method("heal"):
+					pl.heal(heal_on_hit)
 	if _age >= lifetime:
 		_die()
 
