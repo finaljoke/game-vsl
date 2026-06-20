@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://vppvpykvu86d"]
 
-[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
-[ext_resource type="PackedScene" path="res://scenes/weapons/aura/aura_weapon.tscn" id="2_scene"]
-[ext_resource type="Texture2D" path="res://assets/sprites/kenney/particles/orb_ring.png" id="3_icon"]
+[ext_resource type="Script" uid="uid://cvgye13hfmt6x" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="PackedScene" uid="uid://ckcpgjsdxdwci" path="res://scenes/weapons/aura/aura_weapon.tscn" id="2_scene"]
+[ext_resource type="Texture2D" uid="uid://f6epkvulwyrv" path="res://assets/sprites/kenney/particles/orb_ring.png" id="3_icon"]
 
 [resource]
 script = ExtResource("1_data")
@@ -10,6 +10,24 @@ id = "aura"
 display_name = "烈焰护体"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
-max_level = 3
-levels = [{"cooldown": 0.8, "radius": 90.0, "damage": 12.0, "burn_dps": 4.0}, {"cooldown": 0.65, "radius": 110.0, "damage": 13.0, "burn_dps": 5.0}, {"cooldown": 0.5, "radius": 130.0, "damage": 14.0, "burn_dps": 6.0}]
-evolution = {"requires_perk": "perk_hp", "requires_perk_stacks": 3, "evolved_id": "inferno_aura"}
+levels = [{
+"burn_dps": 4.0,
+"cooldown": 0.8,
+"damage": 12.0,
+"radius": 90.0
+}, {
+"burn_dps": 5.0,
+"cooldown": 0.65,
+"damage": 13.0,
+"radius": 110.0
+}, {
+"burn_dps": 6.0,
+"cooldown": 0.5,
+"damage": 14.0,
+"radius": 130.0
+}]
+evolution = {
+"evolved_id": "inferno_aura",
+"requires_perk": "perk_hp",
+"requires_perk_stacks": 3
+}

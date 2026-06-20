@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://d4dj0sekfqpbo"]
 
-[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
-[ext_resource type="PackedScene" path="res://scenes/weapons/reanimate/reanimate_weapon.tscn" id="2_scene"]
-[ext_resource type="Texture2D" path="res://assets/sprites/kenney/items/dagger.png" id="3_icon"]
+[ext_resource type="Script" uid="uid://cvgye13hfmt6x" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="PackedScene" uid="uid://dfptu6yd6511s" path="res://scenes/weapons/reanimate/reanimate_weapon.tscn" id="2_scene"]
+[ext_resource type="Texture2D" uid="uid://chgen8ene7bep" path="res://assets/sprites/kenney/items/dagger.png" id="3_icon"]
 
 [resource]
 script = ExtResource("1_data")
@@ -11,5 +11,12 @@ display_name = "群尸"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"cooldown": 2.5, "max_minions": 6, "damage": 16.0, "minion_hp": 35.0, "minion_speed": 130.0, "lifetime": 18.0, "split_chance": 0.35}]
-evolution = {}
+levels = [{
+"cooldown": 2.5,
+"damage": 16.0,
+"lifetime": 18.0,
+"max_minions": 6,
+"minion_hp": 35.0,
+"minion_speed": 130.0,
+"split_chance": 0.35
+}]

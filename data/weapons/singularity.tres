@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://dp8isi5o637ea"]
 
-[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
-[ext_resource type="PackedScene" path="res://scenes/weapons/gravity_well/gravity_well_weapon.tscn" id="2_scene"]
-[ext_resource type="Texture2D" path="res://assets/sprites/kenney/particles/orb_ring.png" id="3_icon"]
+[ext_resource type="Script" uid="uid://cvgye13hfmt6x" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="PackedScene" uid="uid://cpekqgjra0j7s" path="res://scenes/weapons/gravity_well/gravity_well_weapon.tscn" id="2_scene"]
+[ext_resource type="Texture2D" uid="uid://f6epkvulwyrv" path="res://assets/sprites/kenney/particles/orb_ring.png" id="3_icon"]
 
 [resource]
 script = ExtResource("1_data")
@@ -11,5 +11,11 @@ display_name = "奇点"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"cooldown": 3.0, "field_dur": 3.0, "radius": 180.0, "pull_strength": 240.0, "tick_damage": 5.0, "collapse_damage": 60.0}]
-evolution = {}
+levels = [{
+"collapse_damage": 60.0,
+"cooldown": 3.0,
+"field_dur": 3.0,
+"pull_strength": 240.0,
+"radius": 180.0,
+"tick_damage": 5.0
+}]

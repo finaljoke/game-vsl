@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://bie5ckxd8gx3v"]
 
-[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="Script" uid="uid://cvgye13hfmt6x" path="res://data/weapons/weapon_data.gd" id="1_data"]
 [ext_resource type="PackedScene" uid="uid://7pcvefm8c7gy" path="res://scenes/weapons/orb/orb_weapon.tscn" id="2_scene"]
 [ext_resource type="Texture2D" uid="uid://f6epkvulwyrv" path="res://assets/sprites/kenney/particles/orb_ring.png" id="3_icon"]
 
@@ -10,6 +10,24 @@ id = "orb"
 display_name = "缚灵"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
-max_level = 3
-levels = [{"total_orbs": 2, "damage": 12.0, "orbit_radius": 60.0, "hit_cooldown": 0.35}, {"total_orbs": 3, "damage": 12.0, "orbit_radius": 64.0, "hit_cooldown": 0.32}, {"total_orbs": 4, "damage": 14.0, "orbit_radius": 68.0, "hit_cooldown": 0.30}]
-evolution = {"requires_perk": "perk_hp", "requires_perk_stacks": 3, "evolved_id": "mega_orb"}
+levels = [{
+"damage": 12.0,
+"hit_cooldown": 0.35,
+"orbit_radius": 60.0,
+"total_orbs": 2
+}, {
+"damage": 12.0,
+"hit_cooldown": 0.32,
+"orbit_radius": 64.0,
+"total_orbs": 3
+}, {
+"damage": 14.0,
+"hit_cooldown": 0.3,
+"orbit_radius": 68.0,
+"total_orbs": 4
+}]
+evolution = {
+"evolved_id": "mega_orb",
+"requires_perk": "perk_hp",
+"requires_perk_stacks": 3
+}

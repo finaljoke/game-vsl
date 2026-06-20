@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://71ynpe8jbbx3"]
 
-[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
-[ext_resource type="PackedScene" path="res://scenes/weapons/lightning/lightning_weapon.tscn" id="2_scene"]
-[ext_resource type="Texture2D" path="res://assets/sprites/kenney/fx/lightning_bolt.png" id="3_icon"]
+[ext_resource type="Script" uid="uid://cvgye13hfmt6x" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="PackedScene" uid="uid://bujcw4nw62hpq" path="res://scenes/weapons/lightning/lightning_weapon.tscn" id="2_scene"]
+[ext_resource type="Texture2D" uid="uid://rjdvwhoqxflh" path="res://assets/sprites/kenney/fx/lightning_bolt.png" id="3_icon"]
 
 [resource]
 script = ExtResource("1_data")
@@ -11,5 +11,13 @@ display_name = "雷暴"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"cooldown": 0.45, "chains": 8, "shock_dur": 0.3, "bolt_tint": Color(0.85, 0.75, 1.0, 1.0), "damage": 22.0, "sky_strikes": 3, "sky_radius": 70.0, "sky_damage": 22.0}]
-evolution = {}
+levels = [{
+"bolt_tint": Color(0.85, 0.75, 1, 1),
+"chains": 8,
+"cooldown": 0.45,
+"damage": 22.0,
+"shock_dur": 0.3,
+"sky_damage": 22.0,
+"sky_radius": 70.0,
+"sky_strikes": 3
+}]

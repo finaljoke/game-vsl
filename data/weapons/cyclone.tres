@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://d2j2kimem5pab"]
 
-[ext_resource type="Script" path="res://data/weapons/weapon_data.gd" id="1_data"]
-[ext_resource type="PackedScene" path="res://scenes/weapons/boomerang/boomerang_weapon.tscn" id="2_scene"]
-[ext_resource type="Texture2D" path="res://assets/sprites/kenney/fx/icon_cyclone.png" id="3_icon"]
+[ext_resource type="Script" uid="uid://cvgye13hfmt6x" path="res://data/weapons/weapon_data.gd" id="1_data"]
+[ext_resource type="PackedScene" uid="uid://cjmmu572qhlu8" path="res://scenes/weapons/boomerang/boomerang_weapon.tscn" id="2_scene"]
+[ext_resource type="Texture2D" uid="uid://npb7scyacbvn" path="res://assets/sprites/kenney/fx/icon_cyclone.png" id="3_icon"]
 
 [resource]
 script = ExtResource("1_data")
@@ -11,5 +11,12 @@ display_name = "旋风镖"
 icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
-levels = [{"cooldown": 0.7, "pierce": 8, "throw_range": 300.0, "count": 3, "orbit_return": true, "damage": 20.0, "proj_tint": Color(0.7, 0.95, 1.0, 1)}]
-evolution = {}
+levels = [{
+"cooldown": 0.7,
+"count": 3,
+"damage": 20.0,
+"orbit_return": true,
+"pierce": 8,
+"proj_tint": Color(0.7, 0.95, 1, 1),
+"throw_range": 300.0
+}]
