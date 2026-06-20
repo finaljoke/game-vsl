@@ -125,14 +125,25 @@ git commit -m "feat(cardpool): banish_other_weapons 解决 solo 隔离泄漏(外
 
 - [ ] **Step 1: 实现**（改 `run_harness.gd` 的 `_grant_solo_weapon`，[L246](../../../autoloads/run_harness.gd#L246)）
 
+> ⚠ **实跑修正（2026-06-20）**：仅加 `banish_other_weapons` 不够——`main.gd` 默认授予的**起手 knife** 已持有，致 `knife_2/_3`（`upgrade:knife:1`）就绪污染 build。须**先移除所有非目标已持有武器**再 banish。
+
 把：
 ```gdscript
 	CardPool.apply({"id": wid}, p)
 ```
 改为：
 ```gdscript
-	CardPool.apply({"id": wid}, p)
-	CardPool.banish_other_weapons(wid)   # solo 隔离:外来武器永不进池(防 choose_card offered[0] 兜底污染)
+	# solo 隔离:移除所有非目标已持有武器(含 main.gd 默认授予的起手 knife),否则起手 knife 污染
+	# build(knife_2/_3 就绪)。.keys() 是快照,迭代中 erase 安全。
+	for owned_id in p.owned_weapons.keys():
+		if owned_id != wid:
+			var node = p.owned_weapons[owned_id].get("node")
+			if is_instance_valid(node):
+				node.queue_free()
+			p.owned_weapons.erase(owned_id)
+	if not p.has_weapon(wid):
+		CardPool.apply({"id": wid}, p)   # 目标未持有才授予(solo_knife 时 knife 已在,避免重复 grant 泄漏旧节点)
+	CardPool.banish_other_weapons(wid)   # 外来武器卡永不再被提供(防 choose_card offered[0] 兜底污染)
 ```
 
 - [ ] **Step 2: 关编辑器，实跑一发 solo_explosion 验证纯净**
