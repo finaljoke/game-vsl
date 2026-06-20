@@ -36,6 +36,7 @@ var global_pierce: int = 0        # 所有投射武器额外穿透
 var extra_projectiles: int = 0    # 飞刀类额外弹数
 var pickup_range_mult: float = 1.0  # XP 拾取磁化半径倍率
 var lifesteal: float = 0.0        # 每次击杀回血量
+var slow_vuln_bonus: float = 0.0  # 减速目标易伤加成(冰封/控制卡叠加;基线 0.30 在 Enemy 侧)
 
 # Bot 注入钩子:默认 INF=真人(走键盘);RunHarness 每物理帧覆写为移动向量。详见 autoloads/run_harness.gd。
 var bot_input: Vector2 = Vector2.INF

@@ -21,6 +21,8 @@ const GRAVITY_AMP: float = 0.25      # 引力井内受到的全通道增伤
 const AMP_DUR: float = 0.25          # amp 状态时长(井每帧刷新,离场约 3 帧自然衰减)
 const CONFLAG_RADIUS: float = 60.0   # 燃尽 AoE 半径
 const CONFLAG_DAMAGE: float = 10.0   # 燃尽 AoE 一次性火伤(DOT 通道)
+const SLOW_VULN_BASE: float = 0.30   # 减速目标的基线易伤(无卡即生效,补 C2 slow 孤儿缺口)
+const SLOW_VULN_CAP: float = 0.50    # 易伤硬封(范本 StS Vulnerable/PoE Shock)
 
 # 燃尽重入守卫(模块级):燃尽 AoE 击杀带 burn 邻怪时跳过其再触发,保证单波(见设计 §6)。
 static var _conflagrating: bool = false
@@ -129,17 +131,24 @@ func apply_impulse(dir: Vector2, strength: float) -> void:
 	external_velocity += dir * strength
 
 # 纯函数(便于单测)：状态协同乘区。冻结→碎裂(仅DIRECT,不消耗)；硬直→处决(随缺失血量递增,仅DIRECT)；
-# 引力增幅 amp→双通道。状态键互斥(冻结只走碎裂、硬直只走处决),跨来源乘算叠加。
-static func synergy_multiplier(channel: DamageChannel, frozen: bool, stun: bool, hp_frac: float, amp_frac: float) -> float:
+# 引力增幅 amp 与减速易伤 slow_vuln 同属"易伤桶"桶内相加；碎裂/处决跨桶相乘
+# (C1 桶纪律,防全乘区指数起飞)。slow_vuln_frac 默认 0 → 退化为原式(向后兼容已锁契约)。
+static func synergy_multiplier(channel: DamageChannel, frozen: bool, stun: bool, hp_frac: float, amp_frac: float, slow_vuln_frac: float = 0.0) -> float:
 	var m := 1.0
-	if amp_frac > 0.0:                       # 引力增幅：两个通道都吃
-		m *= (1.0 + amp_frac)
+	if amp_frac > 0.0 or slow_vuln_frac > 0.0:   # 易伤桶：引力增幅 + 减速易伤，相加；两通道都吃
+		m *= (1.0 + amp_frac + slow_vuln_frac)
 	if channel == DamageChannel.DIRECT:      # 打击型协同：仅直击
 		if frozen:
 			m *= SHATTER_MULT
 		if stun:                             # key 在 stun,不含 freeze → 与碎裂互斥
 			m *= (1.0 + EXECUTE_BASE + EXECUTE_SCALE * (1.0 - hp_frac))
 	return m
+
+# 纯函数(便于单测)：减速目标的有效易伤 = (基线 + 攻击方卡加成)，封顶；非减速则 0。
+static func effective_slow_vuln(slowed: bool, player_bonus: float) -> float:
+	if not slowed:
+		return 0.0
+	return minf(SLOW_VULN_BASE + player_bonus, SLOW_VULN_CAP)
 
 # 纯函数(便于单测)：把 atom 的期望速度按状态+外力合成最终速度。
 # 硬直时自身不动但仍受外力推动。
@@ -159,7 +168,12 @@ func take_damage(amount: float, channel: DamageChannel = DamageChannel.DIRECT) -
 	var had_burn := has_status(&"burn")
 	var hp_frac := (hp / MAX_HP) if MAX_HP > 0.0 else 0.0
 	var amp := status.magnitude(&"amp")
-	var final := amount * synergy_multiplier(channel, frozen, stun, hp_frac, amp)
+	# slow 易伤(C2)：减速目标受额外伤害。攻击方加成读 _player(单点接线,基线对所有通道生效)。
+	var slow_bonus := 0.0
+	if _player != null and is_instance_valid(_player) and "slow_vuln_bonus" in _player:
+		slow_bonus = _player.slow_vuln_bonus
+	var slow_vuln := effective_slow_vuln(has_status(&"slow"), slow_bonus)
+	var final := amount * synergy_multiplier(channel, frozen, stun, hp_frac, amp, slow_vuln)
 	hp -= final
 	# DIRECT 打击型协同反馈(复用预设,纯 cosmetic,确定性安全)。
 	if channel == DamageChannel.DIRECT:
