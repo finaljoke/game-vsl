@@ -31,6 +31,22 @@ func test_flag_off_band_detects_op_and_weak() -> void:
 	assert_str(String(f["d"]["verdict"])).is_equal("weak")
 	assert_str(String(f["a"]["verdict"])).is_equal("ok")
 
+# ── solo_spec 解析(纯模块,harness 与分析器共用) ──────────────────────────
+func test_solo_spec_plain_solo() -> void:
+	var s := RA.solo_spec("solo_aura")
+	assert_bool(s["is_solo"]).is_true()
+	assert_bool(s["is_floor"]).is_false()
+	assert_str(String(s["weapon_id"])).is_equal("aura")
+
+func test_solo_spec_floor() -> void:
+	var s := RA.solo_spec("solofloor_knife")
+	assert_bool(s["is_solo"]).is_true()
+	assert_bool(s["is_floor"]).is_true()
+	assert_str(String(s["weapon_id"])).is_equal("knife")
+
+func test_solo_spec_non_solo_empty() -> void:
+	assert_bool(RA.solo_spec("default")["is_solo"]).is_false()
+
 # ── P2a 单元:tick/events 解析 ──────────────────────────────────────────────
 func test_tick_rows_from_csv_parses_header_and_rows() -> void:
 	var csv := "t,level,kills_total,hp_pct,danger_ps\n10.0,5,100,0.8,2.0\n11.0,5,110,0.7,1.0"

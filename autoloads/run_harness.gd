@@ -5,6 +5,8 @@
 # 本文件含两个纯静态函数(compute_kite_dir / choose_card),不依赖场景,便于单测。
 extends Node
 
+const RunAnalysis := preload("res://tools/run_analysis.gd")   # 纯解析模块,solo_spec 等共用
+
 # ── 可调参数(集中) ────────────────────────────────────────────────────────
 const PERCEPTION_RADIUS: float = 220.0   # kite 感知半径(px):此半径内敌人产生斥力
 const CENTER_PULL_GAIN: float = 0.004    # kite 避墙:离中心越远拉回越强
@@ -46,14 +48,10 @@ static func solo_profile(weapon_id: String, evo_perk: String) -> Array:
 		"type:upgrade", "type:synergy", "type:perk",
 	]
 
-# 单武器档名 → 规格。solofloor_ 先于 solo_ 匹配(更长前缀)。
-# {"is_solo": bool, "is_floor": bool, "weapon_id": String}。非单武器档 → is_solo=false。
+# 单武器档名 → 规格(委托纯模块 run_analysis,与分析器共用同一解析,DRY)。
+# {"is_solo": bool, "is_floor": bool, "weapon_id": String}。
 static func solo_spec(cards_name: String) -> Dictionary:
-	if cards_name.begins_with("solofloor_"):
-		return {"is_solo": true, "is_floor": true, "weapon_id": cards_name.substr(10)}
-	if cards_name.begins_with("solo_"):
-		return {"is_solo": true, "is_floor": false, "weapon_id": cards_name.substr(5)}
-	return {"is_solo": false, "is_floor": false, "weapon_id": ""}
+	return RunAnalysis.solo_spec(cards_name)
 
 static func profile_for(name: String) -> Array:
 	var spec := solo_spec(name)

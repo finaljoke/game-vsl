@@ -23,9 +23,10 @@ func _initialize() -> void:
 		if typeof(su) != TYPE_DICTIONARY:
 			continue
 		var cards := String(su.get("config", {}).get("cards", ""))
-		if not cards.begins_with("solo_"):
+		var spec := RA.solo_spec(cards)
+		if not spec["is_solo"]:
 			continue
-		var wid := cards.substr(5)
+		var wid: String = spec["weapon_id"]
 		var events := RA.events_from_jsonl(FileAccess.get_file_as_string(abs_dir.path_join(base + ".events.jsonl")))
 		var ticks := RA.tick_rows_from_csv(FileAccess.get_file_as_string(abs_dir.path_join(base + ".tick.csv")))
 		var t_evo := RA.evolution_unlock_time(events, wid)

@@ -73,6 +73,16 @@ static func tick_rows_from_csv(text: String) -> Array:
 		rows.append(row)
 	return rows
 
+# 单武器档名 → 规格。solofloor_ 先于 solo_ 匹配(更长前缀)。纯字符串解析,无 autoload 依赖,
+# 供 run_harness(运行时授武器)与 analyze_evolutions(-s 脚本,不能 preload autoload)共用。
+# {"is_solo": bool, "is_floor": bool, "weapon_id": String}。非单武器档 → is_solo=false。
+static func solo_spec(cards_name: String) -> Dictionary:
+	if cards_name.begins_with("solofloor_"):
+		return {"is_solo": true, "is_floor": true, "weapon_id": cards_name.substr(10)}
+	if cards_name.begins_with("solo_"):
+		return {"is_solo": true, "is_floor": false, "weapon_id": cards_name.substr(5)}
+	return {"is_solo": false, "is_floor": false, "weapon_id": ""}
+
 # 解析 events JSONL 文本为字典数组(逐行 JSON.parse,跳过非字典行)。
 static func events_from_jsonl(text: String) -> Array:
 	var out: Array = []
