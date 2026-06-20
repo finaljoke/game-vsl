@@ -150,6 +150,9 @@ static func summarize_evolution(metrics_list: Array) -> Dictionary:
 	var kpm: Array = []
 	var hpmin: Array = []
 	var surv: Array = []
+	var clear: Array = []
+	var backlog: Array = []
+	var tevo: Array = []
 	var reached_count := 0
 	var death_count := 0
 	for m in metrics_list:
@@ -158,6 +161,9 @@ static func summarize_evolution(metrics_list: Array) -> Dictionary:
 			kpm.append(float(m.get("kpm_post", 0.0)))
 			hpmin.append(float(m.get("hp_min_post", 0.0)))
 			surv.append(float(m.get("survived_post", 0.0)))
+			clear.append(float(m.get("clear_eff", 0.0)))
+			backlog.append(float(m.get("backlog_mean", 0.0)))
+			tevo.append(float(m.get("t_evo", 0.0)))
 		if String(m.get("outcome", "")) == "death":
 			death_count += 1
 	return {
@@ -167,6 +173,9 @@ static func summarize_evolution(metrics_list: Array) -> Dictionary:
 		"kpm_post_med": median(kpm),
 		"hp_min_post_med": median(hpmin),
 		"survived_post_med": median(surv),
+		"clear_eff_med": median(clear),
+		"backlog_mean_med": median(backlog),
+		"t_evo_med": median(tevo),
 	}
 
 # 多轴判据:对 kpm/survived/hp_min 三数值轴各算跨进化中位 ±band。
@@ -200,6 +209,46 @@ static func flag_multi_axis(by_evo: Dictionary, band: float = 0.35) -> Dictionar
 			"kpm_axis": kpm_v, "kpm_eff": _effect(kpm, kpm_med),
 			"surv_axis": surv_v, "surv_eff": _effect(surv, surv_med),
 			"hp_axis": hp_v, "hp_eff": _effect(hp, hp_med),
+			"reached_ratio": reached, "death_ratio": death,
+		}
+	return flags
+
+# 支配判据(P3):以 clear_eff(密度/时长鲁棒)为主轴替 kpm。
+# OP = clear_eff 高 且 安全非劣(hp_min 非 low);weak = reached<0.5 或(death>0.5 且 surv low)或 ≥2 可信轴低。
+# backlog 反向作辅证(低积压=清场强),不单独定 OP。kpm 不入判据(降级为分析器 context 列)。
+static func flag_dominance(by_evo: Dictionary, band: float = 0.35) -> Dictionary:
+	var clear_med := _axis_median(by_evo, "clear_eff_med")
+	var surv_med := _axis_median(by_evo, "survived_post_med")
+	var hp_med := _axis_median(by_evo, "hp_min_post_med")
+	var backlog_med := _axis_median(by_evo, "backlog_mean_med")
+	var flags := {}
+	for k in by_evo:
+		var r = by_evo[k]
+		var clear := float(r["clear_eff_med"])
+		var surv := float(r["survived_post_med"])
+		var hp := float(r["hp_min_post_med"])
+		var backlog := float(r["backlog_mean_med"])
+		var clear_v := _band_verdict(clear, clear_med, band)
+		var surv_v := _band_verdict(surv, surv_med, band)
+		var hp_v := _band_verdict(hp, hp_med, band)
+		var backlog_raw := _band_verdict(backlog, backlog_med, band)   # 反向:低积压=强
+		var backlog_v := ("high" if backlog_raw == "low" else ("low" if backlog_raw == "high" else "ok"))
+		var reached := float(r.get("reached_ratio", 1.0))
+		var death := float(r.get("death_ratio", 0.0))
+		var low_axes := (1 if clear_v == "low" else 0) + (1 if surv_v == "low" else 0) + (1 if hp_v == "low" else 0)
+		var verdict := "ok"
+		if reached < 0.5 or (death > 0.5 and surv_v == "low"):
+			verdict = "weak"
+		elif low_axes >= 2:
+			verdict = "weak"
+		elif clear_v == "high" and hp_v != "low":
+			verdict = "OP"
+		flags[k] = {
+			"verdict": verdict,
+			"clear_axis": clear_v, "clear_dev": _effect(clear, clear_med),
+			"surv_axis": surv_v, "surv_dev": _effect(surv, surv_med),
+			"hp_axis": hp_v, "hp_dev": _effect(hp, hp_med),
+			"backlog_axis": backlog_v, "backlog_dev": _effect(backlog, backlog_med),
 			"reached_ratio": reached, "death_ratio": death,
 		}
 	return flags

@@ -166,3 +166,52 @@ func test_window_metrics_unreached_has_zero_clear_eff() -> void:
 	assert_bool(m["reached_evolution"]).is_false()
 	assert_float(m["clear_eff"]).is_equal(0.0)
 	assert_float(m["backlog_mean"]).is_equal(0.0)
+
+func test_summarize_evolution_aggregates_new_axes() -> void:
+	var ms := [
+		{"reached_evolution": true, "kpm_post": 100.0, "hp_min_post": 0.9, "survived_post": 300.0,
+			"clear_eff": 10.0, "backlog_mean": 10.0, "t_evo": 180.0, "outcome": "victory"},
+		{"reached_evolution": true, "kpm_post": 140.0, "hp_min_post": 0.8, "survived_post": 360.0,
+			"clear_eff": 14.0, "backlog_mean": 20.0, "t_evo": 220.0, "outcome": "victory"},
+		{"reached_evolution": false, "kpm_post": 0.0, "hp_min_post": 0.0, "survived_post": 0.0,
+			"clear_eff": 0.0, "backlog_mean": 0.0, "t_evo": -1.0, "outcome": "death"},
+	]
+	var s := RA.summarize_evolution(ms)
+	assert_float(s["clear_eff_med"]).is_equal_approx(12.0, 0.001)     # median(10,14)
+	assert_float(s["backlog_mean_med"]).is_equal_approx(15.0, 0.001)  # median(10,20)
+	assert_float(s["t_evo_med"]).is_equal_approx(200.0, 0.001)        # median(180,220),未达不计
+
+# ── P3 单元:flag_dominance 支配判据 ─────────────────────────────────────────
+func test_flag_dominance_uses_clear_eff_not_kpm() -> void:
+	# swarm:clear_eff 低(3) + backlog 巨(200) → 不 OP(纵 kpm 在真实跑里高)
+	# op:clear_eff 高(18) + 安全非劣 → OP;clean/mid:clear_eff 中(9) → ok
+	var by := {
+		"evolve_swarm": {"clear_eff_med": 3.0,  "backlog_mean_med": 200.0, "survived_post_med": 450.0, "hp_min_post_med": 0.74, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"evolve_clean": {"clear_eff_med": 9.0,  "backlog_mean_med": 30.0,  "survived_post_med": 400.0, "hp_min_post_med": 0.70, "reached_ratio": 1.0, "death_ratio": 0.1},
+		"evolve_mid":   {"clear_eff_med": 9.0,  "backlog_mean_med": 30.0,  "survived_post_med": 400.0, "hp_min_post_med": 0.70, "reached_ratio": 1.0, "death_ratio": 0.1},
+		"evolve_op":    {"clear_eff_med": 18.0, "backlog_mean_med": 12.0,  "survived_post_med": 430.0, "hp_min_post_med": 0.85, "reached_ratio": 1.0, "death_ratio": 0.0},
+	}
+	var f := RA.flag_dominance(by, 0.35)
+	assert_str(String(f["evolve_op"]["verdict"])).is_equal("OP")
+	assert_str(String(f["evolve_swarm"]["verdict"])).is_not_equal("OP")   # 反转:高 kpm/积压 不再误报 OP
+	assert_str(String(f["evolve_clean"]["verdict"])).is_equal("ok")
+
+func test_flag_dominance_weak_on_low_reached() -> void:
+	var by := {
+		"evolve_a":    {"clear_eff_med": 10.0, "backlog_mean_med": 30.0, "survived_post_med": 400.0, "hp_min_post_med": 0.8, "reached_ratio": 1.0, "death_ratio": 0.1},
+		"evolve_b":    {"clear_eff_med": 10.0, "backlog_mean_med": 30.0, "survived_post_med": 400.0, "hp_min_post_med": 0.8, "reached_ratio": 1.0, "death_ratio": 0.1},
+		"evolve_weak": {"clear_eff_med": 4.0,  "backlog_mean_med": 90.0, "survived_post_med": 120.0, "hp_min_post_med": 0.2, "reached_ratio": 0.3, "death_ratio": 0.8},
+	}
+	var f := RA.flag_dominance(by, 0.35)
+	assert_str(String(f["evolve_weak"]["verdict"])).is_equal("weak")     # reached<0.5
+
+func test_flag_dominance_backlog_axis_inverted() -> void:
+	# backlog 低于带 → 清场强 → backlog_axis="high";高于带 → "low"
+	var by := {
+		"evolve_lo": {"clear_eff_med": 10.0, "backlog_mean_med": 10.0,  "survived_post_med": 400.0, "hp_min_post_med": 0.8, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"evolve_md": {"clear_eff_med": 10.0, "backlog_mean_med": 100.0, "survived_post_med": 400.0, "hp_min_post_med": 0.8, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"evolve_hi": {"clear_eff_med": 10.0, "backlog_mean_med": 200.0, "survived_post_med": 400.0, "hp_min_post_med": 0.8, "reached_ratio": 1.0, "death_ratio": 0.0},
+	}
+	var f := RA.flag_dominance(by, 0.35)
+	assert_str(String(f["evolve_lo"]["backlog_axis"])).is_equal("high")  # 积压小=清场强
+	assert_str(String(f["evolve_hi"]["backlog_axis"])).is_equal("low")   # 积压大=清场弱
