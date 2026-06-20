@@ -114,6 +114,14 @@ func banish(id: String) -> void:
 func reset_run() -> void:
 	_banished.clear()
 
+# solo 隔离:banish 掉除 keep_id 外的全部 base 武器卡,使 pick() 永不提供外来武器。
+# 外来武器被 ban → 永不 owned → 其升级(upgrade:<w>)永不就绪 → solo build 纯净。
+# 目标武器/升级/perk/目标进化不受影响。仅 RunHarness solo 路径调用。
+func banish_other_weapons(keep_id: String) -> void:
+	for card in _runtime_cards:
+		if String(card.get("type", "")) == "weapon" and String(card["id"]) != keep_id:
+			banish(String(card["id"]))
+
 # 静态武器与升级卡（依赖 WeaponDB 提供数据，但 CARDS 数组里的 id/condition 是手写的）
 func _register_weapon_effects() -> void:
 	for id in ["knife", "orb", "explosion", "lightning", "whip", "boomerang", "aura", "maul", "frostbite", "gravity_well", "reanimate"]:

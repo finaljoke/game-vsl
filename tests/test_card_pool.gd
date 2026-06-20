@@ -579,3 +579,24 @@ func test_synergy_fire_gated_by_fire_weapon() -> void:
 		if c["id"] == "synergy_fire":
 			found = true
 	assert_bool(found).is_true()
+
+# ── P2a 单元:solo 隔离闸 ──────────────────────────────────────────────────
+func test_banish_other_weapons_excludes_foreign() -> void:
+	CardPool.reset_run()
+	CardPool.banish_other_weapons("explosion")
+	var cards := CardPool.pick(_player, 99)
+	for c in cards:
+		if String(c.get("type", "")) == "weapon":
+			assert_str(String(c["id"])).is_equal("explosion")
+	CardPool.reset_run()
+
+func test_banish_other_weapons_keeps_target_offerable() -> void:
+	CardPool.reset_run()
+	CardPool.banish_other_weapons("explosion")
+	var cards := CardPool.pick(_player, 99)  # explosion 未持有 → 仍应可被提供
+	var found := false
+	for c in cards:
+		if String(c["id"]) == "explosion":
+			found = true
+	assert_bool(found).is_true()
+	CardPool.reset_run()
