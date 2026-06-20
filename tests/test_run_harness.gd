@@ -117,3 +117,38 @@ func test_parse_args_reads_fast_out_maxtime() -> void:
 	assert_float(cfg["fast"]).is_equal_approx(5.0, 0.001)
 	assert_str(cfg["out"]).is_equal("telemetry/run_x")
 	assert_float(cfg["maxtime"]).is_equal_approx(30.0, 0.001)
+
+# ── 躲弹方向(compute_dodge_dir) ──────────────────────────────────────────
+func test_dodge_no_projectiles_is_zero() -> void:
+	assert_vector(Harness.compute_dodge_dir(Vector2(640, 360), [], 200.0)).is_equal(Vector2.ZERO)
+
+func test_dodge_sidesteps_perpendicular_to_incoming() -> void:
+	# 弹在玩家左下、向右飞,玩家在弹道线上方 → 垂直侧移(向上=负 y),且垂直于弹速
+	var dir := Harness.compute_dodge_dir(Vector2(640, 360), [{"pos": Vector2(540, 380), "vel": Vector2(220, 0)}], 200.0)
+	assert_float(dir.y).is_less(0.0)
+	assert_float(dir.dot(Vector2(1, 0))).is_equal_approx(0.0, 0.001)
+	assert_float(dir.length()).is_equal_approx(1.0, 0.001)
+
+func test_dodge_ignores_receding_projectile() -> void:
+	# 弹向左飞(远离右侧玩家)→ vel·to_player<0 → 不躲
+	var dir := Harness.compute_dodge_dir(Vector2(640, 360), [{"pos": Vector2(540, 360), "vel": Vector2(-220, 0)}], 200.0)
+	assert_vector(dir).is_equal(Vector2.ZERO)
+
+func test_dodge_ignores_projectile_beyond_radius() -> void:
+	# 弹距离 340 > 半径 200 → 忽略
+	var dir := Harness.compute_dodge_dir(Vector2(640, 360), [{"pos": Vector2(300, 360), "vel": Vector2(220, 0)}], 200.0)
+	assert_vector(dir).is_equal(Vector2.ZERO)
+
+func test_dodge_head_on_uses_deterministic_perpendicular() -> void:
+	# 玩家恰在弹道延长线上 → lateral≈0 → 兜底 (-vdir.y, vdir.x) = (0,1)
+	var dir := Harness.compute_dodge_dir(Vector2(640, 360), [{"pos": Vector2(540, 360), "vel": Vector2(220, 0)}], 200.0)
+	assert_vector(dir).is_equal(Vector2(0, 1))
+
+func test_dodge_order_independent() -> void:
+	# 内部排序 → 同一组弹乱序输入两次结果逐位一致(C5 单元锁)
+	var p := Vector2(640, 360)
+	var a := {"pos": Vector2(540, 340), "vel": Vector2(220, 0)}
+	var b := {"pos": Vector2(560, 380), "vel": Vector2(0, -220)}
+	var r1 := Harness.compute_dodge_dir(p, [a, b], 200.0)
+	var r2 := Harness.compute_dodge_dir(p, [b, a], 200.0)
+	assert_vector(r1).is_equal(r2)
