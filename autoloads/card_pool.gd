@@ -334,8 +334,18 @@ func _check_condition(condition: String, player: Player) -> bool:
 			if player.has_weapon(w.strip_edges()):
 				return true
 		return false
+	if condition.begins_with("has_tag:"):
+		return _player_has_tag(player, StringName(condition.substr(8)))
 	if condition.begins_with("has:"):
 		return player.has_weapon(condition.substr(4))
+	return false
+
+# 持有任一带该标签的武器即真(数据驱动：标签存于 WeaponData.tags)。
+func _player_has_tag(player: Player, tag: StringName) -> bool:
+	for id in player.owned_weapons:
+		var data := WeaponDB.get_data(id)
+		if data != null and data.tags.has(tag):
+			return true
 	return false
 
 # 进化解锁：武器到 max_level 且关联 perk 累积到阈值。

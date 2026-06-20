@@ -517,3 +517,15 @@ func test_pick_never_empty_via_fallback() -> void:
 	assert_int(cards.size()).is_equal(1)
 	assert_str(cards[0]["id"]).is_equal("fallback_token")
 	CardPool.reset_run()  # 清理：别污染其它用例
+
+# ── P1 单元1：has_tag 条件 DSL ─────────────────────────────────────────────
+func test_has_tag_false_when_no_tagged_weapon() -> void:
+	assert_bool(CardPool._check_condition("has_tag:fire", _player)).is_false()
+
+func test_has_tag_true_when_owns_fire_weapon() -> void:
+	_stub_owns("explosion", 1)
+	assert_bool(CardPool._check_condition("has_tag:fire", _player)).is_true()
+
+func test_has_tag_physical_true_for_knife() -> void:
+	_stub_owns("knife", 1)
+	assert_bool(CardPool._check_condition("has_tag:physical", _player)).is_true()
