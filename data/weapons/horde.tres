@@ -14,10 +14,10 @@ base_scene = ExtResource("2_scene")
 max_level = 1
 levels = [{
 "cooldown": 2.5,
-"damage": 16.0,
-"lifetime": 18.0,
-"max_minions": 6,
+"damage": 22.0,
+"lifetime": 22.0,
+"max_minions": 9,
 "minion_hp": 35.0,
-"minion_speed": 130.0,
-"split_chance": 0.35
+"minion_speed": 165.0,
+"split_chance": 0.5
 }]
