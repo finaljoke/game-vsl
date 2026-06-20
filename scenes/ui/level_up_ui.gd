@@ -196,6 +196,15 @@ func _make_card(card: Dictionary) -> Control:
 	type_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_child(type_lbl)
 
+	var tag_text := _card_element_text(card)
+	if tag_text != "":
+		var tag_lbl := Label.new()
+		tag_lbl.text = tag_text
+		tag_lbl.add_theme_font_size_override("font_size", 11)
+		tag_lbl.add_theme_color_override("font_color", Color(0.75, 0.8, 0.95))
+		tag_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		content.add_child(tag_lbl)
+
 	var name_lbl := Label.new()
 	name_lbl.text = card["name"]
 	name_lbl.add_theme_font_size_override("font_size", 14)
@@ -231,3 +240,25 @@ func _on_card_picked(card: Dictionary) -> void:
 	CardPool.apply(card, player)
 	GameFeel.item_selected.emit()
 	_gm.resume_game()
+
+# 卡的元素徽标文本：武器/升级/进化卡取关联武器 tags；synergy 元素卡按 condition 的 has_tag: 取。
+const _ELEMENT_LABELS := {
+	&"fire": "🔥火", &"ice": "❄️冰", &"lightning": "⚡雷",
+	&"physical": "🗡️物理", &"gravity": "🌀重力", &"summon": "💀召唤",
+}
+func _card_element_text(card: Dictionary) -> String:
+	var tags: Array = []
+	var wid: String = CardPool._weapon_id_of(card)
+	if wid != "":
+		var data := WeaponDB.get_data(wid)
+		if data != null:
+			tags = data.tags
+	else:
+		var cond := String(card.get("condition", ""))
+		if cond.begins_with("has_tag:"):
+			tags = [StringName(cond.substr(8))]
+	var parts: Array = []
+	for t in tags:
+		if _ELEMENT_LABELS.has(t):
+			parts.append(_ELEMENT_LABELS[t])
+	return " ".join(parts)
