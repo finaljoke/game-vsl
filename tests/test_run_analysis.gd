@@ -126,3 +126,43 @@ func test_flag_multi_axis_detects_op_and_weak() -> void:
 	assert_str(String(f["evolve_weak"]["verdict"])).is_equal("weak")
 	assert_str(String(f["evolve_a"]["verdict"])).is_equal("ok")
 	assert_float(f["evolve_op"]["kpm_eff"]).is_equal_approx(1.0, 0.001)  # 200/100-1
+
+# ── P3 单元:clear_eff / backlog_mean / t_evo ─────────────────────────────────
+func test_window_metrics_backlog_and_clear_eff() -> void:
+	# t_evo=200,t_end=260→win_dur=60;kills 100→280=180→kpm_post=180;
+	# enemies_alive 均值=(150+90)/2=120;clear_eff=180/max(120,FLOOR)=1.5
+	var win := [
+		{"t": "200.0", "kills_total": "100", "hp_pct": "0.9", "danger_ps": "0.0", "enemies_alive": "150"},
+		{"t": "260.0", "kills_total": "280", "hp_pct": "0.7", "danger_ps": "2.0", "enemies_alive": "90"},
+	]
+	var m := RA.window_metrics(win, 200.0, 260.0, "death")
+	assert_float(m["backlog_mean"]).is_equal_approx(120.0, 0.001)
+	assert_float(m["clear_eff"]).is_equal_approx(1.5, 0.001)
+	assert_float(m["t_evo"]).is_equal_approx(200.0, 0.001)
+
+func test_window_metrics_clear_eff_floor_guards_low_backlog() -> void:
+	# backlog 均值=2 < FLOOR;kills 0→30=30/60s*60=30 kpm;clear_eff=30/FLOOR(非 30/2)
+	var win := [
+		{"t": "200.0", "kills_total": "0", "hp_pct": "1.0", "danger_ps": "0.0", "enemies_alive": "2"},
+		{"t": "260.0", "kills_total": "30", "hp_pct": "1.0", "danger_ps": "0.0", "enemies_alive": "2"},
+	]
+	var m := RA.window_metrics(win, 200.0, 260.0, "victory")
+	assert_float(m["clear_eff"]).is_equal_approx(30.0 / RA.BACKLOG_FLOOR, 0.001)
+
+func test_clear_eff_inverts_swarm_chipping() -> void:
+	# swarm:高 kpm(600) 但满场积压 200 → clear_eff=600/200=3
+	# clean:中 kpm(300) 低积压 20 → clear_eff=300/20=15(更强,尽管 kpm 更低)
+	var swarm := [{"t": "100.0", "kills_total": "0", "enemies_alive": "200"},
+		{"t": "160.0", "kills_total": "600", "enemies_alive": "200"}]
+	var clean := [{"t": "100.0", "kills_total": "0", "enemies_alive": "20"},
+		{"t": "160.0", "kills_total": "300", "enemies_alive": "20"}]
+	var ms := RA.window_metrics(swarm, 100.0, 160.0, "victory")
+	var mc := RA.window_metrics(clean, 100.0, 160.0, "victory")
+	assert_float(ms["kpm_post"]).is_greater(mc["kpm_post"])      # kpm 误把 swarm 排前
+	assert_float(mc["clear_eff"]).is_greater(ms["clear_eff"])    # clear_eff 反转:clean 更强
+
+func test_window_metrics_unreached_has_zero_clear_eff() -> void:
+	var m := RA.window_metrics([], -1.0, 100.0, "death")
+	assert_bool(m["reached_evolution"]).is_false()
+	assert_float(m["clear_eff"]).is_equal(0.0)
+	assert_float(m["backlog_mean"]).is_equal(0.0)

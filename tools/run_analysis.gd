@@ -2,6 +2,8 @@
 # 平衡分析纯函数核。无 IO、无场景。analyze_runs.gd 与单测共用。
 extends RefCounted
 
+const BACKLOG_FLOOR: float = 5.0   # clear_eff 分母地板:强武器清空场地致 backlog→0 时防爆(P3 验证闸复核;若多进化命中地板,主轴降级为 backlog_mean)
+
 static func median(values: Array) -> float:
 	if values.is_empty():
 		return 0.0
@@ -116,21 +118,29 @@ static func window_rows(tick_rows: Array, t_evo: float) -> Array:
 static func window_metrics(win_rows: Array, t_evo: float, t_end: float, outcome: String) -> Dictionary:
 	if win_rows.is_empty():
 		return {"reached_evolution": false, "kpm_post": 0.0, "hp_min_post": 0.0,
-				"danger_mean_post": 0.0, "survived_post": 0.0, "outcome": outcome}
+				"danger_mean_post": 0.0, "survived_post": 0.0, "backlog_mean": 0.0,
+				"clear_eff": 0.0, "t_evo": t_evo, "outcome": outcome}
 	var k0 := float(win_rows[0].get("kills_total", 0))
 	var k1 := float(win_rows[win_rows.size() - 1].get("kills_total", 0))
 	var win_dur := maxf(t_end - t_evo, 0.001)
 	var hp_min := 1.0
 	var danger_sum := 0.0
+	var backlog_sum := 0.0
 	for row in win_rows:
 		hp_min = minf(hp_min, float(row.get("hp_pct", 1.0)))
 		danger_sum += float(row.get("danger_ps", 0.0))
+		backlog_sum += float(row.get("enemies_alive", 0))
+	var kpm_post := (k1 - k0) / win_dur * 60.0
+	var backlog_mean := backlog_sum / win_rows.size()
 	return {
 		"reached_evolution": true,
-		"kpm_post": (k1 - k0) / win_dur * 60.0,
+		"kpm_post": kpm_post,
 		"hp_min_post": hp_min,
 		"danger_mean_post": danger_sum / win_rows.size(),
 		"survived_post": win_dur,
+		"backlog_mean": backlog_mean,
+		"clear_eff": kpm_post / maxf(backlog_mean, BACKLOG_FLOOR),
+		"t_evo": t_evo,
 		"outcome": outcome,
 	}
 
