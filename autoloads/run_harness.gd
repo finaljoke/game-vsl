@@ -36,6 +36,9 @@ const SOLO_PERKS := {
 
 const FLOOR_PERK_HP_STACKS: int = 5   # solofloor_ 档开局授予的 perk_hp 层数(+100 max HP 生存垫,纯防御不加击杀)
 
+const MIX_CHASSIS: Array = ["frostbite"]          # 混编生存底盘武器:控制(slow)、低清场,留 headroom 给目标
+const MIX_CHASSIS_PERK_HP_STACKS: int = 5         # 底盘防御垫(A/B 两臂同垫,delta 抵消;让 base 脆武器活到进化)
+
 # 单武器优先表:拿武器 → 升级 → (就绪即)进化 → 堆进化 perk → 生存兜底。
 # 不含通用 type:weapon,故 bot 不会拿别的武器,保证单武器隔离。
 static func solo_profile(weapon_id: String, evo_perk: String) -> Array:
@@ -48,6 +51,17 @@ static func solo_profile(weapon_id: String, evo_perk: String) -> Array:
 		"type:upgrade", "type:synergy", "type:perk",
 	]
 
+# 混编优先表:目标武器优先(满级→进化→进化 perk),其次底盘武器维护,再生存兜底。
+# 不含通用 type:weapon → bot 不拿外来武器,保证「底盘 + 目标」纯净。target=="" 即纯底盘(mixbase)。
+static func mix_profile(target: String, target_evo_perk: String) -> Array:
+	var p: Array = []
+	if target != "":
+		p.append_array([target, target + "_2", target + "_3", "evolve_" + target, target_evo_perk])
+	for w in MIX_CHASSIS:
+		p.append_array([w, w + "_2", w + "_3"])
+	p.append_array(["synergy_lifesteal", "perk_hp", "perk_heal", "type:upgrade", "type:synergy", "type:perk"])
+	return p
+
 # 单武器档名 → 规格(委托纯模块 run_analysis,与分析器共用同一解析,DRY)。
 # {"is_solo": bool, "is_floor": bool, "weapon_id": String}。
 static func solo_spec(cards_name: String) -> Dictionary:
@@ -58,6 +72,10 @@ static func profile_for(name: String) -> Array:
 	if spec["is_solo"]:
 		var wid: String = spec["weapon_id"]
 		return solo_profile(wid, String(SOLO_PERKS.get(wid, "perk_hp")))
+	var mspec := RunAnalysis.mix_spec(name)
+	if mspec["is_mix"]:
+		var t: String = mspec["target"]
+		return mix_profile(t, String(SOLO_PERKS.get(t, "perk_hp")))
 	return PROFILES.get(name, DEFAULT_PROFILE)
 
 # ── 运行时状态(Task 7 填充驱动逻辑;此处先声明,供其他文件引用) ────────────────
@@ -206,7 +224,7 @@ func _physics_process(_delta: float) -> void:
 		return
 	if not _solo_weapon_granted:
 		_solo_weapon_granted = true
-		_grant_solo_weapon(p)
+		_grant_initial_loadout(p)
 	p.bot_input = _compute_input(p)
 
 func _compute_input(p: Player) -> Vector2:
@@ -251,14 +269,24 @@ func _finish(outcome: String) -> void:
 	print("[RunHarness] 终局=%s,退出。" % outcome)
 	get_tree().quit()
 
-# 单武器档:开局直接授予该武器,使 bot 真正评估它(否则随机卡池常不提供该武器→饿死无解)。
-# 仅 bot solo 模式;按 id 授予(无 RNG,确定性);非 solo 档/无 --bot 时不触发。
-func _grant_solo_weapon(p: Player) -> void:
-	var spec := solo_spec(_cards_name_val)
-	if not spec["is_solo"]:
+# 开局授予档位 loadout,使 bot 真正评估目标(否则随机卡池常不提供→饿死无解)。
+# 按 cards 档名分流:solo_/solofloor_ → _grant_solo;mixbase/mix_ → _grant_mix;其余(默认档)不触发。
+# 仅 bot 模式;按 id 授予(无 RNG,确定性)。
+func _grant_initial_loadout(p: Player) -> void:
+	if p == null:
 		return
+	var spec := solo_spec(_cards_name_val)
+	if spec["is_solo"]:
+		_grant_solo(p, spec)
+		return
+	var mspec := RunAnalysis.mix_spec(_cards_name_val)
+	if mspec["is_mix"]:
+		_grant_mix(p, mspec)
+
+# 单武器档:授目标武器、移除外来武器、地板档加防御垫。
+func _grant_solo(p: Player, spec: Dictionary) -> void:
 	var wid: String = spec["weapon_id"]
-	if wid == "" or p == null:
+	if wid == "":
 		return
 	# solo 隔离:移除所有非目标已持有武器(含 main.gd 默认授予的起手 knife),否则起手 knife 污染
 	# build(knife_2/_3 就绪)。.keys() 是快照,迭代中 erase 安全。
@@ -275,6 +303,25 @@ func _grant_solo_weapon(p: Player) -> void:
 	if spec["is_floor"]:
 		for _i in range(FLOOR_PERK_HP_STACKS):
 			CardPool.apply({"id": "perk_hp"}, p)
+
+# 混编档:授「底盘 + 目标」,移除其余武器,授底盘防御垫(A/B 两臂同垫 → delta 抵消)。
+func _grant_mix(p: Player, mspec: Dictionary) -> void:
+	var target: String = mspec["target"]
+	var loadout := MIX_CHASSIS.duplicate()
+	if target != "" and not loadout.has(target):
+		loadout.append(target)
+	for owned_id in p.owned_weapons.keys():
+		if not loadout.has(owned_id):
+			var node = p.owned_weapons[owned_id].get("node")
+			if is_instance_valid(node):
+				node.queue_free()
+			p.owned_weapons.erase(owned_id)
+	for wid in loadout:
+		if not p.has_weapon(wid):
+			CardPool.apply({"id": wid}, p)
+	CardPool.banish_weapons_except(loadout)
+	for _i in range(MIX_CHASSIS_PERK_HP_STACKS):
+		CardPool.apply({"id": "perk_hp"}, p)
 
 func _get_player() -> Player:
 	if _player == null or not is_instance_valid(_player):

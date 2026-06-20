@@ -85,6 +85,15 @@ static func solo_spec(cards_name: String) -> Dictionary:
 		return {"is_solo": true, "is_floor": false, "weapon_id": cards_name.substr(5)}
 	return {"is_solo": false, "is_floor": false, "weapon_id": ""}
 
+# 混编档名 → 规格。mixbase=纯底盘(无目标);mix_<wid>=底盘+目标武器。
+# {"is_mix": bool, "is_base": bool, "target": String}。供 harness(授武器)与 A/B 分析共用。
+static func mix_spec(cards_name: String) -> Dictionary:
+	if cards_name == "mixbase":
+		return {"is_mix": true, "is_base": true, "target": ""}
+	if cards_name.begins_with("mix_"):
+		return {"is_mix": true, "is_base": false, "target": cards_name.substr(4)}
+	return {"is_mix": false, "is_base": false, "target": ""}
+
 # 解析 events JSONL 文本为字典数组(逐行 JSON.parse,跳过非字典行)。
 static func events_from_jsonl(text: String) -> Array:
 	var out: Array = []

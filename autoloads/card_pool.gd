@@ -110,6 +110,9 @@ func rarity_weight(card: Dictionary) -> int:
 func banish(id: String) -> void:
 	_banished[id] = true
 
+func is_banished(id: String) -> bool:
+	return _banished.get(id, false)
+
 # 每局开始重置本局 ban 状态(CardPool 是 autoload 跨场景重载存活)。
 func reset_run() -> void:
 	_banished.clear()
@@ -118,8 +121,13 @@ func reset_run() -> void:
 # 外来武器被 ban → 永不 owned → 其升级(upgrade:<w>)永不就绪 → solo build 纯净。
 # 目标武器/升级/perk/目标进化不受影响。仅 RunHarness solo 路径调用。
 func banish_other_weapons(keep_id: String) -> void:
+	banish_weapons_except([keep_id])
+
+# 混编隔离(集合版):banish 掉 keep_ids 之外的全部 base 武器卡。solo 版 banish_other_weapons 委托此。
+# 仅 RunHarness solo/mix 路径调用,保证 pick() 只提供 loadout 内武器。
+func banish_weapons_except(keep_ids: Array) -> void:
 	for card in _runtime_cards:
-		if String(card.get("type", "")) == "weapon" and String(card["id"]) != keep_id:
+		if String(card.get("type", "")) == "weapon" and not keep_ids.has(String(card["id"])):
 			banish(String(card["id"]))
 
 # 静态武器与升级卡（依赖 WeaponDB 提供数据，但 CARDS 数组里的 id/condition 是手写的）

@@ -205,9 +205,27 @@ func test_grant_solofloor_isolates_and_grants_hp() -> void:
 	p.owned_weapons["knife"] = {"node": null, "level": 1}   # 注入外来武器,验证被剥离
 	var prev_cards := RunHarness._cards_name_val
 	RunHarness._cards_name_val = "solofloor_orb"
-	RunHarness._grant_solo_weapon(p)
+	RunHarness._grant_initial_loadout(p)
 	assert_bool(p.owned_weapons.has("knife")).is_false()      # 外来武器剥离
 	assert_bool(p.has_weapon("orb")).is_true()                # 目标授予
 	assert_float(p.max_hp).is_equal_approx(hp0 + 100.0, 0.001)  # perk_hp ×5 = +100 max HP
 	RunHarness._cards_name_val = prev_cards
 	CardPool.reset_run()   # 还原 banish 全局态,防泄漏后续用例
+
+# ── mix_ 档:授「底盘 + 目标」+ 剥离外来 + 底盘防御垫(集成,排末位) ──────────────
+func test_grant_mix_isolates_keeps_chassis_and_target() -> void:
+	var scene := load("res://scenes/player/player.tscn") as PackedScene
+	var p: Player = auto_free(scene.instantiate() as Player)
+	add_child(p)
+	await get_tree().process_frame
+	var hp0 := p.max_hp
+	p.owned_weapons["aura"] = {"node": null, "level": 1}   # 注入外来武器,验证被剥离
+	var prev_cards := RunHarness._cards_name_val
+	RunHarness._cards_name_val = "mix_knife"
+	RunHarness._grant_initial_loadout(p)
+	assert_bool(p.owned_weapons.has("aura")).is_false()       # 外来武器剥离
+	assert_bool(p.has_weapon("knife")).is_true()              # 目标授予
+	assert_bool(p.has_weapon("frostbite")).is_true()          # 底盘授予
+	assert_float(p.max_hp).is_equal_approx(hp0 + 100.0, 0.001)  # 底盘 perk_hp ×5 = +100 max HP
+	RunHarness._cards_name_val = prev_cards
+	CardPool.reset_run()

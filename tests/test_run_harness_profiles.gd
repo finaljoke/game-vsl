@@ -25,3 +25,22 @@ func test_profile_for_solo_dispatch() -> void:
 
 func test_profile_for_default_fallback() -> void:
 	assert_array(Harness.profile_for("default")).is_equal(Harness.DEFAULT_PROFILE)
+
+# ── P3:混编优先表 ───────────────────────────────────────────────────────────
+func test_mix_profile_target_first_then_chassis() -> void:
+	var p := Harness.mix_profile("knife", "perk_attack")
+	# 目标武器及其进化链排在底盘(frostbite)之前
+	assert_int(p.find("knife")).is_less(p.find("frostbite"))
+	assert_int(p.find("evolve_knife")).is_greater_equal(0)
+	assert_int(p.find("perk_attack")).is_greater_equal(0)
+	# 不含通用 type:weapon(否则拿外来武器污染混编)
+	assert_bool(p.has("type:weapon")).is_false()
+
+func test_mix_profile_base_has_no_target() -> void:
+	var p := Harness.mix_profile("", "perk_hp")
+	assert_bool(p.has("frostbite")).is_true()        # 底盘仍在
+	assert_bool(p.has("evolve_")).is_false()
+
+func test_profile_for_mix_dispatch() -> void:
+	var prof: Array = Harness.profile_for("mix_knife")
+	assert_int(prof.find("knife")).is_less(prof.find("frostbite"))

@@ -215,3 +215,20 @@ func test_flag_dominance_clear_axis_from_backlog_inverted() -> void:
 	var f := RA.flag_dominance(by, 0.35)
 	assert_str(String(f["evolve_lo"]["clear_axis"])).is_equal("high")  # 积压小=清场强
 	assert_str(String(f["evolve_hi"]["clear_axis"])).is_equal("low")   # 积压大=清场弱
+
+# ── P3 单元3:混编档名解析 ───────────────────────────────────────────────────
+func test_mix_spec_base() -> void:
+	var s := RA.mix_spec("mixbase")
+	assert_bool(s["is_mix"]).is_true()
+	assert_bool(s["is_base"]).is_true()
+	assert_str(String(s["target"])).is_equal("")
+
+func test_mix_spec_target() -> void:
+	var s := RA.mix_spec("mix_knife")
+	assert_bool(s["is_mix"]).is_true()
+	assert_bool(s["is_base"]).is_false()
+	assert_str(String(s["target"])).is_equal("knife")
+
+func test_mix_spec_non_mix() -> void:
+	assert_bool(RA.mix_spec("solo_aura")["is_mix"]).is_false()
+	assert_bool(RA.mix_spec("default")["is_mix"]).is_false()

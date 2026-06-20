@@ -600,3 +600,12 @@ func test_banish_other_weapons_keeps_target_offerable() -> void:
 			found = true
 	assert_bool(found).is_true()
 	CardPool.reset_run()
+
+func test_banish_weapons_except_keeps_set() -> void:
+	# 混编隔离:保留集内武器不被 ban;集外武器被 ban。
+	CardPool.reset_run()
+	CardPool.banish_weapons_except(["frostbite", "knife"])
+	assert_bool(CardPool.is_banished("aura")).is_true()       # 集外 → 被 ban
+	assert_bool(CardPool.is_banished("frostbite")).is_false() # 集内 → 保留
+	assert_bool(CardPool.is_banished("knife")).is_false()     # 集内 → 保留
+	CardPool.reset_run()
