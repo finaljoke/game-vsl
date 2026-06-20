@@ -104,6 +104,13 @@ static func compute_dodge_dir(player_pos: Vector2, projectiles: Array, dodge_rad
 		return Vector2.ZERO
 	return steer.normalized()
 
+# kite + dodge 加权合成,归一化;两者皆零返回 ZERO。
+static func blend_move(kite: Vector2, dodge: Vector2, w_kite: float, w_dodge: float) -> Vector2:
+	var v := kite * w_kite + dodge * w_dodge
+	if v.length() < 0.001:
+		return Vector2.ZERO
+	return v.normalized()
+
 # 从 offered 里按 profile 顺序取最高优先命中;无命中取第 0 张兜底(保证一定有解,防暂停卡死)。
 static func choose_card(offered: Array, profile: Array) -> Dictionary:
 	for matcher in profile:
@@ -199,7 +206,13 @@ func _compute_input(p: Player) -> Vector2:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if e is Node2D:
 			positions.append(e.global_position)
-	return compute_kite_dir(p.global_position, positions, _arena_center, PERCEPTION_RADIUS)
+	var projectiles: Array = []
+	for b in get_tree().get_nodes_in_group("enemy_projectiles"):
+		if b is Node2D:
+			projectiles.append({"pos": b.global_position, "vel": b.direction * b.SPEED})
+	var kite := compute_kite_dir(p.global_position, positions, _arena_center, PERCEPTION_RADIUS)
+	var dodge := compute_dodge_dir(p.global_position, projectiles, DODGE_RADIUS)
+	return blend_move(kite, dodge, W_KITE, W_DODGE)
 
 # 升级:唯一一次 pick → 按 profile 选 → apply → 通知 recorder → resume。
 func _on_level_up() -> void:

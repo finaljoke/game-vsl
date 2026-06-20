@@ -162,3 +162,13 @@ func test_kite_order_independent() -> void:
 	var r1 := Harness.compute_kite_dir(p, [e1, e2, e3], Vector2(640, 360), 220.0)
 	var r2 := Harness.compute_kite_dir(p, [e3, e1, e2], Vector2(640, 360), 220.0)
 	assert_vector(r1).is_equal(r2)
+
+# ── kite + dodge 合成(blend_move) ────────────────────────────────────────
+func test_blend_dodge_dominates_opposing_kite() -> void:
+	# kite 推右(+x)、dodge 推上(-y),dodge 权重更高 → 合成更偏 dodge 轴
+	var v := Harness.blend_move(Vector2(1, 0), Vector2(0, -1), 1.0, 1.5)
+	assert_float(absf(v.y)).is_greater(absf(v.x))
+	assert_float(v.length()).is_equal_approx(1.0, 0.001)
+
+func test_blend_zero_when_both_zero() -> void:
+	assert_vector(Harness.blend_move(Vector2.ZERO, Vector2.ZERO, 1.0, 1.5)).is_equal(Vector2.ZERO)
