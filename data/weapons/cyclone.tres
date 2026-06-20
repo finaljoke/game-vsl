@@ -13,11 +13,11 @@ icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
 levels = [{
-"cooldown": 0.7,
+"cooldown": 0.85,
 "count": 3,
 "damage": 20.0,
 "orbit_return": true,
-"pierce": 8,
+"pierce": 5,
 "proj_tint": Color(0.7, 0.95, 1, 1),
-"throw_range": 300.0
+"throw_range": 270.0
 }]
