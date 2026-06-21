@@ -56,3 +56,12 @@ func test_thunderstorm_clearing_ge_base_l3() -> void:
 	assert_int(int(ts["chains"])).is_greater_equal(int(l3["chains"]))          # 连锁 ≥ base
 	assert_float(float(ts["cooldown"])).is_less_equal(float(l3["cooldown"]))   # 不慢于 base
 	assert_int(int(ts.get("sky_strikes", 0))).is_greater(0)                    # 天雷=质变身份(base 无)
+
+# ── earthshatter ≥ maul L3(命中身份)+ 冲击波质变 ──
+func test_earthshatter_shockwave_ge_base_l3() -> void:
+	var es := _evo("earthshatter")
+	var l3 := _l3("maul")
+	assert_float(float(es["damage"])).is_greater_equal(float(l3["damage"]))      # 命中伤 ≥ base
+	assert_float(float(es["radius"])).is_greater_equal(float(l3["radius"]))       # 命中半径 ≥ base
+	assert_float(float(es.get("shockwave_radius", 0.0))).is_greater(0.0)          # 冲击波=质变身份(base 无)
+	assert_float(float(es["shockwave_radius"])).is_greater(float(es["radius"]))   # 环带须超出命中半径才有意义

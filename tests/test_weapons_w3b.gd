@@ -180,8 +180,10 @@ func test_evolve_maul_grants_earthshatter() -> void:
 func test_earthshatter_shockwave_hits_far_ring_and_slows() -> void:
 	var w := _evolve("maul", "earthshatter")
 	_player.global_position = Vector2.ZERO
-	# 落在初始 radius(170) 外、shockwave_radius(280) 内
-	var e := _tough_enemy_at(Vector2(240, 0))
+	# 落在初始 radius 外、shockwave_radius 内(取环带中点,随复衡仍稳健)
+	var sw: float = float(WeaponDB.get_data("earthshatter").levels[0]["shockwave_radius"])
+	var rad: float = float(WeaponDB.get_data("earthshatter").levels[0]["radius"])
+	var e := _tough_enemy_at(Vector2((rad + sw) * 0.5, 0))
 	await get_tree().process_frame
 	w._apply_shockwave(Vector2.ZERO)
 	assert_float(e.hp).is_less(500.0)

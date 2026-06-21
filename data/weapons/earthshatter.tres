@@ -17,8 +17,8 @@ levels = [{
 "damage": 72.0,
 "knockback": 300.0,
 "radius": 170.0,
-"shockwave_damage": 40.0,
-"shockwave_radius": 280.0,
+"shockwave_damage": 32.0,
+"shockwave_radius": 240.0,
 "shockwave_slow": 0.5,
 "shockwave_slow_dur": 1.5,
 "stun_dur": 0.6
