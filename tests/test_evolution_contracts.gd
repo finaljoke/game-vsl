@@ -37,3 +37,14 @@ func test_horde_lifetime_ge_base_l3() -> void:
 # §3c 防御杠杆:群尸须带本体回血(基础 reanimate 无此键 → 进化独有的生存机制)
 func test_horde_has_heal_on_hit() -> void:
 	assert_float(float(_evo("horde").get("heal_on_hit", 0.0))).is_greater(0.0)
+
+# ── P3b 复衡守恒契约(5 进化)──────────────────────────────────────────────────
+# ── nuke ≥ explosion L3(全屏覆盖/地火/二连爆身份) ──
+func test_nuke_clearing_ge_base_l3() -> void:
+	var nuke := _evo("nuke")
+	var l3 := _l3("explosion")
+	assert_float(float(nuke["blast_radius"])).is_greater_equal(float(l3["blast_radius"]))  # 覆盖 ≥ base
+	assert_float(float(nuke["burn_dps"])).is_greater_equal(float(l3["burn_dps"]))          # 地火 ≥ base
+	assert_float(float(nuke["field_dur"])).is_greater_equal(float(l3["field_dur"]))        # 地火时长 ≥ base
+	assert_float(float(nuke["cooldown"])).is_less_equal(float(l3["cooldown"]))             # 引爆不慢于 base
+	assert_int(int(nuke.get("secondary_count", 0))).is_greater(0)                          # 二连爆=质变身份(base 无)

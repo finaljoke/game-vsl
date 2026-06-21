@@ -236,7 +236,7 @@ func test_apply_evolve_explosion_grants_nuke() -> void:
 	assert_bool(_player.has_weapon("explosion")).is_false()
 	for child in _player.get_children():
 		if child is ExplosionWeapon and child.data != null and child.data.id == "nuke":
-			assert_float(child.cooldown).is_equal_approx(0.5, 0.001)
+			assert_float(child.cooldown).is_equal_approx(float(WeaponDB.get_data("nuke").levels[0]["cooldown"]), 0.001)
 
 # ── 进化解锁阈值：C1 统一降到 3(配合 XP 提速让进化落在 ~5 分钟)──────────────
 
