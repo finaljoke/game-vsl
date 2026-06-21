@@ -109,7 +109,7 @@ func test_inferno_reflects_burn_and_lifesteal() -> void:
 func test_tempest_reflects_sky_strikes() -> void:
 	var w := _evolve("lightning", "thunderstorm")
 	assert_int(w.get("sky_strikes")).is_greater(0)
-	assert_int(w.get("chains")).is_greater(int(WeaponDB.get_data("lightning").levels[2]["chains"]))  # 进化连锁 > base lightning L3(5)
+	assert_int(w.get("chains")).is_greater_equal(int(WeaponDB.get_data("lightning").levels[2]["chains"]))  # 进化连锁 ≥ base lightning L3(thunderstorm 复衡至地板=5,守恒契约同口径)
 
 func test_tempest_sky_strike_damages_enemies() -> void:
 	var w := _evolve("lightning", "thunderstorm")

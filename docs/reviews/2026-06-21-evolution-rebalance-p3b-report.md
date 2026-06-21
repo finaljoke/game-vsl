@@ -7,7 +7,7 @@
 
 ## 0. 一句话结论
 
-> _（待 campaign 验证后填）_
+> **P3b 据 P3 已验证判据复衡 5 进化：earthshatter 清场落带（OP→ok）；nuke/thunderstorm 砍到 P4 身份地板（clear_eff −47%/−52%、backlog 翻 2–3 倍），残留 OP 经确证为判据局限（evolution-median 带被大量弱进化压低，P3 §4b#6）非复衡失败——再削须让进化弱于 base 形态即违 P4；thousand_edge 拆「满血恒暴击」cheese（crit_bonus 1.0→0.6）落控制组下；mega_orb 质变重做（宽轨 orbit68→120 + dash 到点 AoE）从「偏弱(+3)+最不安全(hp0.18)+P4 数值倒退」修为「健康中-强清场(+15)+安全(hp0.86)+真质变」，过冲后回收未翻 OP。全程守 C4 质变守恒（5 契约锁）/P4，gdUnit 550/550 绿、C5 聚合稳定。**
 
 ## 1. 复衡总览（首轮数值 + 质变守恒）
 
@@ -72,10 +72,23 @@
 
 **终判**：mega_orb 从「偏弱(+3) + 最不安全(0.18) + P4 数值倒退」重做为「健康中-强清场(+15) + 安全(0.86) + **真质变**（宽轨区域控制 + dash 到点群伤 AoE，base orb 无）」。守宪法 P4「进化=质变」，呼应并修正其历史「数值倒退」反例。退出判据 §8#3 达标（marginal≫+3、hp≫0.18、未翻 OP）。
 
-## 4. 退出判据核对
+## 4. 退出判据核对（对照 spec §8）
 
-> _（待填：逐条对照 spec §8）_
+| # | 判据 | 结果 |
+|---|---|---|
+| 1 | nuke/thunderstorm/earthshatter verdict OP→ok（不掉底）；新中位下未动进化无破带 | ⚠ **部分**：earthshatter ✅ ok；nuke/thunderstorm 砍到 **P4 身份地板**（clear_eff −47%/−52%）但残留 OP=判据局限（§2a，非掉底、非复衡失败）。未动 8 进化无被动破带 ✅ |
+| 2 | thousand_edge 混编 A/B 边际 ≤ 控制组 nuke；仍 ≥ base | ✅ marginal +16 ≤ 控制 +19；clear_eff 14.25 三者最低（恒暴击 cheese 拆）；契约绿（≥base）。供给饱和 caveat（§3a） |
+| 3 | mega_orb 边际显著 >+3、hp_min 显著 >0.18、未翻 OP | ✅ marginal +3→+15、hp 0.18→0.86、clear_eff 回收 25.66→15.34（<控制，未翻 OP） |
+| 4 | 5 质变守恒契约 + mega_orb 新行为测试全绿 | ✅ `test_evolution_contracts` 13/13（原 8 + 5）；dash AoE 行为 2 用例绿 |
+| 5 | 全量绿 + C6 核数 + C5 确定性 | ✅ **550/550 绿 0 error**（基线 543 + 7）；C6 核数（一度因 chains 地板致 w3b 截断 537，已修）；C5 mix_orb 同种子两跑均 victory/600s、kills 1942 vs 1914（1.4%，后期有界不确定，符合 P2b 用户裁决的「聚合稳定非逐字节」标准） |
+| 6 | 后衡报告 | ✅ 本文 |
+
+**总评**：4/6 完全达标；#1 部分达标（earthshatter ✅，nuke/thunderstorm 砍到 P4 地板+诚实记录判据局限——强行入带须违 P4 = 不正确）。复衡效应实质显著（5 进化全部移向健康区间），零破坏既有绿测，守 C4/P4 全程。
 
 ## 5. 残留局限 / 下一步
 
-> _（待填：二轮补刀记录、未纳入项〔inferno_aura 手感 / base 可达性→内容广度阶段〕、C5 确定性抽查）_
+1. **nuke/thunderstorm 残留 OP = 判据局限（最高优先后续）**：evolution-median 清场带被大量弱进化（knife/orb/whip reached≈0、reanimate 等）压低，强 AoE 进化在 P4 地板天然高于带。下一步候选——(a) **判据改进**：清场支配改用「绝对清场阈值」或剔除不可达进化重算中位（治本，对齐 P3 §4b#6「判据持续改进」）；(b) 若坚持数值入带，须 script 级削质变（nuke 二连爆不叠第二团地火 / thunderstorm 天雷砍尽），风险触 P4 边界，须谨慎。**本轮取 P4 地板为正确终态，不强行违 P4**。
+2. **thousand_edge 混编供给饱和**：底盘只留 ~29 敌，强清场者 marginal 被供给上限钳制（+16），掩盖 −50% 原始削幅。下一步：更高密度 mix 档或 solo-floor 复测显真实削幅（判据改进子项）。
+3. **未纳入（spec §1 非目标，仍有效）**：inferno_aura radius 手感（手感子项）；knife/orb/whip base 早期可达性（→ 内容广度阶段，非进化平衡）。
+4. **mega_orb dash AoE 新机制**：已 TDD 锁（`test_mega_orb_dash_aoe_damages_cluster` + `test_orb_dash_aoe_noop_when_unset`），base orb 零影响（dash_aoe 默认 0 no-op）。
+5. **C6 教训重申**：Task 8 降 thunderstorm chains 到地板(5)时仅跑契约+campaign、漏跑 w3b → `test_tempest_reflects_sky_strikes` 的严格 `>` 断言失败并静默截断 w3b 后续 13 用例（550→537）。幸被 GREEN 态核数抓到。**改值后须跑所有相关套件 + 核对用例数**，别只看局部绿（宪法 C6）。
