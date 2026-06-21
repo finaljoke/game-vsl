@@ -106,5 +106,5 @@ func test_fireball_reflects_burn_field_data() -> void:
 	CardPool.apply({"id": "explosion"}, _player)
 	var node := _player.get_weapon_node("explosion")
 	assert_float(node.get("blast_radius")).is_equal_approx(80.0, 0.001)
-	assert_float(node.get("burn_dps")).is_equal_approx(6.0, 0.001)
-	assert_float(node.get("field_dur")).is_equal_approx(2.0, 0.001)
+	assert_float(node.get("burn_dps")).is_equal_approx(4.0, 0.001)    # 报告 §5① 复衡:L1 地火 6→4(周期化爆发,削持续地火)
+	assert_float(node.get("field_dur")).is_equal_approx(1.5, 0.001)   # L1 field_dur 2.0→1.5

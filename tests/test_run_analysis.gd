@@ -273,3 +273,67 @@ func test_flag_dominance_reached_filter_excludes_zero_backlog() -> void:
 	# knife 未达 → weak;且不把清场组中位拖向 0 → maul verdict 两次一致
 	assert_str(String(fb["evolve_knife"]["verdict"])).is_equal("weak")
 	assert_str(String(fb["evolve_maul"]["verdict"])).is_equal(String(fa["evolve_maul"]["verdict"]))
+
+# ── 内容广度 base 测量:solobase_ 解析 + max_level 锚(报告 §5①) ───────────────
+func test_solo_spec_base() -> void:
+	var s := RA.solo_spec("solobase_explosion")
+	assert_bool(s["is_solo"]).is_true()
+	assert_bool(s["is_base"]).is_true()
+	assert_bool(s["is_floor"]).is_false()
+	assert_str(String(s["weapon_id"])).is_equal("explosion")
+
+func test_solo_spec_plain_and_floor_not_base() -> void:
+	# solo_/solofloor_ 仍 is_base=false(新字段不破旧档)
+	assert_bool(RA.solo_spec("solo_aura")["is_base"]).is_false()
+	assert_bool(RA.solo_spec("solofloor_knife")["is_base"]).is_false()
+	assert_bool(RA.solo_spec("default")["is_base"]).is_false()
+
+func test_max_level_time_found() -> void:
+	# 首个 picked==<wid>_3 的 level_up t(base 档无进化,以满级为窗口锚)
+	var events := [
+		{"type": "level_up", "picked": "explosion_2", "t": 40.0},
+		{"type": "level_up", "picked": "explosion_3", "t": 95.0},
+	]
+	assert_float(RA.max_level_time(events, "explosion")).is_equal_approx(95.0, 0.01)
+
+func test_max_level_time_absent_returns_negative() -> void:
+	var events := [{"type": "level_up", "picked": "explosion_2", "t": 40.0}]
+	assert_float(RA.max_level_time(events, "explosion")).is_equal(-1.0)
+
+func test_max_level_time_takes_first_occurrence() -> void:
+	# 满级仅一次,但守确定性:多行取首个
+	var events := [
+		{"type": "level_up", "picked": "maul_3", "t": 80.0},
+		{"type": "level_up", "picked": "maul_3", "t": 120.0},
+	]
+	assert_float(RA.max_level_time(events, "maul")).is_equal_approx(80.0, 0.01)
+
+# ── 内容广度 base 清场组差异化:base 形态角色映射 ─────────────────────────────
+func test_base_role_for_overrides_and_fallback() -> void:
+	assert_str(RA.base_role_for("explosion")).is_equal("clear")
+	assert_str(RA.base_role_for("lightning")).is_equal("clear")
+	assert_str(RA.base_role_for("frostbite")).is_equal("control")  # base 控场(进化 blizzard 才清场)
+	assert_str(RA.base_role_for("maul")).is_equal("control")       # base 重控(进化 earthshatter 才清场)
+	assert_str(RA.base_role_for("aura")).is_equal("defense")
+	assert_str(RA.base_role_for("boomerang")).is_equal("single")   # 未覆盖 → 回退 EVOLUTION_ROLE
+	assert_str(RA.base_role_for("zzz_unknown")).is_equal("clear")  # 全未知 → 默认 clear
+
+func test_flag_dominance_base_roles_clear_band_two_specialists() -> void:
+	# base 清场带只含 explosion/lightning;frostbite/maul/aura 重桶为非清场 → clear_axis=na、不判清场 OP
+	var by := {
+		"base_explosion": {"clear_eff_med": 14.0, "backlog_mean_med": 16.8,  "survived_post_med": 440.0, "hp_min_post_med": 0.66, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"base_lightning": {"clear_eff_med": 13.0, "backlog_mean_med": 26.4,  "survived_post_med": 460.0, "hp_min_post_med": 0.90, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"base_frostbite": {"clear_eff_med": 10.0, "backlog_mean_med": 30.0,  "survived_post_med": 440.0, "hp_min_post_med": 0.80, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"base_maul":      {"clear_eff_med": 2.0,  "backlog_mean_med": 137.0, "survived_post_med": 460.0, "hp_min_post_med": 0.86, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"base_aura":      {"clear_eff_med": 2.0,  "backlog_mean_med": 168.0, "survived_post_med": 400.0, "hp_min_post_med": 0.78, "reached_ratio": 1.0, "death_ratio": 0.0},
+	}
+	var roles := {}
+	for k in by:
+		roles[k] = RA.base_role_for(String(k).trim_prefix("base_"))
+	var f := RA.flag_dominance(by, 0.35, roles)
+	# 清场带 {16.8,26.4} 中位 21.6,带[14.04,29.16] → explosion 16.8 落带内 ok(不再被 maul/aura 拉高中位误判 OP)
+	assert_str(String(f["base_explosion"]["verdict"])).is_equal("ok")
+	assert_str(String(f["base_lightning"]["verdict"])).is_equal("ok")
+	assert_str(String(f["base_frostbite"]["clear_axis"])).is_equal("na")
+	assert_str(String(f["base_maul"]["clear_axis"])).is_equal("na")
+	assert_str(String(f["base_aura"]["clear_axis"])).is_equal("na")

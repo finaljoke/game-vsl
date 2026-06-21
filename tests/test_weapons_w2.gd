@@ -58,7 +58,8 @@ func test_frostbite_reflects_level1_fields() -> void:
 	var node := _player.get_weapon_node("frostbite")
 	assert_object(node).is_not_null()
 	assert_float(node.get("area")).is_equal_approx(90.0, 0.001)
-	assert_float(node.get("slow_factor")).is_equal_approx(0.6, 0.001)
+	assert_float(node.get("slow_factor")).is_equal_approx(0.5, 0.001)  # 内容广度:预算搬移 0.6→0.5(减速↑)
+	assert_float(node.get("damage")).is_equal_approx(9.0, 0.001)       # 预算搬移:raw 伤害 13→9(控场化)
 
 func test_frostbite_slows_then_freezes_on_second_hit() -> void:
 	CardPool.apply({"id": "frostbite"}, _player)

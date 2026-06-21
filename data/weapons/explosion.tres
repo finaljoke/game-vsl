@@ -13,22 +13,22 @@ icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 levels = [{
 "blast_radius": 80.0,
-"burn_dps": 6.0,
+"burn_dps": 4.0,
 "cooldown": 3.2,
 "damage": 32.0,
-"field_dur": 2.0
+"field_dur": 1.5
 }, {
 "blast_radius": 90.0,
-"burn_dps": 8.0,
+"burn_dps": 5.0,
 "cooldown": 2.0,
 "damage": 34.0,
-"field_dur": 2.5
+"field_dur": 1.75
 }, {
 "blast_radius": 100.0,
-"burn_dps": 10.0,
-"cooldown": 1.3,
+"burn_dps": 6.0,
+"cooldown": 1.9,
 "damage": 35.0,
-"field_dur": 3.0
+"field_dur": 2.0
 }]
 evolution = {
 "evolved_id": "nuke",

@@ -299,6 +299,10 @@ func _grant_solo(p: Player, spec: Dictionary) -> void:
 	if not p.has_weapon(wid):
 		CardPool.apply({"id": wid}, p)   # 目标未持有才授予(solo_knife 时 knife 已在,避免重复 grant 泄漏旧节点)
 	CardPool.banish_other_weapons(wid)   # 外来武器卡永不再被提供(防 choose_card offered[0] 兜底污染)
+	# base 档(报告 §5①内容广度):banish 进化 → bot 永卡 base L3,隔离纯 base 武器清场强度。
+	# 与 _grant_mix 底盘永不进化同机制:banished 进化被 ready_evolutions 守卫滤除 → 确定性投放不再占槽。
+	if spec.get("is_base", false):
+		CardPool.banish("evolve_" + wid)
 	# 地板档:额外授纯防御垫(perk_hp 只加 HP 不加击杀 → kpm 仍单武器归属),让弱 solo 武器活到进化。
 	if spec["is_floor"]:
 		for _i in range(FLOOR_PERK_HP_STACKS):

@@ -84,3 +84,14 @@ func test_mega_orb_quale_redo() -> void:
 	assert_float(float(mo["damage"])).is_greater_equal(float(l3["damage"]))              # 环绕伤 ≥ base
 	assert_float(float(mo.get("dash_aoe_radius", 0.0))).is_greater(0.0)                  # 扑击 AoE=质变身份(base 无)
 	assert_float(float(mo.get("dash_aoe_damage", 0.0))).is_greater(0.0)
+
+# ── blizzard ≥ frostbite L3(冰系控场身份:进化控制/伤害不弱于 base) ──
+# 内容广度 base 清场组差异化:frostbite 预算搬移(控制↑)后,进化 blizzard 须平行守 C4 否则倒退。
+func test_blizzard_control_ge_base_l3() -> void:
+	var blz := _evo("blizzard")
+	var l3 := _l3("frostbite")
+	assert_float(float(blz["damage"])).is_greater_equal(float(l3["damage"]))          # 伤害 ≥ base
+	assert_float(float(blz["slow_factor"])).is_less_equal(float(l3["slow_factor"]))    # 减速 ≥ base(低=更强)
+	assert_float(float(blz["slow_dur"])).is_greater_equal(float(l3["slow_dur"]))       # 减速时长 ≥ base
+	assert_float(float(blz["freeze_dur"])).is_greater_equal(float(l3["freeze_dur"]))   # 冻结时长 ≥ base
+	assert_float(float(blz["area"])).is_greater_equal(float(l3["area"]))               # 覆盖 ≥ base

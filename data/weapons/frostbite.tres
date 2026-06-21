@@ -14,24 +14,24 @@ base_scene = ExtResource("2_scene")
 levels = [{
 "area": 90.0,
 "cooldown": 1.8,
-"damage": 13.0,
-"freeze_dur": 0.6,
-"slow_dur": 1.5,
-"slow_factor": 0.6
-}, {
-"area": 100.0,
-"cooldown": 1.4,
-"damage": 14.0,
-"freeze_dur": 0.8,
+"damage": 9.0,
+"freeze_dur": 0.7,
 "slow_dur": 1.8,
 "slow_factor": 0.5
 }, {
+"area": 100.0,
+"cooldown": 1.4,
+"damage": 10.0,
+"freeze_dur": 0.9,
+"slow_dur": 2.2,
+"slow_factor": 0.42
+}, {
 "area": 110.0,
 "cooldown": 1.1,
-"damage": 16.0,
-"freeze_dur": 1.0,
-"slow_dur": 2.0,
-"slow_factor": 0.45
+"damage": 11.0,
+"freeze_dur": 1.1,
+"slow_dur": 2.5,
+"slow_factor": 0.35
 }]
 evolution = {
 "evolved_id": "blizzard",

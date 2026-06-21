@@ -230,3 +230,30 @@ func test_grant_mix_isolates_keeps_chassis_and_target() -> void:
 	assert_float(p.max_hp).is_equal_approx(hp0 + 100.0, 0.001)  # 底盘 perk_hp ×5 = +100 max HP
 	RunHarness._cards_name_val = prev_cards
 	CardPool.reset_run()
+
+# ── 内容广度 base 档(solobase_):复用 solo 选卡 + grant 时 banish 进化(报告 §5①) ──
+func test_solo_spec_base_via_harness() -> void:
+	var s := Harness.solo_spec("solobase_maul")
+	assert_bool(s["is_solo"]).is_true()
+	assert_bool(s["is_base"]).is_true()
+	assert_str(String(s["weapon_id"])).is_equal("maul")
+
+func test_profile_for_solobase_matches_solo_cards() -> void:
+	# base 档选卡序与同武器 solo 档一致(差别只在 grant 时 banish 进化,不在选卡)
+	assert_array(Harness.profile_for("solobase_explosion")).is_equal(Harness.profile_for("solo_explosion"))
+
+# ── solobase_ 档集成:授武器 + 剥离外来 + banish 进化(纯 base L3 永不进化,排末位) ──
+func test_grant_solobase_banishes_evolution() -> void:
+	var scene := load("res://scenes/player/player.tscn") as PackedScene
+	var p: Player = auto_free(scene.instantiate() as Player)
+	add_child(p)
+	await get_tree().process_frame
+	p.owned_weapons["knife"] = {"node": null, "level": 1}   # 注入外来武器,验证被剥离
+	var prev_cards := RunHarness._cards_name_val
+	RunHarness._cards_name_val = "solobase_explosion"
+	RunHarness._grant_initial_loadout(p)
+	assert_bool(p.owned_weapons.has("knife")).is_false()             # 外来武器剥离
+	assert_bool(p.has_weapon("explosion")).is_true()                 # 目标授予
+	assert_bool(CardPool.is_banished("evolve_explosion")).is_true()  # 进化被 banish → 永不进化(隔离纯 base L3)
+	RunHarness._cards_name_val = prev_cards
+	CardPool.reset_run()

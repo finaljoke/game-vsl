@@ -22,6 +22,18 @@ static func roles_for(by_evo: Dictionary) -> Dictionary:
 		out[k] = EVOLUTION_ROLE.get(String(k).trim_prefix("evolve_"), "clear")
 	return out
 
+# base 形态角色(覆盖 EVOLUTION_ROLE):base 与进化角色可不同——frostbite/maul base 是控场,进化(blizzard/
+# earthshatter)才成清场;aura 两形态都防御。供 analyze_base_clear 角色感知重桶,使 base 清场带只含真清场专精。
+const BASE_ROLE := {
+	"explosion": "clear", "lightning": "clear",
+	"frostbite": "control", "maul": "control",
+	"aura": "defense",
+}
+
+# base 形态角色:BASE_ROLE 覆盖优先 → 回退 EVOLUTION_ROLE → 默认 clear。
+static func base_role_for(wid: String) -> String:
+	return BASE_ROLE.get(wid, EVOLUTION_ROLE.get(wid, "clear"))
+
 static func median(values: Array) -> float:
 	if values.is_empty():
 		return 0.0
@@ -93,15 +105,19 @@ static func tick_rows_from_csv(text: String) -> Array:
 		rows.append(row)
 	return rows
 
-# 单武器档名 → 规格。solofloor_ 先于 solo_ 匹配(更长前缀)。纯字符串解析,无 autoload 依赖,
-# 供 run_harness(运行时授武器)与 analyze_evolutions(-s 脚本,不能 preload autoload)共用。
-# {"is_solo": bool, "is_floor": bool, "weapon_id": String}。非单武器档 → is_solo=false。
+# 单武器档名 → 规格。solofloor_/solobase_ 先于 solo_ 匹配(更长前缀)。纯字符串解析,无 autoload 依赖,
+# 供 run_harness(运行时授武器)与 analyze_*(-s 脚本,不能 preload autoload)共用。
+# {"is_solo": bool, "is_floor": bool, "is_base": bool, "weapon_id": String}。非单武器档 → is_solo=false。
+# is_base(solobase_,报告 §5①内容广度):同 solo 选卡,但 grant 时 banish 进化 → bot 永卡 base L3,
+#   隔离 base 武器自身清场强度(分析以 max_level_time 为窗口锚,非 evolution_unlock_time)。
 static func solo_spec(cards_name: String) -> Dictionary:
 	if cards_name.begins_with("solofloor_"):
-		return {"is_solo": true, "is_floor": true, "weapon_id": cards_name.substr(10)}
+		return {"is_solo": true, "is_floor": true, "is_base": false, "weapon_id": cards_name.substr(10)}
+	if cards_name.begins_with("solobase_"):
+		return {"is_solo": true, "is_floor": false, "is_base": true, "weapon_id": cards_name.substr(9)}
 	if cards_name.begins_with("solo_"):
-		return {"is_solo": true, "is_floor": false, "weapon_id": cards_name.substr(5)}
-	return {"is_solo": false, "is_floor": false, "weapon_id": ""}
+		return {"is_solo": true, "is_floor": false, "is_base": false, "weapon_id": cards_name.substr(5)}
+	return {"is_solo": false, "is_floor": false, "is_base": false, "weapon_id": ""}
 
 # 混编档名 → 规格。mixbase=纯底盘(无目标);mix_<wid>=底盘+目标武器。
 # {"is_mix": bool, "is_base": bool, "target": String}。供 harness(授武器)与 A/B 分析共用。
@@ -124,6 +140,15 @@ static func events_from_jsonl(text: String) -> Array:
 # 进化解锁时刻:首个 type=="level_up" 且 picked=="evolve_"+weapon_id 的 t。无 → -1.0。
 static func evolution_unlock_time(events: Array, weapon_id: String) -> float:
 	var target := "evolve_" + weapon_id
+	for e in events:
+		if String(e.get("type", "")) == "level_up" and String(e.get("picked", "")) == target:
+			return float(e.get("t", -1.0))
+	return -1.0
+
+# 满级时刻:首个 type=="level_up" 且 picked==weapon_id+"_3" 的 t。无 → -1.0。
+# base 档(solobase_,永不进化)的窗口锚:武器满级=进入稳态清场形态,与 evolution_unlock_time 对称。
+static func max_level_time(events: Array, weapon_id: String) -> float:
+	var target := weapon_id + "_3"
 	for e in events:
 		if String(e.get("type", "")) == "level_up" and String(e.get("picked", "")) == target:
 			return float(e.get("t", -1.0))

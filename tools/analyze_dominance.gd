@@ -26,6 +26,8 @@ func _initialize() -> void:
 		var spec := RA.solo_spec(cards)
 		if not spec["is_solo"]:
 			continue
+		if bool(spec.get("is_base", false)):
+			continue   # base 档(solobase_)无进化 → 走 analyze_base_clear(max_level 锚),此处跳过防误判未达
 		var wid: String = spec["weapon_id"]
 		var events := RA.events_from_jsonl(FileAccess.get_file_as_string(abs_dir.path_join(base + ".events.jsonl")))
 		var ticks := RA.tick_rows_from_csv(FileAccess.get_file_as_string(abs_dir.path_join(base + ".tick.csv")))
