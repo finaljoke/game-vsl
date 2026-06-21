@@ -232,3 +232,44 @@ func test_mix_spec_target() -> void:
 func test_mix_spec_non_mix() -> void:
 	assert_bool(RA.mix_spec("solo_aura")["is_mix"]).is_false()
 	assert_bool(RA.mix_spec("default")["is_mix"]).is_false()
+
+# ── P3c 单元:判据 v2 角色感知清场组 + 未达过滤 ─────────────────────────────
+func test_roles_for_maps_evolve_keys() -> void:
+	var r := RA.roles_for({"evolve_explosion": {}, "evolve_knife": {}, "evolve_unknown": {}})
+	assert_str(String(r["evolve_explosion"])).is_equal("clear")
+	assert_str(String(r["evolve_knife"])).is_equal("single")
+	assert_str(String(r["evolve_unknown"])).is_equal("clear")  # 未知默认 clear
+
+func test_flag_dominance_role_aware_excludes_nonclear_from_band() -> void:
+	# 非清场角色高 backlog(像 aura175/boomerang98) 不进清场中位、不判 OP;
+	# 清场专精低 backlog 仅与同类比 → 落带 ok(不再被弱进化基准误判)。
+	var by := {
+		"evolve_explosion": {"clear_eff_med": 19.0, "backlog_mean_med": 14.0, "survived_post_med": 440.0, "hp_min_post_med": 0.87, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"evolve_lightning": {"clear_eff_med": 13.0, "backlog_mean_med": 19.0, "survived_post_med": 460.0, "hp_min_post_med": 0.92, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"evolve_maul":      {"clear_eff_med": 9.0,  "backlog_mean_med": 24.0, "survived_post_med": 460.0, "hp_min_post_med": 0.88, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"evolve_boomerang": {"clear_eff_med": 2.0,  "backlog_mean_med": 98.0, "survived_post_med": 400.0, "hp_min_post_med": 0.70, "reached_ratio": 1.0, "death_ratio": 0.1},
+	}
+	var roles := RA.roles_for(by)
+	var f := RA.flag_dominance(by, 0.35, roles)
+	# 清场组 {14,19,24} 中位 19,带 [12.35,25.65];三清场专精全落带 → 无 OP
+	assert_str(String(f["evolve_lightning"]["verdict"])).is_equal("ok")
+	assert_str(String(f["evolve_maul"]["verdict"])).is_equal("ok")
+	# boomerang(非清场)高 backlog 不判 OP、role 记 single、不参清场轴
+	assert_str(String(f["evolve_boomerang"]["verdict"])).is_not_equal("OP")
+	assert_str(String(f["evolve_boomerang"]["role"])).is_equal("single")
+	assert_str(String(f["evolve_boomerang"]["clear_axis"])).is_equal("na")
+
+func test_flag_dominance_reached_filter_excludes_zero_backlog() -> void:
+	# 未达进化(reached=0、backlog=0) 不污染清场组中位:加它前后,达进化 verdict 不变。
+	var base := {
+		"evolve_explosion": {"clear_eff_med": 19.0, "backlog_mean_med": 14.0, "survived_post_med": 440.0, "hp_min_post_med": 0.87, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"evolve_lightning": {"clear_eff_med": 13.0, "backlog_mean_med": 19.0, "survived_post_med": 460.0, "hp_min_post_med": 0.92, "reached_ratio": 1.0, "death_ratio": 0.0},
+		"evolve_maul":      {"clear_eff_med": 9.0,  "backlog_mean_med": 24.0, "survived_post_med": 460.0, "hp_min_post_med": 0.88, "reached_ratio": 1.0, "death_ratio": 0.0},
+	}
+	var with_unreached: Dictionary = base.duplicate(true)
+	with_unreached["evolve_knife"] = {"clear_eff_med": 0.0, "backlog_mean_med": 0.0, "survived_post_med": 0.0, "hp_min_post_med": 0.0, "reached_ratio": 0.0, "death_ratio": 1.0}
+	var fa := RA.flag_dominance(base, 0.35, RA.roles_for(base))
+	var fb := RA.flag_dominance(with_unreached, 0.35, RA.roles_for(with_unreached))
+	# knife 未达 → weak;且不把清场组中位拖向 0 → maul verdict 两次一致
+	assert_str(String(fb["evolve_knife"]["verdict"])).is_equal("weak")
+	assert_str(String(fb["evolve_maul"]["verdict"])).is_equal(String(fa["evolve_maul"]["verdict"]))

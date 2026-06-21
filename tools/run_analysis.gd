@@ -3,6 +3,24 @@
 extends RefCounted
 
 const BACKLOG_FLOOR: float = 5.0   # clear_eff 分母地板:强武器清空场地致 backlog→0 时防爆(P3 验证闸复核;若多进化命中地板,主轴降级为 backlog_mean)
+const REACH_MIN: float = 0.5       # 达进化比例下沿:低于此 → 不计支配基准 + verdict weak(P3c:未达进化 backlog 退化 0,无数据不该污染中位)
+
+# 进化角色(设计意图,独立于 backlog 测量值声明,非循环):clear=AoE 区域清场专精。
+# P3c 治本:backlog 是角色依赖量,清场轴中位仅在 clear 角色组内取 → 修跨角色假阳(清场专精被弱进化基准误判 OP)。
+const EVOLUTION_ROLE := {
+	"aura": "clear", "frostbite": "clear", "explosion": "clear",
+	"lightning": "clear", "maul": "clear", "whip": "clear",
+	"boomerang": "single", "knife": "single",
+	"orb": "control", "gravity_well": "control",
+	"reanimate": "summon",
+}
+
+# by_evo 键("evolve_<wid>") → 角色映射,供 flag_dominance 角色组。未知 wid 默认 clear。
+static func roles_for(by_evo: Dictionary) -> Dictionary:
+	var out := {}
+	for k in by_evo:
+		out[k] = EVOLUTION_ROLE.get(String(k).trim_prefix("evolve_"), "clear")
+	return out
 
 static func median(values: Array) -> float:
 	if values.is_empty():
@@ -227,36 +245,54 @@ static func flag_multi_axis(by_evo: Dictionary, band: float = 0.35) -> Dictionar
 # ——召唤流(horde)活进后期高密窗口→kpm 假高→clear_eff 假高(实测 p2b_main reanimate 误判 OP)。
 # backlog 是瞬时量,无累积速率/生存污染,且密度污染天然反向(swarm 堆积→backlog 高→清场弱)。
 # 故 clear_eff 仅作 context 列;backlog 反向定清场轴。详见 docs/reviews/2026-06-20-dominance-criteria-report.md §1。
-# OP = 清场强(backlog 低于带)且 安全非劣(hp 非 low);weak = reached<0.5 或(death>0.5 且 surv low)或 ≥2 可信轴低。
-static func flag_dominance(by_evo: Dictionary, band: float = 0.35) -> Dictionary:
-	var backlog_med := _axis_median(by_evo, "backlog_mean_med")
-	var surv_med := _axis_median(by_evo, "survived_post_med")
-	var hp_med := _axis_median(by_evo, "hp_min_post_med")
-	var clear_med := _axis_median(by_evo, "clear_eff_med")
+# OP = 清场强(backlog 低于带)且 安全非劣(hp 非 low);weak = reached<REACH_MIN 或(death>0.5 且 surv low)或 ≥2 可信轴低。
+# P3c 治本:① 清场轴 backlog 中位仅在「清场角色 ∩ 达进化」组内取 → 修跨角色假阳(非清场角色天然高 backlog,不该
+# 拉高清场专精的判 OP 基准);② 未达进化(reached<REACH_MIN,backlog 退化 0)不计任何基准 → 修无数据污染。
+# 非清场角色 clear_axis="na"(不参清场组中位、不判清场 OP);其支配该用各自相关轴度量(超本轮,记残留)。
+# roles 空 → 退化旧单组行为(全 clear)+ 未达过滤,保现有合成单测兼容。详见 docs/.../2026-06-21-p3c-dominance-criterion-design.md。
+static func flag_dominance(by_evo: Dictionary, band: float = 0.35, roles: Dictionary = {}) -> Dictionary:
+	var reached_keys: Array = []
+	for k in by_evo:
+		if float(by_evo[k].get("reached_ratio", 1.0)) >= REACH_MIN:
+			reached_keys.append(k)
+	# 安全/context 轴中位:全角色达进化组(未达不计)。
+	var surv_med := _axis_median_keys(by_evo, reached_keys, "survived_post_med")
+	var hp_med := _axis_median_keys(by_evo, reached_keys, "hp_min_post_med")
+	var clear_med := _axis_median_keys(by_evo, reached_keys, "clear_eff_med")
+	# 清场轴中位:清场角色 ∩ 达进化(roles 空 → 全达进化,兼容旧行为)。
+	var clearing_keys: Array = []
+	for k in reached_keys:
+		if roles.is_empty() or String(roles.get(k, "clear")) == "clear":
+			clearing_keys.append(k)
+	var backlog_med := _axis_median_keys(by_evo, clearing_keys, "backlog_mean_med")
 	var flags := {}
 	for k in by_evo:
 		var r = by_evo[k]
+		var role := String(roles.get(k, "clear"))
+		var is_clear := role == "clear"
 		var backlog := float(r["backlog_mean_med"])
 		var surv := float(r["survived_post_med"])
 		var hp := float(r["hp_min_post_med"])
 		var clear := float(r["clear_eff_med"])
-		# 清场强度 = backlog 反向:低于带=强(clear_axis="high"),高于带=弱(="low")。
-		var backlog_raw := _band_verdict(backlog, backlog_med, band)
-		var clear_v := ("high" if backlog_raw == "low" else ("low" if backlog_raw == "high" else "ok"))
+		# 清场强度 = backlog 反向:低于带=强(clear_axis="high"),高于带=弱(="low")。非清场角色不参清场轴="na"。
+		var clear_v := "na"
+		if is_clear:
+			var backlog_raw := _band_verdict(backlog, backlog_med, band)
+			clear_v = ("high" if backlog_raw == "low" else ("low" if backlog_raw == "high" else "ok"))
 		var surv_v := _band_verdict(surv, surv_med, band)
 		var hp_v := _band_verdict(hp, hp_med, band)
 		var reached := float(r.get("reached_ratio", 1.0))
 		var death := float(r.get("death_ratio", 0.0))
 		var low_axes := (1 if clear_v == "low" else 0) + (1 if surv_v == "low" else 0) + (1 if hp_v == "low" else 0)
 		var verdict := "ok"
-		if reached < 0.5 or (death > 0.5 and surv_v == "low"):
+		if reached < REACH_MIN or (death > 0.5 and surv_v == "low"):
 			verdict = "weak"
 		elif low_axes >= 2:
 			verdict = "weak"
-		elif clear_v == "high" and hp_v != "low":
+		elif is_clear and clear_v == "high" and hp_v != "low":
 			verdict = "OP"
 		flags[k] = {
-			"verdict": verdict,
+			"verdict": verdict, "role": role,
 			"clear_axis": clear_v, "backlog_dev": _effect(backlog, backlog_med),
 			"surv_axis": surv_v, "surv_dev": _effect(surv, surv_med),
 			"hp_axis": hp_v, "hp_dev": _effect(hp, hp_med),
@@ -268,6 +304,13 @@ static func flag_dominance(by_evo: Dictionary, band: float = 0.35) -> Dictionary
 static func _axis_median(by_evo: Dictionary, key: String) -> float:
 	var vals: Array = []
 	for k in by_evo:
+		vals.append(float(by_evo[k][key]))
+	return median(vals)
+
+# 仅在指定 keys 子集上取某轴中位(P3c:支配基准排除未达/非清场角色)。
+static func _axis_median_keys(by_evo: Dictionary, keys: Array, key: String) -> float:
+	var vals: Array = []
+	for k in keys:
 		vals.append(float(by_evo[k][key]))
 	return median(vals)
 
