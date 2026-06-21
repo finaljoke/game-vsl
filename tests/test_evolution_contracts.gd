@@ -48,3 +48,11 @@ func test_nuke_clearing_ge_base_l3() -> void:
 	assert_float(float(nuke["field_dur"])).is_greater_equal(float(l3["field_dur"]))        # 地火时长 ≥ base
 	assert_float(float(nuke["cooldown"])).is_less_equal(float(l3["cooldown"]))             # 引爆不慢于 base
 	assert_int(int(nuke.get("secondary_count", 0))).is_greater(0)                          # 二连爆=质变身份(base 无)
+
+# ── thunderstorm ≥ lightning L3(连锁 + 天雷身份) ──
+func test_thunderstorm_clearing_ge_base_l3() -> void:
+	var ts := _evo("thunderstorm")
+	var l3 := _l3("lightning")
+	assert_int(int(ts["chains"])).is_greater_equal(int(l3["chains"]))          # 连锁 ≥ base
+	assert_float(float(ts["cooldown"])).is_less_equal(float(l3["cooldown"]))   # 不慢于 base
+	assert_int(int(ts.get("sky_strikes", 0))).is_greater(0)                    # 天雷=质变身份(base 无)

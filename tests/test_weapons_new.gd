@@ -123,7 +123,7 @@ func test_evolve_lightning_grants_thunderstorm() -> void:
 	CardPool.apply({"id": "evolve_lightning", "type": "evolution"}, _player)
 	assert_bool(_player.has_weapon("thunderstorm")).is_true()
 	assert_bool(_player.has_weapon("lightning")).is_false()
-	assert_int(_player.get_weapon_node("thunderstorm").get("chains")).is_equal(8)
+	assert_int(_player.get_weapon_node("thunderstorm").get("chains")).is_equal(int(WeaponDB.get_data("thunderstorm").levels[0]["chains"]))
 
 func test_evolve_aura_grants_inferno() -> void:
 	CardPool.apply({"id": "aura"}, _player)
