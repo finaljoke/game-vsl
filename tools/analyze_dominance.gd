@@ -38,16 +38,16 @@ func _initialize() -> void:
 	var summary := {}
 	for wid in by_evo:
 		summary["evolve_" + wid] = RA.summarize_evolution(by_evo[wid])
-	var new_flags := RA.flag_dominance(summary)
+	var new_flags := RA.flag_dominance(summary, 0.35, RA.roles_for(summary))  # P3c:角色感知清场组+未达过滤
 	var old_flags := RA.flag_multi_axis(summary)
-	# 主轴=backlog(反向:低=强清场);clear_eff/kpm 降级为 context 列。
-	print("evolution,n,reached,backlog,backlog_dev,clear_eff(ctx),kpm(ctx),hp_min,verdict_new,verdict_old")
+	# 主轴=backlog(反向:低=强清场);clear_eff/kpm 降级为 context 列。role=清场角色组(P3c)。
+	print("evolution,role,n,reached,backlog,backlog_dev,clear_eff(ctx),kpm(ctx),hp_min,verdict_new,verdict_old")
 	for k in new_flags:
 		var s = summary[k]
 		var nf = new_flags[k]
 		var of = old_flags[k]
-		print("%s,%d,%.2f,%.0f,%+.2f,%.2f,%.0f,%.2f,%s,%s" % [
-			k, int(s["n"]), float(s["reached_ratio"]), float(s["backlog_mean_med"]),
+		print("%s,%s,%d,%.2f,%.0f,%+.2f,%.2f,%.0f,%.2f,%s,%s" % [
+			k, String(nf["role"]), int(s["n"]), float(s["reached_ratio"]), float(s["backlog_mean_med"]),
 			float(nf["backlog_dev"]), float(s["clear_eff_med"]), float(s["kpm_post_med"]),
 			float(s["hp_min_post_med"]), String(nf["verdict"]), String(of["verdict"])])
 	var f := FileAccess.open(_res(report_rel), FileAccess.WRITE)
