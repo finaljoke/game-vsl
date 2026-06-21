@@ -74,3 +74,13 @@ func test_thousand_edge_ceiling_ge_base_l3() -> void:
 	assert_int(int(te["pierce"])).is_greater_equal(int(l3["pierce"]))               # 穿透 ≥ base
 	assert_float(float(te["cooldown"])).is_less_equal(float(l3["cooldown"]))        # 不慢于 base
 	assert_float(float(te["crit_bonus"])).is_greater_equal(float(l3["crit_bonus"])) # 暴击加成 ≥ base(防过砍暴击轴退化)
+
+# ── mega_orb 质变重做(宽轨 + 扑击 AoE) ≥ orb L3 + 新机制 ──
+func test_mega_orb_quale_redo() -> void:
+	var mo := _evo("mega_orb")
+	var l3 := _l3("orb")
+	assert_int(int(mo["total_orbs"])).is_greater(int(l3["total_orbs"]))                  # 球数 > base
+	assert_float(float(mo["orbit_radius"])).is_greater_equal(float(l3["orbit_radius"]))  # 轨半径 ≥ base(宽轨)
+	assert_float(float(mo["damage"])).is_greater_equal(float(l3["damage"]))              # 环绕伤 ≥ base
+	assert_float(float(mo.get("dash_aoe_radius", 0.0))).is_greater(0.0)                  # 扑击 AoE=质变身份(base 无)
+	assert_float(float(mo.get("dash_aoe_damage", 0.0))).is_greater(0.0)
