@@ -213,8 +213,8 @@ func test_apply_evolve_knife_grants_thousand_edge() -> void:
 	# 新挂上的 KnifeWeapon 实例的 data.id 必须是 thousand_edge 且 cooldown=0.15、pierce=8
 	for child in _player.get_children():
 		if child is KnifeWeapon and child.data != null and child.data.id == "thousand_edge":
-			assert_float(child.cooldown).is_equal_approx(0.15, 0.001)
-			assert_int(child.pierce).is_equal(8)
+			assert_float(child.cooldown).is_equal_approx(float(WeaponDB.get_data("thousand_edge").levels[0]["cooldown"]), 0.001)
+			assert_int(child.pierce).is_equal(int(WeaponDB.get_data("thousand_edge").levels[0]["pierce"]))
 
 func test_apply_evolve_orb_grants_mega_orb() -> void:
 	CardPool.apply({"id": "orb"}, _player)

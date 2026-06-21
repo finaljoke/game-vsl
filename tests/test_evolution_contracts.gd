@@ -65,3 +65,12 @@ func test_earthshatter_shockwave_ge_base_l3() -> void:
 	assert_float(float(es["radius"])).is_greater_equal(float(l3["radius"]))       # 命中半径 ≥ base
 	assert_float(float(es.get("shockwave_radius", 0.0))).is_greater(0.0)          # 冲击波=质变身份(base 无)
 	assert_float(float(es["shockwave_radius"])).is_greater(float(es["radius"]))   # 环带须超出命中半径才有意义
+
+# ── thousand_edge ≥ knife L3(多发/穿透/射速/暴击轴,不锁单发 damage) ──
+func test_thousand_edge_ceiling_ge_base_l3() -> void:
+	var te := _evo("thousand_edge")
+	var l3 := _l3("knife")
+	assert_int(int(te.get("volley", 0))).is_greater_equal(2)                        # 多发身份(base knife 无 volley)
+	assert_int(int(te["pierce"])).is_greater_equal(int(l3["pierce"]))               # 穿透 ≥ base
+	assert_float(float(te["cooldown"])).is_less_equal(float(l3["cooldown"]))        # 不慢于 base
+	assert_float(float(te["crit_bonus"])).is_greater_equal(float(l3["crit_bonus"])) # 暴击加成 ≥ base(防过砍暴击轴退化)
