@@ -13,11 +13,11 @@ icon = ExtResource("3_icon")
 base_scene = ExtResource("2_scene")
 max_level = 1
 levels = [{
-"damage": 18.0,
-"dash_aoe_damage": 24.0,
-"dash_aoe_radius": 90.0,
+"damage": 16.0,
+"dash_aoe_damage": 15.0,
+"dash_aoe_radius": 70.0,
 "dash_enabled": true,
-"dash_interval": 2.0,
+"dash_interval": 2.5,
 "hit_cooldown": 0.3,
 "orbit_radius": 120.0,
 "total_orbs": 8

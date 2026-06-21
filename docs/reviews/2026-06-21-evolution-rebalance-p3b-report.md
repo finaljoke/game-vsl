@@ -50,7 +50,27 @@
 
 ## 3. 工作流 B/C · thousand_edge / mega_orb（混编 A/B 验证）
 
-> _（待混编 A/B campaign + analyze_mix_ab 填：thousand_edge 边际降向控制组 / mega_orb 边际升 + hp_min 升 + 未翻 OP）_
+混编 A/B（mixbase 底盘 vs mix_target，共时重叠窗边际归因，8 种子）。控制组 explosion(→nuke) 给「强清场」定标（nuke 复衡后控制 +25→+19）：
+
+| 目标 | P3 marginal/hp | P3b marginal | clear_eff_mix | hp_min | 终判 |
+|---|---|---|---|---|---|
+| **explosion**（控制/nuke） | +25 | +19 | 22.37 | 0.91 | 强清场基准（已削） |
+| **thousand_edge**(knife) | +16 / 0.88 | **+16** | **14.25** | 0.85 | ✅ 削成功（clear_eff 三者最低，marginal ≤ 控制） |
+| **mega_orb**(orb) | +3 / 0.18 | **+15** | **15.34** | **0.86** | ✅ 质变重做成功（buff + 安全，回收后未翻 OP） |
+
+### 3a. thousand_edge：满血恒暴击 cheese 已消，落控制组下
+
+复衡 `crit_bonus1.0→0.6`（满血恒暴击 guaranteed_crit→60% 概率）+ `volley5→3` + `cd0.15→0.22`（原始输出 −50%+）。混编 A/B：marginal +16 **≤ 控制 +19**（退出判据 §8#2 达标），且 `clear_eff 14.25` 是三者**最低**（削最彻底）。
+
+**供给饱和 caveat**：底盘只留 ~29 敌（backlog_base），thousand_edge 即便削后仍清空可用敌 → marginal 被**供给上限钳制**在 +16（非输出上限），掩盖了完整 −50% 削幅（clear_eff 仅显 15.7→14.25）。真实削幅在更高密度环境才完全显现。判据局限记 §5。**裁决：恒暴击 cheese 已拆（核心 OP 驱动），落控制组下，削成功**。
+
+### 3b. mega_orb：质变重做大成功（修偏弱 + 修不安全 + 守 P4）+ 过冲回收
+
+**首轮重做**（orbit68→120 宽轨 + dash 到点 AoE r90/dmg24 + dmg14→18 + interval3→2）一击修复两大病：marginal **+3→+16**（5×，从清场可忽略到强清场）、hp_min **0.18→0.94**（从最不安全到最安全）。但 clear_eff 飙到 **25.66**（三者最高、超控制）= **过冲翻 OP**。
+
+**过冲回收**（spec §5c 守卫）：`dash_aoe r90→70/dmg24→15 + dmg18→16 + interval2→2.5`（削 AoE 清场，**保宽轨 orbit120 安全**）。回收后：marginal **+15**（仍远超 P3 +3）、clear_eff **15.34**（中位、低于控制 22.37 = **不再 OP**）、hp_min **0.86**（仍安全）。
+
+**终判**：mega_orb 从「偏弱(+3) + 最不安全(0.18) + P4 数值倒退」重做为「健康中-强清场(+15) + 安全(0.86) + **真质变**（宽轨区域控制 + dash 到点群伤 AoE，base orb 无）」。守宪法 P4「进化=质变」，呼应并修正其历史「数值倒退」反例。退出判据 §8#3 达标（marginal≫+3、hp≫0.18、未翻 OP）。
 
 ## 4. 退出判据核对
 
