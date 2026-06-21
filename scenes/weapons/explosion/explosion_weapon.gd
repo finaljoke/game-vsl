@@ -20,7 +20,7 @@ func _ready() -> void:
 	super._ready()
 	# cooldown 由 WeaponData.levels 通过 apply_level() 注入
 
-func _spawn_explosion(center: Vector2, lay_field: bool = true) -> void:
+func _spawn_explosion(center: Vector2) -> void:
 	var explosion := EXPLOSION_SCENE.instantiate()
 	explosion.damage = damage_for(damage)
 	explosion.blast_radius = blast_radius
@@ -29,9 +29,8 @@ func _spawn_explosion(center: Vector2, lay_field: bool = true) -> void:
 	get_ysort().add_child(explosion)
 	explosion.global_position = center
 	explosion.detonate()
-	# 火球地火(spec §7.5)：仅基础注入 burn_dps/field_dur 时生成；nuke 注入炼狱地火。
-	# P3c 治本:二连爆(lay_field=false)不叠第二团地火——保二连爆爆发质变,去翻倍持续清场(守 P4)。
-	if lay_field and burn_dps > 0.0 and field_dur > 0.0:
+	# 火球地火(spec §7.5)：仅基础注入 burn_dps/field_dur 时生成；nuke 注入炼狱地火
+	if burn_dps > 0.0 and field_dur > 0.0:
 		var field := BURN_FIELD.new()
 		field.radius = blast_radius
 		field.burn_dps = burn_dps
@@ -51,7 +50,7 @@ func attack() -> void:
 	_spawn_explosion(center)
 	for i in range(secondary_count):
 		var c := center
-		get_tree().create_timer(secondary_delay * float(i + 1)).timeout.connect(func() -> void: _spawn_explosion(c, false))  # 二连爆只爆发,不叠地火(P3c)
+		get_tree().create_timer(secondary_delay * float(i + 1)).timeout.connect(func() -> void: _spawn_explosion(c))
 
 # 纯函数：返回半径内邻居最多的坐标，便于单测。
 # 候选用步长采样限到至多 candidate_cap 个，把最坏复杂度从 O(n²) 降到 O(cap·n)；

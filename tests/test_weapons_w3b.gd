@@ -152,7 +152,7 @@ func test_orb_dashes_toward_enemy_when_due() -> void:
 		await get_tree().process_frame
 	assert_float((orb as Node2D).global_position.distance_to(e.global_position)).is_less(d0)
 
-# ── P3c:nuke 二连爆不叠第二团地火(保二连爆质变/去翻倍持续清场,守 P4/C4) ──
+# ── P3c:explosion 主爆铺地火回归守卫(诊断 secondary_count=0 base floor 用同一落位路径) ──
 func _count_in_ysort(ys: Node, klass) -> int:
 	var n := 0
 	for c in ys.get_children():
@@ -160,35 +160,18 @@ func _count_in_ysort(ys: Node, klass) -> int:
 			n += 1
 	return n
 
-func test_explosion_secondary_skips_burn_field() -> void:
+func test_explosion_primary_lays_one_burn_field() -> void:
+	# 主爆铺一团地火(base explosion 行为锁);P3c 诊断证 nuke 残留=base 清场,二连爆地火非驱动。
 	var ys: Node2D = auto_free(Node2D.new()) as Node2D
 	add_child(ys)
 	ys.add_to_group("ysort")
 	var w := auto_free(ExplosionWeapon.new()) as ExplosionWeapon
 	_player.add_child(w)   # 须挂 player:damage_for 用 get_parent().damage_mult
 	await get_tree().process_frame
-	w.burn_dps = 10.0
-	w.field_dur = 3.0
-	# 主爆 lay_field=true:铺一团地火
-	w._spawn_explosion(Vector2(640, 360), true)
-	assert_int(_count_in_ysort(ys, Explosion)).is_equal(1)
-	assert_int(_count_in_ysort(ys, BurnField)).is_equal(1)
-	# 二连爆 lay_field=false:仍生成 Explosion(保二连爆质变),但不再铺第二团地火
-	w._spawn_explosion(Vector2(640, 360), false)
-	assert_int(_count_in_ysort(ys, Explosion)).is_equal(2)    # 二连爆质变保留(第二次引爆)
-	assert_int(_count_in_ysort(ys, BurnField)).is_equal(1)    # 持续地火不翻倍(仍 1)
-
-func test_explosion_primary_still_lays_burn_field() -> void:
-	# base explosion(无二连爆)主爆铺地火行为不回归。
-	var ys: Node2D = auto_free(Node2D.new()) as Node2D
-	add_child(ys)
-	ys.add_to_group("ysort")
-	var w := auto_free(ExplosionWeapon.new()) as ExplosionWeapon
-	_player.add_child(w)
-	await get_tree().process_frame
 	w.burn_dps = 6.0
 	w.field_dur = 2.0
-	w._spawn_explosion(Vector2(640, 360))   # 默认 lay_field=true
+	w._spawn_explosion(Vector2(640, 360))
+	assert_int(_count_in_ysort(ys, Explosion)).is_equal(1)
 	assert_int(_count_in_ysort(ys, BurnField)).is_equal(1)
 
 # A4 回归守卫：进化形态(mega_orb)逐球不得弱于满级缚灵(orb Lv3)。
