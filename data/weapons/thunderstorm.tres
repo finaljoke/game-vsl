@@ -14,11 +14,11 @@ base_scene = ExtResource("2_scene")
 max_level = 1
 levels = [{
 "bolt_tint": Color(0.85, 0.75, 1, 1),
-"chains": 6,
-"cooldown": 0.6,
+"chains": 5,
+"cooldown": 0.7,
 "damage": 22.0,
 "shock_dur": 0.3,
-"sky_damage": 22.0,
-"sky_radius": 70.0,
-"sky_strikes": 2
+"sky_damage": 14.0,
+"sky_radius": 35.0,
+"sky_strikes": 1
 }]
