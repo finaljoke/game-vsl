@@ -21,6 +21,8 @@ const DASH_SPEED: float = 600.0
 var _dash_t: float = 0.0
 var _dashing: bool = false
 var _dash_target: Node2D = null
+var dash_aoe_radius: float = 0.0    # 进化(缚刃)：dash 到点群伤范围(0=不触发,base orb 无扑击)
+var dash_aoe_damage: float = 0.0
 
 func _ready() -> void:
 	_player = get_parent()
@@ -59,6 +61,7 @@ func _update_dash(delta: float) -> bool:
 		return false
 	global_position = global_position.move_toward(_dash_target.global_position, DASH_SPEED * delta)
 	if global_position.distance_to(_dash_target.global_position) <= ORB_RADIUS:
+		_apply_dash_aoe(global_position)   # 质变:到点群伤爆裂
 		_dashing = false
 		_dash_t = 0.0
 	return true
@@ -91,3 +94,16 @@ func _tick_cooldowns(delta: float) -> void:
 		_hit_cooldowns[key] -= delta
 		if _hit_cooldowns[key] <= 0.0:
 			_hit_cooldowns.erase(key)
+
+# 扑击到点群伤(质变)：对 dash_aoe_radius 内全体造 dash_aoe_damage(含玩家增伤)。
+# radius/damage ≤0(base orb 默认)→ no-op,零影响。
+func _apply_dash_aoe(center: Vector2) -> void:
+	if dash_aoe_radius <= 0.0 or dash_aoe_damage <= 0.0:
+		return
+	var player := _player as Player
+	var dmg := dash_aoe_damage * (player.damage_mult if player != null else 1.0)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy):
+			continue
+		if center.distance_to((enemy as Node2D).global_position) <= dash_aoe_radius:
+			(enemy as Enemy).take_damage(dmg)

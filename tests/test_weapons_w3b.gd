@@ -231,3 +231,27 @@ func test_singularity_collapse_damages_clustered_enemies() -> void:
 	for i in range(10):
 		await get_tree().physics_frame   # _age 超过 field_dur → 坍缩并 queue_free
 	assert_float(e.hp).is_less(500.0)
+
+# ── 缚刃 dash 到点 AoE(P3b 质变:扑击从单体接触→群伤爆裂) ────────────────────
+func test_mega_orb_dash_aoe_damages_cluster() -> void:
+	var orb = auto_free(OrbShieldScript.new())
+	orb.dash_aoe_radius = 90.0
+	orb.dash_aoe_damage = 24.0
+	_player.add_child(orb)
+	await get_tree().process_frame   # _ready 抓 _player
+	var center := _player.global_position + Vector2(300, 0)
+	var inside := _tough_enemy_at(center + Vector2(40, 0))    # 距 center 40 < 90 → 受群伤
+	var outside := _tough_enemy_at(center + Vector2(200, 0))  # 距 center 200 > 90 → 不受
+	orb._apply_dash_aoe(center)
+	assert_float(inside.hp).is_less(500.0)
+	assert_float(outside.hp).is_equal(500.0)
+
+func test_orb_dash_aoe_noop_when_unset() -> void:
+	# base orb(dash_aoe_radius/damage 默认 0)→ 扑击不造成 AoE(零影响守恒)
+	var orb = auto_free(OrbShieldScript.new())
+	_player.add_child(orb)
+	await get_tree().process_frame
+	var center := _player.global_position + Vector2(300, 0)
+	var e := _tough_enemy_at(center)
+	orb._apply_dash_aoe(center)
+	assert_float(e.hp).is_equal(500.0)   # radius/damage=0 → no-op

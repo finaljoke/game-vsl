@@ -10,6 +10,8 @@ var orbit_radius: float = 60.0      # 缚灵数据驱动(注入给每个 OrbShie
 var hit_cooldown: float = 0.5
 var dash_enabled: bool = false
 var dash_interval: float = 3.0
+var dash_aoe_radius: float = 0.0   # 进化(缚刃)注入:扑击到点群伤,逐球传递
+var dash_aoe_damage: float = 0.0
 
 func _ready() -> void:
 	super._ready()
@@ -38,6 +40,8 @@ func _sync_shields() -> void:
 		existing[i].hit_cooldown = hit_cooldown
 		existing[i].dash_enabled = dash_enabled
 		existing[i].dash_interval = dash_interval
+		existing[i].dash_aoe_radius = dash_aoe_radius
+		existing[i].dash_aoe_damage = dash_aoe_damage
 
 func attack() -> void:
 	pass
